@@ -1,0 +1,135 @@
+rules:
+  main:
+    UNDEAD:
+      status:
+        POISONED:
+          applyMultiplier: 0.0
+          damageMultiplier: 0.0
+        BLEEDING:
+          applyMultiplier: 0.5
+          damageMultiplier: 0.5
+      damage:
+        WITHER:
+          damageMultiplier: 0.5
+
+    SKELETON:
+      inherit: UNDEAD
+      status:
+        BLEEDING:
+          applyMultiplier: 0.0
+          damageMultiplier: 0.0
+
+    ANIMAL: {}
+
+    ARTHROPOD:
+      status:
+        POISONED:
+          applyMultiplier: 0.5
+          damageMultiplier: 0.5
+
+    HUMANOID: {}
+
+    GELATINOUS:
+      status:
+        BLEEDING:
+          applyMultiplier: 0.0
+          damageMultiplier: 0.0
+        POISONED:
+          applyMultiplier: 0.5
+          damageMultiplier: 0.5
+
+    CONSTRUCT:
+      status:
+        POISONED:
+          applyMultiplier: 0.0
+          damageMultiplier: 0.0
+        BLEEDING:
+          applyMultiplier: 0.0
+          damageMultiplier: 0.0
+        WITHERED:
+          applyMultiplier: 0.5
+          damageMultiplier: 0.5
+
+    GHOST:
+      status:
+        BLEEDING:
+          applyMultiplier: 0.0
+          damageMultiplier: 0.0
+        POISONED:
+          applyMultiplier: 0.5
+          damageMultiplier: 0.5
+      control:
+        STUNNED:
+          durationMultiplier: 0.7
+
+    GIANT:
+      control:
+        STUNNED:
+          durationMultiplier: 0.35
+          maxDurationTicks: 20
+        FULL_FREEZE:
+          durationMultiplier: 0.35
+          maxDurationTicks: 30
+        KNOCKBACK:
+          multiplier: 0.3
+      dot:
+        maxPercentHealthPerSecond: 0.04
+
+    ABERRANT: {}
+
+  trait:
+    FIRE:
+      damage:
+        FIRE:
+          damageMultiplier: 0.0
+        FROST:
+          damageMultiplier: 1.25
+      status:
+        BURNING:
+          applyMultiplier: 0.0
+          damageMultiplier: 0.0
+        FROSTBITE:
+          applyMultiplier: 1.5
+          damageMultiplier: 1.25
+
+    FROST:
+      damage:
+        FROST:
+          damageMultiplier: 0.0
+        FIRE:
+          damageMultiplier: 1.25
+      status:
+        FROSTBITE:
+          applyMultiplier: 0.0
+          damageMultiplier: 0.0
+        BURNING:
+          applyMultiplier: 1.25
+          damageMultiplier: 1.25
+
+    VOID:
+      damage:
+        WITHER:
+          damageMultiplier: 0.5
+      control:
+        STUNNED:
+          durationMultiplier: 0.85
+
+    FLYING:
+      control:
+        ROOT:
+          durationMultiplier: 0.5
+        GROUND_TRAP:
+          durationMultiplier: 0.5
+
+    BOSS:
+      control:
+        STUNNED:
+          durationMultiplier: 0.25
+          maxDurationTicks: 12
+          internalCooldownTicks: 160
+        FULL_FREEZE:
+          durationMultiplier: 0.25
+          maxDurationTicks: 16
+          internalCooldownTicks: 240
+      dot:
+        maxPercentHealthPerSecond: 0.02

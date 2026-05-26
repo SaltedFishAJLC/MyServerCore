@@ -1,0 +1,269 @@
+tagDisplay:
+  main:
+    UNDEAD:
+      symbol: "☠"
+      name: "亡灵"
+      color: "dark_green"
+    SKELETON:
+      symbol: "骨"
+      name: "骷髅"
+      color: "gray"
+    ANIMAL:
+      symbol: "兽"
+      name: "动物"
+      color: "gold"
+    ARTHROPOD:
+      symbol: "虫"
+      name: "节肢"
+      color: "dark_purple"
+    HUMANOID:
+      symbol: "人"
+      name: "人形"
+      color: "yellow"
+    GELATINOUS:
+      symbol: "●"
+      name: "黏体"
+      color: "green"
+    CONSTRUCT:
+      symbol: "⚙"
+      name: "构装"
+      color: "aqua"
+    GHOST:
+      symbol: "✦"
+      name: "幽灵"
+      color: "light_purple"
+    GIANT:
+      symbol: "▲"
+      name: "巨兽"
+      color: "dark_red"
+    ABERRANT:
+      symbol: "◈"
+      name: "异怪"
+      color: "dark_aqua"
+  trait:
+    FIRE:
+      symbol: "✹"
+      name: "熔火"
+      color: "red"
+    FROST:
+      symbol: "❄"
+      name: "冰霜"
+      color: "aqua"
+    VOID:
+      symbol: "☽"
+      name: "幽冥"
+      color: "dark_purple"
+    FLYING:
+      symbol: "⬆"
+      name: "飞行"
+      color: "blue"
+    BOSS:
+      symbol: "★"
+      name: "首领"
+      color: "gold"
+
+entities:
+  ZOMBIE:
+    main: UNDEAD
+    traits: []
+  HUSK:
+    main: UNDEAD
+    traits: []
+  DROWNED:
+    main: UNDEAD
+    traits: []
+  ZOMBIE_VILLAGER:
+    main: UNDEAD
+    traits: []
+  ZOMBIFIED_PIGLIN:
+    main: UNDEAD
+    traits: []
+  ZOMBIE_HORSE:
+    main: UNDEAD
+    traits: []
+  ZOGLIN:
+    main: UNDEAD
+    traits: []
+
+  SKELETON:
+    main: SKELETON
+    traits: []
+  STRAY:
+    main: SKELETON
+    traits: [FROST]
+  WITHER_SKELETON:
+    main: SKELETON
+    traits: [VOID]
+  SKELETON_HORSE:
+    main: SKELETON
+    traits: []
+  BOGGED:
+    main: SKELETON
+    traits: []
+
+  SPIDER:
+    main: ARTHROPOD
+    traits: []
+  CAVE_SPIDER:
+    main: ARTHROPOD
+    traits: []
+  SILVERFISH:
+    main: ARTHROPOD
+    traits: []
+  ENDERMITE:
+    main: ARTHROPOD
+    traits: [VOID]
+  BEE:
+    main: ARTHROPOD
+    traits: [FLYING]
+
+  VILLAGER:
+    main: HUMANOID
+    traits: []
+  WANDERING_TRADER:
+    main: HUMANOID
+    traits: []
+  PILLAGER:
+    main: HUMANOID
+    traits: []
+  VINDICATOR:
+    main: HUMANOID
+    traits: []
+  EVOKER:
+    main: HUMANOID
+    traits: []
+  ILLUSIONER:
+    main: HUMANOID
+    traits: []
+  WITCH:
+    main: HUMANOID
+    traits: []
+  PIGLIN:
+    main: HUMANOID
+    traits: []
+  PIGLIN_BRUTE:
+    main: HUMANOID
+    traits: []
+  ENDERMAN:
+    main: HUMANOID
+    traits: [VOID]
+
+  SLIME:
+    main: GELATINOUS
+    traits: []
+  MAGMA_CUBE:
+    main: GELATINOUS
+    traits: [FIRE]
+
+  IRON_GOLEM:
+    main: CONSTRUCT
+    traits: []
+  SNOW_GOLEM:
+    main: CONSTRUCT
+    traits: [FROST]
+  CREAKING:
+    main: CONSTRUCT
+    traits: []
+
+  GHAST:
+    main: GHOST
+    traits: [FIRE, FLYING]
+  VEX:
+    main: GHOST
+    traits: [FLYING]
+  ALLAY:
+    main: GHOST
+    traits: [FLYING]
+  PHANTOM:
+    main: GHOST
+    traits: [FLYING]
+
+  RAVAGER:
+    main: GIANT
+    traits: []
+  WARDEN:
+    main: GIANT
+    traits: [BOSS]
+  WITHER:
+    main: GIANT
+    traits: [VOID, BOSS]
+  ENDER_DRAGON:
+    main: GIANT
+    traits: [VOID, BOSS]
+
+  CREEPER:
+    main: ABERRANT
+    traits: []
+  BLAZE:
+    main: ABERRANT
+    traits: [FIRE, FLYING]
+  BREEZE:
+    main: ABERRANT
+    traits: [FLYING]
+  GUARDIAN:
+    main: ABERRANT
+    traits: []
+  ELDER_GUARDIAN:
+    main: ABERRANT
+    traits: [BOSS]
+  SHULKER:
+    main: ABERRANT
+    traits: [VOID]
+
+  COW:
+    main: ANIMAL
+    traits: []
+  PIG:
+    main: ANIMAL
+    traits: []
+  SHEEP:
+    main: ANIMAL
+    traits: []
+  CHICKEN:
+    main: ANIMAL
+    traits: []
+  WOLF:
+    main: ANIMAL
+    traits: []
+  FOX:
+    main: ANIMAL
+    traits: []
+  POLAR_BEAR:
+    main: ANIMAL
+    traits: []
+  HORSE:
+    main: ANIMAL
+    traits: []
+  DONKEY:
+    main: ANIMAL
+    traits: []
+  MULE:
+    main: ANIMAL
+    traits: []
+  LLAMA:
+    main: ANIMAL
+    traits: []
+  TRADER_LLAMA:
+    main: ANIMAL
+    traits: []
+  CAMEL:
+    main: ANIMAL
+    traits: []
+  GOAT:
+    main: ANIMAL
+    traits: []
+  TURTLE:
+    main: ANIMAL
+    traits: []
+  DOLPHIN:
+    main: ANIMAL
+    traits: []
+  FROG:
+    main: ANIMAL
+    traits: []
+  AXOLOTL:
+    main: ANIMAL
+    traits: []
+  HOGLIN:
+    main: ANIMAL
+    traits: []

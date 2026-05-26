@@ -1,0 +1,17 @@
+# Probabilistic replacements for naturally spawned vanilla mobs.
+#
+# replacement_mob is a ServerCore rule ID from custom_mobs.yml.
+# chance supports decimals or percentages: 0.10 and 10% are equivalent.
+# spawn_reasons can be omitted to match all spawn reasons.
+
+replacements:
+  rogue_enderman:
+    enabled: true
+    source_type: ENDERMAN
+    spawn_reasons:
+      - NATURAL
+    chance: 10%
+    replacement_mob: Rogue_Enderman
+    # Optional filters:
+    # worlds: [world]
+    # biomes: [warped_forest]

@@ -1,0 +1,926 @@
+package com.servercore;
+
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.ServicePriority;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import com.servercore.combat.creature.CreatureTagService;
+import com.servercore.combat.damage.DamageService;
+import com.servercore.combat.damage.VanillaDamageAdapter;
+import com.servercore.combat.resistance.ResistanceResolver;
+import com.servercore.combat.resistance.TagRuleRegistry;
+import com.servercore.combat.status.FrostService;
+import com.servercore.combat.status.StatusService;
+import com.servercore.combat.status.StunController;
+import com.servercore.manager.DatabaseManager;
+import com.servercore.manager.EconomyManager;
+import com.servercore.manager.EconomyListener;
+import com.servercore.manager.PDCManager;
+import com.servercore.manager.VaultImplementer;
+import com.servercore.manager.CombatManager;
+import com.servercore.manager.AccessoryManager;
+import com.servercore.manager.PlayerStatCache;
+import com.servercore.manager.AccessoryListener;
+import com.servercore.manager.ItemFormatManager;
+import com.servercore.manager.ItemStandardizer;
+import com.servercore.manager.ReforgeManager;
+import com.servercore.manager.GemstoneManager;
+import com.servercore.manager.EnchantManager;
+import com.servercore.manager.RecycleManager;
+import com.servercore.manager.SoulContainerManager;
+import com.servercore.manager.StashManager;
+import com.servercore.manager.DeathListener;
+import com.servercore.manager.PowerLevelManager;
+import com.servercore.manager.HologramManager;
+import com.servercore.manager.MobSpawnManager;
+import com.servercore.manager.CustomMobRegistry;
+import com.servercore.manager.MobReplacementManager;
+import com.servercore.manager.CustomRecipeManager;
+import com.servercore.manager.CustomItemRegistry;
+import com.servercore.manager.RequirementManager;
+import com.servercore.manager.ScoreboardManager;
+import com.servercore.manager.AttributeManager;
+import com.servercore.manager.AuraSkillsBridge;
+import com.servercore.manager.AuraSkillsMenuHijacker;
+import com.servercore.manager.CollectionSkillManager;
+import com.servercore.manager.ClassManager;
+import com.servercore.manager.FishingManager;
+import com.servercore.manager.GlobalStatManager;
+import com.servercore.manager.MiningManager;
+import com.servercore.manager.NonCombatStatsMenu;
+import com.servercore.manager.RangedWeaponManager;
+import com.servercore.manager.ShieldManager;
+import com.servercore.manager.UniqueMobSpawnManager;
+import com.servercore.manager.VanillaItemOverrideManager;
+import com.servercore.manager.WeaponAbilityManager;
+import com.servercore.manager.WeaponTemplateManager;
+import org.bukkit.NamespacedKey;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
+
+public final class ServerCorePlugin extends JavaPlugin {
+
+    // 缓存 MiniMessage 实例供全局单例调用，遵循 1.21 Paper 文本展示规范
+    private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+    
+    private static ServerCorePlugin instance;
+    
+    private DatabaseManager databaseManager;
+    private EconomyManager economyManager;
+    private com.servercore.manager.AccessoryListener accListener;
+    private PowerLevelManager powerLevelManager;
+    private ScoreboardManager scoreboardManager;
+    private AttributeManager attributeManager;
+    private AuraSkillsBridge auraSkillsBridge;
+    private CustomMobRegistry customMobRegistry;
+    private CustomRecipeManager customRecipeManager;
+    private CustomItemRegistry customItemRegistry;
+    private ItemFormatManager itemFormatManager;
+    private ReforgeManager reforgeManager;
+    private GemstoneManager gemstoneManager;
+    private EnchantManager enchantManager;
+    private RecycleManager recycleManager;
+    private GlobalStatManager globalStatManager;
+    private MiningManager miningManager;
+    private FishingManager fishingManager;
+    private WeaponTemplateManager weaponTemplateManager;
+    private MobSpawnManager mobSpawnManager;
+    private MobReplacementManager mobReplacementManager;
+    private VanillaItemOverrideManager vanillaItemOverrideManager;
+    private UniqueMobSpawnManager uniqueMobSpawnManager;
+    private ShieldManager shieldManager;
+    private StatusService statusService;
+    private FrostService frostService;
+    private StunController stunController;
+
+    @Override
+    public void onEnable() {
+        instance = this;
+        
+        long startTime = System.currentTimeMillis();
+
+        // 1. 基础日志输出 (使用 ComponentLogger 与 MiniMessage 渲染)
+        getComponentLogger().info(MINI_MESSAGE.deserialize("<gradient:#00ff00:#00aa00>ServerCore 插件正在启动...</gradient>"));
+
+        // 2. 检查前置依赖 (PAPI 挂载检测)
+        setupPlaceholderAPI();
+
+        this.auraSkillsBridge = new AuraSkillsBridge(this);
+        new AuraSkillsMenuHijacker(this, auraSkillsBridge);
+
+        // 3. 启动 UI 管理系统 (ActionBar 刷新任务)
+        new com.servercore.manager.ActionBarManager(this).start();
+
+        // 4. 初始化战斗数值引擎
+        new CombatManager(this);
+        
+        // 5. 初始化数据库与经济模块
+        this.databaseManager = new DatabaseManager(this);
+        this.economyManager = new EconomyManager(databaseManager);
+        new EconomyListener(this, economyManager);
+        
+        // 5.5 初始化附属系统
+        new PDCManager(this);
+        CreatureTagService creatureTagService = new CreatureTagService(this);
+        TagRuleRegistry tagRuleRegistry = new TagRuleRegistry(this);
+        ResistanceResolver resistanceResolver = new ResistanceResolver(creatureTagService, tagRuleRegistry);
+        DamageService damageService = new DamageService(this, resistanceResolver);
+        this.stunController = new StunController(this, resistanceResolver);
+        this.statusService = new StatusService(this, damageService, resistanceResolver);
+        this.frostService = new FrostService(this, resistanceResolver, stunController);
+        new VanillaDamageAdapter(this, damageService, statusService, frostService, stunController);
+        new AccessoryManager(this);
+        new PlayerStatCache();
+        new ClassManager(this);
+        this.weaponTemplateManager = new WeaponTemplateManager(this);
+        this.shieldManager = new ShieldManager(this);
+        this.attributeManager = new AttributeManager(this);
+        this.globalStatManager = new GlobalStatManager(this);
+        new CollectionSkillManager(this, globalStatManager);
+        this.fishingManager = new FishingManager(this);
+        this.miningManager = new MiningManager(this, globalStatManager);
+        new RequirementManager(this);
+        this.accListener = new AccessoryListener(this);
+        this.itemFormatManager = new ItemFormatManager(this);
+        this.reforgeManager = new ReforgeManager(this);
+        this.gemstoneManager = new GemstoneManager(this);
+        this.enchantManager = new EnchantManager(this);
+        this.recycleManager = new RecycleManager(this, economyManager);
+        this.customItemRegistry = new CustomItemRegistry(this);
+        this.vanillaItemOverrideManager = new VanillaItemOverrideManager(this);
+        new ItemStandardizer(this);
+        new WeaponAbilityManager(this);
+        new RangedWeaponManager(this);
+        this.customMobRegistry = new CustomMobRegistry(this);
+        this.customMobRegistry.loadConfig();
+        this.customRecipeManager = new CustomRecipeManager(this);
+        this.powerLevelManager = new PowerLevelManager(this);
+        powerLevelManager.start();
+        HologramManager hologramManager = new HologramManager(this);
+        this.mobSpawnManager = new MobSpawnManager(this, powerLevelManager, hologramManager, economyManager, customMobRegistry);
+        this.mobReplacementManager = new MobReplacementManager(this, customMobRegistry);
+        this.uniqueMobSpawnManager = new UniqueMobSpawnManager(this, customMobRegistry);
+        this.scoreboardManager = new ScoreboardManager(this, powerLevelManager, economyManager);
+        scoreboardManager.start();
+        
+        SoulContainerManager soulContainerManager = new SoulContainerManager(this, databaseManager);
+        new StashManager(this, databaseManager);
+        new DeathListener(this, soulContainerManager, economyManager);
+
+        // 6. 注册 Vault 服务
+        if (getServer().getPluginManager().getPlugin("Vault") != null) {
+            try {
+                // 绕过 Shadow 插件在 Gradle 9+ 的 ASM org.objectweb.asm.Type LDC 映射 Bug
+                @SuppressWarnings("unchecked")
+                Class<Economy> ecoClass = (Class<Economy>) Class.forName("net.milkbowl.vault.economy.Economy");
+                getServer().getServicesManager().register(ecoClass, new VaultImplementer(economyManager), this, ServicePriority.Highest);
+                getComponentLogger().info(MINI_MESSAGE.deserialize("<aqua>✓ 已成功挂载 Vault 经济系统服务！</aqua>"));
+            } catch (ClassNotFoundException e) {
+                getComponentLogger().error(MINI_MESSAGE.deserialize("<red>⚠ 找不到 Vault API 类，挂载失败！</red>"));
+            }
+        } else {
+            getComponentLogger().warn(MINI_MESSAGE.deserialize("<red>⚠ 未找到 Vault 插件，经济桥接注册失败！</red>"));
+        }
+
+        // 7. 注册 PDC 管理器与自定义指令
+        getCommand("servercore").setExecutor(new CommandExecutor() {
+            @Override
+            public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("该指令仅限玩家使用！");
+                    return true;
+                }
+
+                if (args.length >= 1
+                        && (args[0].equalsIgnoreCase("recipe")
+                        || args[0].equalsIgnoreCase("recipes")
+                        || args[0].equalsIgnoreCase("recipebook"))) {
+                    if (args.length >= 2) {
+                        customRecipeManager.openRecipeUses(player, args[1]);
+                    } else {
+                        customRecipeManager.openRecipeUses(player, player.getInventory().getItemInMainHand());
+                    }
+                    return true;
+                }
+                
+                if (args.length >= 4
+                        && args[0].equalsIgnoreCase("admin")
+                        && args[1].equalsIgnoreCase("recipe")
+                        && args[2].equalsIgnoreCase("create")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    String recipeId = args[3];
+                    if (!CustomRecipeManager.isValidRecipeId(recipeId)) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Recipe ID must use only letters, numbers, _ or -.</red>"));
+                        return true;
+                    }
+
+                    customRecipeManager.openRecipeBuilder(player, recipeId);
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && args[1].equalsIgnoreCase("recipe")
+                        && args[2].equalsIgnoreCase("reload")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    customRecipeManager.reloadRecipes();
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Custom recipes reloaded: " + customRecipeManager.getRegisteredRecipeCount() + "</green>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && args[1].equalsIgnoreCase("mobs")
+                        && args[2].equalsIgnoreCase("reload")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    customMobRegistry.loadConfig();
+                    CreatureTagService tagService = CreatureTagService.getInstance();
+                    if (tagService != null) {
+                        tagService.reload();
+                    }
+                    TagRuleRegistry ruleRegistry = TagRuleRegistry.getInstance();
+                    if (ruleRegistry != null) {
+                        ruleRegistry.reload();
+                    }
+                    int replacementRules = mobReplacementManager == null ? 0 : mobReplacementManager.reload();
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Custom mob rules reloaded: " + customMobRegistry.getRuleCount()
+                            + "</green> <dark_gray>|</dark_gray> <green>Mob replacements: " + replacementRules + "</green>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && args[1].equalsIgnoreCase("mobs")
+                        && args[2].equalsIgnoreCase("list")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+
+                    String ids = String.join(", ", customMobRegistry.getRuleIds());
+                    player.sendMessage(MINI_MESSAGE.deserialize(ids.isBlank()
+                            ? "<yellow>No custom mob rules loaded.</yellow>"
+                            : "<green>Custom mob rules:</green> <white>" + ids + "</white>"));
+                    return true;
+                } else if (args.length >= 4
+                        && args[0].equalsIgnoreCase("admin")
+                        && args[1].equalsIgnoreCase("mobs")
+                        && args[2].equalsIgnoreCase("summon")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+
+                    int amount = 1;
+                    if (args.length >= 5) {
+                        try {
+                            amount = Math.max(1, Math.min(50, Integer.parseInt(args[4])));
+                        } catch (NumberFormatException exception) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<red>Amount must be a number.</red>"));
+                            return true;
+                        }
+                    }
+
+                    int spawned = 0;
+                    for (int index = 0; index < amount; index++) {
+                        org.bukkit.entity.LivingEntity entity = customMobRegistry.spawnConfiguredMob(args[3], player.getLocation());
+                        if (entity == null) {
+                            break;
+                        }
+                        MobSpawnManager mobSpawnManager = MobSpawnManager.getInstance();
+                        if (mobSpawnManager != null) {
+                            mobSpawnManager.applyCustomMobScaling(entity, args[3]);
+                        }
+                        spawned++;
+                    }
+
+                    player.sendMessage(MINI_MESSAGE.deserialize(spawned == 0
+                            ? "<red>Unknown or unspawnable custom mob rule: " + args[3] + "</red>"
+                            : "<green>Summoned custom mob:</green> <white>" + args[3] + " x" + spawned + "</white>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("mobreplacements")
+                        || args[1].equalsIgnoreCase("mob-replacements")
+                        || args[1].equalsIgnoreCase("spawnreplacements"))
+                        && args[2].equalsIgnoreCase("reload")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    int loaded = mobReplacementManager == null ? 0 : mobReplacementManager.reload();
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Mob replacement rules reloaded:</green> <white>" + loaded + "</white>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("mobreplacements")
+                        || args[1].equalsIgnoreCase("mob-replacements")
+                        || args[1].equalsIgnoreCase("spawnreplacements"))
+                        && args[2].equalsIgnoreCase("list")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    String ids = mobReplacementManager == null ? "" : String.join(", ", mobReplacementManager.getRuleIds());
+                    player.sendMessage(MINI_MESSAGE.deserialize(ids.isBlank()
+                            ? "<yellow>No mob replacement rules loaded.</yellow>"
+                            : "<green>Mob replacement rules:</green> <white>" + ids + "</white>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("uniquespawns")
+                        || args[1].equalsIgnoreCase("unique-spawns")
+                        || args[1].equalsIgnoreCase("structurespawns")
+                        || args[1].equalsIgnoreCase("structuremobs"))
+                        && args[2].equalsIgnoreCase("reload")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    int loaded = uniqueMobSpawnManager == null ? 0 : uniqueMobSpawnManager.reload();
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Unique mob spawns reloaded:</green> <white>" + loaded + "</white>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("uniquespawns")
+                        || args[1].equalsIgnoreCase("unique-spawns")
+                        || args[1].equalsIgnoreCase("structurespawns")
+                        || args[1].equalsIgnoreCase("structuremobs"))
+                        && args[2].equalsIgnoreCase("list")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    String ids = uniqueMobSpawnManager == null ? "" : String.join(", ", uniqueMobSpawnManager.getSpawnIds());
+                    player.sendMessage(MINI_MESSAGE.deserialize(ids.isBlank()
+                            ? "<yellow>No unique mob spawns loaded.</yellow>"
+                            : "<green>Unique mob spawns:</green> <white>" + ids + "</white>"));
+                    return true;
+                } else if (args.length >= 4
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("uniquespawns")
+                        || args[1].equalsIgnoreCase("unique-spawns")
+                        || args[1].equalsIgnoreCase("structurespawns")
+                        || args[1].equalsIgnoreCase("structuremobs"))
+                        && args[2].equalsIgnoreCase("reset")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    boolean reset = uniqueMobSpawnManager != null && uniqueMobSpawnManager.reset(args[3]);
+                    player.sendMessage(MINI_MESSAGE.deserialize(reset
+                            ? "<green>Unique mob spawn reset:</green> <white>" + args[3] + "</white>"
+                            : "<red>Unknown unique mob spawn:</red> <white>" + args[3] + "</white>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("names") || args[1].equalsIgnoreCase("itemnames"))
+                        && args[2].equalsIgnoreCase("reload")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>娴ｇ姵鐥呴張澶嬫綀闂勬劧绱?/red>"));
+                        return true;
+                    }
+
+                    itemFormatManager.reloadNameMappings();
+                    itemFormatManager.formatInventory(player.getInventory());
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Item name mappings reloaded.</green>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("recycle") || args[1].equalsIgnoreCase("salvage"))
+                        && args[2].equalsIgnoreCase("reload")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>娴ｇ姵鐥呴張澶嬫綀闂勬劧绱?/red>"));
+                        return true;
+                    }
+
+                    recycleManager.reloadConfig();
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Recycle prices reloaded.</green>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("items") || args[1].equalsIgnoreCase("customitems"))
+                        && args[2].equalsIgnoreCase("reload")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>娴ｇ姵鐥呴張澶嬫綀闂勬劧绱?/red>"));
+                        return true;
+                    }
+
+                    customItemRegistry.reloadItems();
+                    if (vanillaItemOverrideManager != null) {
+                        vanillaItemOverrideManager.reload();
+                        vanillaItemOverrideManager.applyInventory(player);
+                    }
+                    itemFormatManager.formatInventory(player.getInventory());
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Custom item templates reloaded: " + customItemRegistry.getItemCount() + "</green>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("vanillaitems")
+                        || args[1].equalsIgnoreCase("vanilla-items")
+                        || args[1].equalsIgnoreCase("itemoverrides"))
+                        && args[2].equalsIgnoreCase("reload")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>濞达絿濮甸惀鍛村嫉婢跺缍€闂傚嫭鍔х槐?/red>"));
+                        return true;
+                    }
+
+                    int loaded = vanillaItemOverrideManager == null ? 0 : vanillaItemOverrideManager.reload();
+                    if (vanillaItemOverrideManager != null) {
+                        vanillaItemOverrideManager.applyInventory(player);
+                    }
+                    itemFormatManager.formatInventory(player.getInventory());
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Vanilla item overrides reloaded:</green> <white>" + loaded + "</white>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("vanillaitems")
+                        || args[1].equalsIgnoreCase("vanilla-items")
+                        || args[1].equalsIgnoreCase("itemoverrides"))
+                        && args[2].equalsIgnoreCase("list")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>濞达絿濮甸惀鍛村嫉婢跺缍€闂傚嫭鍔х槐?/red>"));
+                        return true;
+                    }
+
+                    String ids = vanillaItemOverrideManager == null ? "" : String.join(", ", vanillaItemOverrideManager.getOverrideIds());
+                    player.sendMessage(MINI_MESSAGE.deserialize(ids.isBlank()
+                            ? "<yellow>No vanilla item overrides loaded.</yellow>"
+                            : "<green>Vanilla item overrides:</green> <white>" + ids + "</white>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("gatheringloot") || args[1].equalsIgnoreCase("loot"))
+                        && args[2].equalsIgnoreCase("reload")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+
+                    CollectionSkillManager collectionSkillManager = CollectionSkillManager.getInstance();
+                    int loaded = collectionSkillManager == null ? 0 : collectionSkillManager.reloadLootTables();
+                    if (fishingManager != null) {
+                        loaded += fishingManager.reloadLootTables();
+                    }
+                    if (miningManager != null) {
+                        loaded += miningManager.reloadLootTables();
+                    }
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Gathering loot tables reloaded: " + loaded + "</green>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("items") || args[1].equalsIgnoreCase("customitems"))
+                        && args[2].equalsIgnoreCase("list")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>娴ｇ姵鐥呴張澶嬫綀闂勬劧绱?/red>"));
+                        return true;
+                    }
+
+                    String ids = String.join(", ", customItemRegistry.getItemIds());
+                    player.sendMessage(MINI_MESSAGE.deserialize(ids.isBlank()
+                            ? "<yellow>No custom item templates loaded.</yellow>"
+                            : "<green>Custom items:</green> <white>" + ids + "</white>"));
+                    return true;
+                } else if (args.length >= 4
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("items") || args[1].equalsIgnoreCase("customitems"))
+                        && (args[2].equalsIgnoreCase("id")
+                        || args[2].equalsIgnoreCase("setid")
+                        || args[2].equalsIgnoreCase("set-id"))) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+
+                    ItemStack item = player.getInventory().getItemInMainHand();
+                    CustomItemRegistry.SaveResult result = customItemRegistry.setHeldItemId(item, args[3]);
+                    if (result.success()) {
+                        player.getInventory().setItemInMainHand(item);
+                    }
+                    player.sendMessage(MINI_MESSAGE.deserialize(result.success()
+                            ? "<green>" + result.message() + "</green> <white>" + result.itemId() + "</white>"
+                            : "<red>" + result.message() + "</red>"));
+                    return true;
+                } else if (args.length >= 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("items") || args[1].equalsIgnoreCase("customitems"))
+                        && args[2].equalsIgnoreCase("save")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+
+                    ItemStack item = player.getInventory().getItemInMainHand();
+                    String itemId = args.length >= 4 ? args[3] : "";
+                    CustomItemRegistry.SaveResult result = customItemRegistry.saveHeldItemTemplate(item, itemId);
+                    if (result.success()) {
+                        player.getInventory().setItemInMainHand(item);
+                    }
+                    player.sendMessage(MINI_MESSAGE.deserialize(result.success()
+                            ? "<green>" + result.message() + "</green> <white>" + result.itemId() + "</white>"
+                            : "<red>" + result.message() + "</red>"));
+                    return true;
+                } else if (args.length >= 4
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("items") || args[1].equalsIgnoreCase("customitems"))
+                        && args[2].equalsIgnoreCase("give")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>娴ｇ姵鐥呴張澶嬫綀闂勬劧绱?/red>"));
+                        return true;
+                    }
+
+                    int amount = -1;
+                    if (args.length >= 5) {
+                        try {
+                            amount = Math.max(1, Integer.parseInt(args[4]));
+                        } catch (NumberFormatException exception) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<red>Amount must be a number.</red>"));
+                            return true;
+                        }
+                    }
+
+                    ItemStack item = customItemRegistry.createItem(args[3], amount);
+                    if (item == null) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Unknown custom item id: " + args[3] + "</red>"));
+                        return true;
+                    }
+
+                    java.util.Map<Integer, ItemStack> overflow = player.getInventory().addItem(item);
+                    for (ItemStack leftover : overflow.values()) {
+                        player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+                    }
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Gave custom item:</green> <white>" + args[3] + "</white>"));
+                    return true;
+                } else if (args.length >= 3 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("rarity")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    ItemStack item = player.getInventory().getItemInMainHand();
+                    if (item.getType().isAir()) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Hold an item first.</red>"));
+                        return true;
+                    }
+
+                    try {
+                        itemFormatManager.setRarity(item, ItemFormatManager.Rarity.valueOf(args[2].toUpperCase(java.util.Locale.ROOT)));
+                        player.getInventory().setItemInMainHand(item);
+                        player.sendMessage(MINI_MESSAGE.deserialize("<green>Rarity updated.</green>"));
+                    } catch (IllegalArgumentException exception) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Unknown rarity. Use COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, MYTHIC.</red>"));
+                    }
+                    return true;
+                } else if (args.length >= 3 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("reforge")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    ItemStack item = player.getInventory().getItemInMainHand();
+                    if (item.getType().isAir()) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Hold an item first.</red>"));
+                        return true;
+                    }
+
+                    if (args[2].equalsIgnoreCase("clear")) {
+                        reforgeManager.clearReforge(item);
+                        player.sendMessage(MINI_MESSAGE.deserialize("<green>Reforge cleared.</green>"));
+                    } else {
+                        boolean applied = reforgeManager.applyReforge(item, args[2]);
+                        if (!applied) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<red>This reforge cannot be applied to the held item.</red>"));
+                            return true;
+                        }
+                        player.sendMessage(MINI_MESSAGE.deserialize("<green>Reforge updated.</green>"));
+                    }
+                    player.getInventory().setItemInMainHand(item);
+                    return true;
+                } else if (args.length >= 5
+                        && args[0].equalsIgnoreCase("admin")
+                        && args[1].equalsIgnoreCase("gem")
+                        && args[2].equalsIgnoreCase("socket")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    ItemStack item = player.getInventory().getItemInMainHand();
+                    if (item.getType().isAir()) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Hold an item first.</red>"));
+                        return true;
+                    }
+
+                    try {
+                        GemstoneManager.SocketType type = GemstoneManager.SocketType.valueOf(args[3].toUpperCase(java.util.Locale.ROOT));
+                        int amount = Math.max(1, Integer.parseInt(args[4]));
+                        gemstoneManager.addSockets(item, type, amount);
+                        player.getInventory().setItemInMainHand(item);
+                        player.sendMessage(MINI_MESSAGE.deserialize("<green>Socket added.</green>"));
+                    } catch (IllegalArgumentException exception) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Usage: /sc admin gem socket <WEAPON|ARMOR|TOOL|UNIVERSAL> <amount></red>"));
+                    }
+                    return true;
+                } else if (args.length >= 4
+                        && args[0].equalsIgnoreCase("admin")
+                        && args[1].equalsIgnoreCase("gem")
+                        && args[2].equalsIgnoreCase("apply")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    ItemStack item = player.getInventory().getItemInMainHand();
+                    if (item.getType().isAir()) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Hold an item first.</red>"));
+                        return true;
+                    }
+
+                    boolean applied = gemstoneManager.applyGemstone(item, args[3]);
+                    player.getInventory().setItemInMainHand(item);
+                    player.sendMessage(MINI_MESSAGE.deserialize(applied ? "<green>Gemstone applied.</green>" : "<red>No compatible empty socket.</red>"));
+                    return true;
+                } else if (args.length >= 4 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("enchant")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
+                        return true;
+                    }
+
+                    ItemStack item = player.getInventory().getItemInMainHand();
+                    if (item.getType().isAir()) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Hold an item first.</red>"));
+                        return true;
+                    }
+
+                    try {
+                        enchantManager.addCustomEnchant(item, args[2], Integer.parseInt(args[3]));
+                        player.getInventory().setItemInMainHand(item);
+                        player.sendMessage(MINI_MESSAGE.deserialize("<green>Custom enchant updated.</green>"));
+                    } catch (NumberFormatException exception) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Level must be a number.</red>"));
+                    }
+                    return true;
+                } else if (args.length >= 3 && args[0].equalsIgnoreCase("item")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+                    
+                    ItemStack item = player.getInventory().getItemInMainHand();
+                    if (item.getType().isAir()) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>请将要修改的物品拿在主手中！</red>"));
+                        return true;
+                    }
+                    
+                    String statName = args[1].toLowerCase();
+                    PDCManager pdc = PDCManager.getInstance();
+                    
+                    // 特殊处理 acctype
+                    if (statName.equals("acctype")) {
+                        pdc.setString(item, pdc.KEY_ACC_TYPE, args[2].toLowerCase());
+                        player.getInventory().setItemInMainHand(item);
+                        player.sendMessage(MINI_MESSAGE.deserialize("<green>已成功将饰品部位设为 " + args[2].toLowerCase() + " !</green>"));
+                        return true;
+                    }
+
+                    if (statName.equals("template") || statName.equals("weapontemplate") || statName.equals("weapon_template")) {
+                        WeaponTemplateManager templateManager = WeaponTemplateManager.getInstance();
+                        WeaponTemplateManager.WeaponTemplate template = templateManager == null ? null : templateManager.parseTemplate(args[2]);
+                        if (template == null) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<red>Unknown weapon template.</red>"));
+                            return true;
+                        }
+
+                        templateManager.applyTemplateToItem(item, template);
+                        player.getInventory().setItemInMainHand(item);
+                        PlayerStatCache statCache = PlayerStatCache.getInstance();
+                        if (statCache != null) {
+                            statCache.updateCache(player);
+                        } else if (attributeManager != null) {
+                            attributeManager.refreshPlayer(player);
+                        }
+                        player.sendMessage(MINI_MESSAGE.deserialize("<green>Weapon template updated: " + template.name() + "</green>"));
+                        return true;
+                    }
+
+                    if (statName.equals("handrule") || statName.equals("hand_rule") || statName.equals("weaponhand") || statName.equals("weapon_hand_rule")) {
+                        WeaponTemplateManager templateManager = WeaponTemplateManager.getInstance();
+                        WeaponTemplateManager.HandRule handRule = templateManager == null ? null : templateManager.parseHandRule(args[2]);
+                        if (handRule == null) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<red>Unknown hand rule.</red>"));
+                            return true;
+                        }
+
+                        templateManager.applyHandRuleToItem(item, handRule);
+                        player.getInventory().setItemInMainHand(item);
+                        PlayerStatCache statCache = PlayerStatCache.getInstance();
+                        if (statCache != null) {
+                            statCache.updateCache(player);
+                        } else if (attributeManager != null) {
+                            attributeManager.refreshPlayer(player);
+                        }
+                        player.sendMessage(MINI_MESSAGE.deserialize("<green>Weapon hand rule updated: " + handRule.name() + "</green>"));
+                        return true;
+                    }
+
+                    double value;
+                    try {
+                        value = Double.parseDouble(args[2]);
+                    } catch (NumberFormatException e) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>属性值必须是数字！</red>"));
+                        return true;
+                    }
+                    
+                    NamespacedKey key = switch (statName) {
+                        case "damage" -> pdc.KEY_BASE_DAMAGE;
+                        case "mult" -> pdc.KEY_BASE_MULTIPLIER;
+                        case "crit" -> pdc.KEY_CRIT_CHANCE;
+                        case "critdmg" -> pdc.KEY_CRIT_DAMAGE;
+                        case "brutality" -> pdc.KEY_BRUTALITY;
+                        case "armorpen" -> pdc.KEY_ARMOR_PEN;
+                        case "armor" -> pdc.KEY_BASE_ARMOR;
+                        case "attackspeed", "attack_speed", "attack_speed_bonus", "aspeed" -> pdc.KEY_ATTACK_SPEED_BONUS;
+                        case "shieldthreshold", "shield_threshold", "block_threshold", "shield_block_threshold" -> pdc.KEY_SHIELD_BLOCK_THRESHOLD;
+                        case "effectiveblock", "effective_block", "shield_effective_block" -> pdc.KEY_SHIELD_EFFECTIVE_BLOCK;
+                        case "shieldcooldown", "shield_cooldown", "shield_cooldown_seconds" -> pdc.KEY_SHIELD_COOLDOWN_SECONDS;
+                        case "tou", "toughness" -> pdc.KEY_ATTR_TOUGHNESS;
+                        case "agi", "agility" -> pdc.KEY_ATTR_AGILITY;
+                        case "int", "intelligence" -> pdc.KEY_ATTR_INTELLIGENCE;
+                        case "wil", "will", "willpower" -> pdc.KEY_ATTR_WILLPOWER;
+                        case "luk", "luck" -> pdc.KEY_ATTR_LUCK;
+                        case "toolfortune", "fortune", "tf", "tool_fortune" -> pdc.KEY_TOOL_FORTUNE;
+                        case "collectionfortune", "gatherfortune", "cf", "collection_fortune" -> pdc.KEY_COLLECTION_FORTUNE;
+                        case "foragingfortune", "ff", "foraging_fortune" -> pdc.KEY_FORAGING_FORTUNE;
+                        case "bounty", "foragingbounty", "foraging_bounty" -> pdc.KEY_BOUNTY;
+                        case "farmingfortune", "farmfortune", "farming_fortune" -> pdc.KEY_FARMING_FORTUNE;
+                        case "overbloom", "over_bloom", "bloom" -> pdc.KEY_OVERBLOOM;
+                        case "excavationfortune", "digfortune", "excavation_fortune" -> pdc.KEY_EXCAVATION_FORTUNE;
+                        case "miningfortune", "minefortune", "mining_fortune" -> pdc.KEY_MINING_FORTUNE;
+                        case "toolsweep", "sweep", "tool_sweep" -> pdc.KEY_TOOL_SWEEP;
+                        case "collectionsweep", "gathersweep", "collection_sweep" -> pdc.KEY_COLLECTION_SWEEP;
+                        case "foragingsweep", "fsweep", "foraging_sweep" -> pdc.KEY_FORAGING_SWEEP;
+                        case "toolspread", "spread", "tool_spread" -> pdc.KEY_MINING_SPREAD;
+                        case "miningspread", "minespread", "mining_spread" -> pdc.KEY_MINING_SPREAD;
+                        case "miningspeed", "toolminingspeed", "tool_mining_speed" -> pdc.KEY_TOOL_MINING_SPEED;
+                        case "breakingpower", "bp", "breaking_power" -> pdc.KEY_BREAKING_POWER;
+                        case "purity" -> pdc.KEY_PURITY;
+                        case "miningpurity", "mpurity", "mining_purity" -> pdc.KEY_MINING_PURITY;
+                        case "fishingspeed", "fishspeed", "fishing_speed" -> pdc.KEY_FISHING_SPEED;
+                        case "seacreaturechance", "scc", "sea_creature_chance" -> pdc.KEY_SEA_CREATURE_CHANCE;
+                        case "treasurechance", "tc", "treasure_chance" -> pdc.KEY_TREASURE_CHANCE;
+                        default -> null;
+                    };
+                    
+                    if (key == null) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>未知属性！可用: damage, mult, crit, critdmg, brutality, armorpen, armor, tou, agi, int, wil, luk, bounty, farmingfortune, overbloom, fishingspeed</red>"));
+                        return true;
+                    }
+                    
+                    pdc.setStat(item, key, value);
+                    // 必须将修改后的 ItemStack 强制塞回玩家手中，否则 NBT 改变只停留在内存副本！
+                    player.getInventory().setItemInMainHand(item);
+                    PlayerStatCache statCache = PlayerStatCache.getInstance();
+                    if (statCache != null) {
+                        statCache.updateCache(player);
+                    } else if (attributeManager != null) {
+                        attributeManager.refreshPlayer(player);
+                    }
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>已成功为手中的物品赋予 " + statName + " = " + value + " !</green>"));
+                    return true;
+                } else if (args.length == 1 && args[0].equalsIgnoreCase("acc")) {
+                    accListener.openAccessoryMenu(player);
+                    return true;
+                } else if (args.length == 1 && args[0].equalsIgnoreCase("stats")) {
+                    new com.servercore.manager.StatsMenu(player).open();
+                    return true;
+                } else if (args.length == 1
+                        && (args[0].equalsIgnoreCase("gathering")
+                        || args[0].equalsIgnoreCase("life")
+                        || args[0].equalsIgnoreCase("noncombat")
+                        || args[0].equalsIgnoreCase("toolstats")
+                        || args[0].equalsIgnoreCase("生活")
+                        || args[0].equalsIgnoreCase("采集"))) {
+                    new NonCombatStatsMenu(player).open();
+                    return true;
+                } else if (args.length == 1 && args[0].equalsIgnoreCase("class")) {
+                    ClassManager classManager = ClassManager.getInstance();
+                    if (classManager != null) {
+                        classManager.openClassSelectionGUI(player);
+                    }
+                    return true;
+                } else if (args.length == 1 && args[0].equalsIgnoreCase("stash")) {
+                    StashManager.getInstance().openStashGUI(player);
+                    return true;
+                } else if (args.length == 1 && (args[0].equalsIgnoreCase("recycle") || args[0].equalsIgnoreCase("salvage"))) {
+                    recycleManager.openRecycleGui(player);
+                    return true;
+                }
+                
+                player.sendMessage(MINI_MESSAGE.deserialize("<yellow>可用指令: /sc item <属性> <数值>, /sc recipe [物品id], /sc acc, /sc stats, /sc class, /sc stash, /sc recycle</yellow>"));
+                return true;
+            }
+        });
+
+        // 记录启动耗时
+        long timeTaken = System.currentTimeMillis() - startTime;
+        getComponentLogger().info(MINI_MESSAGE.deserialize("<green>ServerCore 启动完成! 耗时: <white>" + timeTaken + "ms</white></green>"));
+    }
+
+    @Override
+    public void onDisable() {
+        // 保存所有在线玩家数据
+        if (economyManager != null) {
+            economyManager.saveAllSync();
+        }
+
+        if (powerLevelManager != null) {
+            powerLevelManager.stop();
+        }
+
+        if (statusService != null) {
+            statusService.stop();
+        }
+
+        if (frostService != null) {
+            frostService.stop();
+        }
+
+        if (stunController != null) {
+            stunController.stop();
+        }
+
+        if (scoreboardManager != null) {
+            scoreboardManager.stop();
+        }
+
+        if (attributeManager != null) {
+            attributeManager.stop();
+        }
+
+        if (globalStatManager != null) {
+            globalStatManager.stop();
+        }
+
+        if (weaponTemplateManager != null) {
+            weaponTemplateManager.stop();
+        }
+
+        if (mobSpawnManager != null) {
+            mobSpawnManager.stop();
+        }
+
+        if (uniqueMobSpawnManager != null) {
+            uniqueMobSpawnManager.stop();
+        }
+
+        if (miningManager != null) {
+            miningManager.stop();
+        }
+
+        if (customRecipeManager != null) {
+            customRecipeManager.unregisterAll();
+        }
+        
+        // 关闭数据库连接池
+        if (databaseManager != null) {
+            databaseManager.close();
+        }
+        
+        getComponentLogger().info(MINI_MESSAGE.deserialize("<red>ServerCore 插件已卸载，经济数据已安全保存。</red>"));
+    }
+
+    private void setupPlaceholderAPI() {
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            // PAPI 已安装，可以在这里注册自定义变量扩展 (PlaceholderExpansion)
+            getComponentLogger().info(MINI_MESSAGE.deserialize("<aqua>✓ 已检测到 PlaceholderAPI，成功挂载！</aqua>"));
+        } else {
+            // 警告日志，采用红色醒目提示
+            getComponentLogger().warn(MINI_MESSAGE.deserialize("<red>⚠ 未检测到 PlaceholderAPI! 部分依赖 PAPI 的系统可能无法正常工作。</red>"));
+        }
+    }
+    
+    public static ServerCorePlugin getInstance() {
+        return instance;
+    }
+    
+    public static MiniMessage getMiniMessage() {
+        return MINI_MESSAGE;
+    }
+}

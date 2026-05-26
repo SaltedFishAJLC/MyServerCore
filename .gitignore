@@ -1,0 +1,10 @@
+.gradle/
+build/
+bin/
+gradle-8.5/
+gradle.zip
+.vscode/
+
+*.class
+*.jar
+*.log

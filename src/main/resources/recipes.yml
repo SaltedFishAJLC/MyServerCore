@@ -1,0 +1,119 @@
+# YAML-backed starter recipes. Existing plugins/ServerCore/recipes.yml files are
+# not overwritten automatically; merge these entries or delete the deployed file
+# to regenerate defaults.
+recipes:
+  canopy_harvester:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: heart_of_the_forest
+      B:
+        custom_item: living_bark
+      C:
+        custom_item: resin_amber
+      D:
+        material: NETHERITE_AXE
+      E:
+        custom_item: forest_core
+    result:
+      custom_item: canopy_harvester
+
+  verdant_cultivator:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: overgrown_essence
+      B:
+        custom_item: moonlit_pollen
+      C:
+        custom_item: fertile_spore
+      D:
+        material: NETHERITE_HOE
+      E:
+        custom_item: verdant_core
+    result:
+      custom_item: verdant_cultivator
+
+  tidecaller_rod:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: deep_sea_cache
+      B:
+        custom_item: ancient_shell
+      C:
+        custom_item: pearl_cluster
+      D:
+        material: FISHING_ROD
+      E:
+        custom_item: tide_heart
+    result:
+      custom_item: tidecaller_rod
+
+  relic_spade:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: buried_relic
+      B:
+        custom_item: ancient_coin
+      C:
+        custom_item: fossilized_heart
+      D:
+        material: NETHERITE_SHOVEL
+      E:
+        custom_item: buried_crown
+    result:
+      custom_item: relic_spade
+
+  geodebreaker_pick:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: metal_spark
+      B:
+        custom_item: crystal_echo
+      C:
+        custom_item: gem_dust
+      D:
+        material: NETHERITE_PICKAXE
+      E:
+        custom_item: geode_heart
+    result:
+      custom_item: geodebreaker_pick
+
+  gatherers_compass:
+    shape:
+      - "ABC"
+      - "DGD"
+      - "EBA"
+    ingredients:
+      A:
+        custom_item: forest_core
+      B:
+        custom_item: verdant_core
+      C:
+        custom_item: tide_heart
+      D:
+        custom_item: buried_crown
+      E:
+        custom_item: geode_heart
+      G:
+        material: COMPASS
+    result:
+      custom_item: gatherers_compass

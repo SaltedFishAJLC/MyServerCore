@@ -1,0 +1,20 @@
+# Defaults and replacements for vanilla items when they enter inventories,
+# crafting outputs, or pickups.
+#
+# Use stats to keep the vanilla item but add ServerCore stats.
+# Use custom_item to replace the vanilla item with a custom_items.yml template.
+
+items:
+  netherite_pickaxe:
+    enabled: true
+    material: NETHERITE_PICKAXE
+    chance: 100%
+    stats:
+      mining_spread: 1
+
+  # Example full replacement:
+  # diamond_sword:
+  #   enabled: true
+  #   material: DIAMOND_SWORD
+  #   chance: 5%
+  #   custom_item: foundry_flame_sword

@@ -1,0 +1,449 @@
+# YAML-driven custom equipment templates.
+# This file is copied to plugins/ServerCore/custom_items.yml on first start.
+#
+# Example:
+#
+# items:
+#   foundry_flame_sword:
+#     material: NETHERITE_SWORD
+#     name: "铸炉熔火长剑"
+#     rarity: LEGENDARY
+#     weapon_template: ONE_HANDED_SWORD
+#     hand_rule: BOTH_HANDS
+#     custom_model_data: 10001
+#     unbreakable: false
+#     stats:
+#       damage: 120
+#       crit_chance: 0.15
+#       crit_damage: 0.50
+#       brutality: 8
+#     sockets:
+#       - WEAPON
+#       - UNIVERSAL
+#     enchants:
+#       critical: 2
+#     abilities:
+#       molten_slash:
+#         trigger: RIGHT_CLICK
+#         cooldown: 8
+#         lore:
+#           - "右键释放一道熔火斩击。"
+#     story_lore:
+#       - "由铸炉深处的余烬锻成。"
+#
+#   painted_guard:
+#     material: SHIELD
+#     name: "绘纹守盾"
+#     rarity: RARE
+#     weapon_template: SHIELD
+#     hand_rule: OFF_HAND_ONLY
+#     shield:
+#       color: BLUE
+#       patterns:
+#         - WHITE:STRIPE_CENTER
+#         - CYAN:CROSS
+#     stats:
+#       shield_block_threshold: 14
+#       shield_effective_block: 0.7
+#       shield_cooldown_seconds: 2.5
+#
+#   trimmed_coat:
+#     material: LEATHER_CHESTPLATE
+#     name: "镶纹皮甲"
+#     rarity: EPIC
+#     appearance:
+#       leather_color: "#7A2F20"
+#       trim:
+#         material: minecraft:gold
+#         pattern: minecraft:spire
+#     stats:
+#       base_armor: 80
+#
+# Notes:
+# - Percentage stats use decimals: 0.15 = +15.0%.
+# - abilities are parsed and written to item lore, but no trigger logic is registered by default.
+# - Use /sc admin items id <id> to stamp the held item with a custom internal id.
+# - Use /sc admin items save [id] to export the held item into plugins/ServerCore/custom_items.yml.
+# - Use /sc admin items reload after editing.
+
+items:
+  heart_of_the_forest:
+    material: GOLDEN_APPLE
+    name: "森林之心"
+    rarity: RARE
+    story_lore:
+      - "伐木赏金的基础凝结物，可回收换取稳定金币。"
+
+  resin_amber:
+    material: HONEYCOMB
+    name: "树脂琥珀"
+    rarity: RARE
+    story_lore:
+      - "封着旧树年轮的琥珀，是高阶伐木工具的常用胶结剂。"
+
+  living_bark:
+    material: OAK_LOG
+    name: "活性树皮"
+    rarity: EPIC
+    story_lore:
+      - "仍会缓慢呼吸的树皮，可强化采集连锁。"
+
+  whispering_leaf:
+    material: OAK_LEAVES
+    name: "低语叶片"
+    rarity: EPIC
+    story_lore:
+      - "靠近耳边时，会指出下一片值得砍伐的林冠。"
+
+  forest_core:
+    material: EMERALD
+    name: "林冠核心"
+    rarity: LEGENDARY
+    story_lore:
+      - "由大量伐木赏金压缩成的核心材料。"
+
+  elder_sap_seed:
+    material: NETHER_STAR
+    name: "古树髓种"
+    rarity: MYTHIC
+    story_lore:
+      - "极少数伐木大师才能从古树回响中取得。"
+
+  overgrown_essence:
+    material: GLOW_BERRIES
+    name: "溢生精华"
+    rarity: RARE
+    story_lore:
+      - "成熟作物偶尔溢出的生命余量。"
+
+  fertile_spore:
+    material: BROWN_MUSHROOM
+    name: "丰沃孢子"
+    rarity: RARE
+    story_lore:
+      - "能让土壤短暂记住上一轮丰收。"
+
+  moonlit_pollen:
+    material: SPORE_BLOSSOM
+    name: "月照花粉"
+    rarity: EPIC
+    story_lore:
+      - "只在溢绽时显形的银色花粉。"
+
+  harvest_gem:
+    material: GLOWSTONE_DUST
+    name: "丰收晶尘"
+    rarity: EPIC
+    story_lore:
+      - "农业收益装的轻量强化材料。"
+
+  verdant_core:
+    material: HEART_OF_THE_SEA
+    name: "苍翠核心"
+    rarity: LEGENDARY
+    story_lore:
+      - "把整季丰收压成一枚温热核心。"
+
+  genesis_pod:
+    material: CHORUS_FRUIT
+    name: "创生荚果"
+    rarity: MYTHIC
+    story_lore:
+      - "高阶农夫用来启动循环种植仪式的罕见材料。"
+
+  deep_sea_cache:
+    material: PRISMARINE_CRYSTALS
+    name: "深海匣"
+    rarity: RARE
+    story_lore:
+      - "钓鱼宝藏中的基础货币材料。"
+
+  sunken_emerald:
+    material: EMERALD
+    name: "沉水绿宝石"
+    rarity: RARE
+    story_lore:
+      - "长年泡在海底遗迹里的绿宝石，回收价值更高。"
+
+  pearl_cluster:
+    material: ENDER_PEARL
+    name: "珍珠簇"
+    rarity: EPIC
+    story_lore:
+      - "会吸引更深水域回声的钓具材料。"
+
+  drowned_map_fragment:
+    material: MAP
+    name: "溺亡航图残页"
+    rarity: EPIC
+    story_lore:
+      - "海怪与宝藏路线常被标在同一张破图上。"
+
+  ancient_shell:
+    material: NAUTILUS_SHELL
+    name: "远古贝壳"
+    rarity: EPIC
+    story_lore:
+      - "钓鱼高阶装备的核心声腔。"
+
+  reef_glass:
+    material: PRISMARINE_SHARD
+    name: "礁光玻璃"
+    rarity: EPIC
+    story_lore:
+      - "在暖海中被珊瑚打磨过的半透明碎片。"
+
+  stormfish_scale:
+    material: PHANTOM_MEMBRANE
+    name: "雷鱼鳞膜"
+    rarity: LEGENDARY
+    story_lore:
+      - "暴雨中的海怪会留下带电的鳞膜。"
+
+  tide_heart:
+    material: HEART_OF_THE_SEA
+    name: "潮汐之心"
+    rarity: LEGENDARY
+    story_lore:
+      - "海底宝藏的高阶核心，可引导宝藏概率。"
+
+  abyssal_pearl:
+    material: ECHO_SHARD
+    name: "深渊珍珠"
+    rarity: MYTHIC
+    story_lore:
+      - "深海会把声音折叠成珍珠。"
+
+  leviathan_lure_core:
+    material: CONDUIT
+    name: "利维坦诱饵核"
+    rarity: MYTHIC
+    story_lore:
+      - "足以让海怪概率变成一门生意。"
+
+  buried_relic:
+    material: AMETHYST_SHARD
+    name: "埋藏遗物"
+    rarity: RARE
+    story_lore:
+      - "采掘宝藏中的基础遗物。"
+
+  chipped_idol:
+    material: BRICK
+    name: "残缺陶偶"
+    rarity: RARE
+    story_lore:
+      - "土层中常见，但完整图案仍有收藏价值。"
+
+  clay_tablet:
+    material: CLAY_BALL
+    name: "泥板残片"
+    rarity: EPIC
+    story_lore:
+      - "记录着旧时代采掘路线的泥板。"
+
+  ancient_coin:
+    material: GOLD_INGOT
+    name: "古代金币"
+    rarity: EPIC
+    story_lore:
+      - "回收站很喜欢这种不需要解释来历的东西。"
+
+  fossilized_heart:
+    material: BONE
+    name: "化石心核"
+    rarity: EPIC
+    story_lore:
+      - "采掘装备用来储存耐久回声的材料。"
+
+  null_scarab:
+    material: ECHO_SHARD
+    name: "空响圣甲虫"
+    rarity: LEGENDARY
+    story_lore:
+      - "只在灵魂沙与灵魂土附近有明显共鸣。"
+
+  buried_crown:
+    material: HEART_OF_THE_SEA
+    name: "埋藏王冠"
+    rarity: LEGENDARY
+    story_lore:
+      - "采掘大师常把它当作高级锹具的仪式核心。"
+
+  timeworn_compass:
+    material: CLOCK
+    name: "蚀时罗盘"
+    rarity: MYTHIC
+    story_lore:
+      - "指针会指向尚未被挖出的价值。"
+
+  architect_tablet:
+    material: RECOVERY_COMPASS
+    name: "建筑师石板"
+    rarity: MYTHIC
+    story_lore:
+      - "传说能把地下结构的收益重新排布。"
+
+  iron_nodule:
+    material: RAW_IRON
+    name: "铁脉结核"
+    rarity: RARE
+    story_lore:
+      - "挖矿稀有掉落的基础结晶。"
+
+  metal_spark:
+    material: RAW_GOLD
+    name: "金属火花"
+    rarity: EPIC
+    story_lore:
+      - "魔法金属矿偶尔溅出的热亮碎屑。"
+
+  gem_dust:
+    material: AMETHYST_SHARD
+    name: "晶尘"
+    rarity: EPIC
+    story_lore:
+      - "可与纯度、晶石掉落收益产生联动。"
+
+  crystal_echo:
+    material: ECHO_SHARD
+    name: "晶洞回声"
+    rarity: LEGENDARY
+    story_lore:
+      - "魔法水晶破裂后残留的声音。"
+
+  geode_heart:
+    material: DIAMOND
+    name: "晶洞心脏"
+    rarity: MYTHIC
+    story_lore:
+      - "顶级挖矿工具的关键核心。"
+
+  star_forged_core:
+    material: NETHER_STAR
+    name: "星铸采集核心"
+    rarity: MYTHIC
+    story_lore:
+      - "五种采集核心共鸣后的终端材料。"
+
+  canopy_harvester:
+    material: NETHERITE_AXE
+    name: "林冠收割斧"
+    rarity: LEGENDARY
+    req_skill: "foraging:45"
+    hand_rule: MAIN_HAND_ONLY
+    unbreakable: true
+    stats:
+      foraging_fortune: 85
+      collection_sweep: 6
+      bounty: 3.5
+      attr_luck: 8
+    sockets:
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "伐木等级 45 后生效；Bounty 赏金会额外产出本表材料。"
+      - "适合搭配高幸运饰品，提高全局时运与魔法发现。"
+    story_lore:
+      - "由林冠核心与古树材料打造。"
+
+  verdant_cultivator:
+    material: NETHERITE_HOE
+    name: "苍翠培育锄"
+    rarity: LEGENDARY
+    req_skill: "farming:45"
+    hand_rule: MAIN_HAND_ONLY
+    unbreakable: true
+    stats:
+      farming_fortune: 90
+      overbloom: 4.0
+      attr_luck: 6
+    sockets:
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "农业等级 45 后生效；成熟作物触发溢绽时可获得稀有材料与额外经验。"
+    story_lore:
+      - "丰收晶尘让每次收割都更像一次抽奖。"
+
+  tidecaller_rod:
+    material: FISHING_ROD
+    name: "唤潮钓竿"
+    rarity: LEGENDARY
+    req_skill: "fishing:45"
+    hand_rule: MAIN_HAND_ONLY
+    unbreakable: true
+    stats:
+      fishing_speed: 180
+      sea_creature_chance: 4.0
+      treasure_chance: 5.0
+      attr_luck: 8
+    sockets:
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "钓鱼等级 45 后生效；同时拉高海怪与宝藏路线收益。"
+    story_lore:
+      - "潮汐之心会把深海宝藏推到钩尖附近。"
+
+  relic_spade:
+    material: NETHERITE_SHOVEL
+    name: "遗迹寻踪铲"
+    rarity: LEGENDARY
+    req_skill: "excavation:45"
+    hand_rule: MAIN_HAND_ONLY
+    unbreakable: true
+    stats:
+      excavation_fortune: 80
+      collection_fortune: 25
+      attr_luck: 7
+    sockets:
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "采掘等级 45 后生效；提高基础掉落复制，并服务采掘宝藏循环。"
+    story_lore:
+      - "埋藏王冠让每一铲都像在翻旧王库。"
+
+  geodebreaker_pick:
+    material: NETHERITE_PICKAXE
+    name: "晶洞破界镐"
+    rarity: MYTHIC
+    req_skill: "mining:60"
+    hand_rule: MAIN_HAND_ONLY
+    unbreakable: true
+    stats:
+      mining_fortune: 115
+      mining_spread: 3
+      tool_mining_speed: 260
+      breaking_power: 5
+      purity: 18
+      attr_luck: 10
+    sockets:
+      - TOOL
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "挖矿等级 60 后生效；扩散、时运、纯度同时服务矿物收益。"
+    story_lore:
+      - "晶洞心脏在镐尖里持续回声。"
+
+  gatherers_compass:
+    material: COMPASS
+    name: "采集者罗盘"
+    rarity: MYTHIC
+    accessory_type: TALISMAN
+    req_skill: "foraging:50,farming:50,mining:50,fishing:50,excavation:50"
+    stats:
+      collection_fortune: 35
+      bounty: 1.0
+      overbloom: 1.0
+      treasure_chance: 2.0
+      attr_luck: 15
+    sockets:
+      - UNIVERSAL
+    ability_lore:
+      - "五项采集等级 50 后建议装备；幸运会转化为全局时运与魔法发现。"
+      - "适合作为所有采集路线的长期目标。"
+    story_lore:
+      - "指针不指北，只指向下一笔收益。"

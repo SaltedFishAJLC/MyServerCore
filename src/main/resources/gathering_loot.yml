@@ -1,0 +1,425 @@
+# Editable rare gathering loot tables.
+# This file is copied to plugins/ServerCore/gathering_loot.yml on first start.
+#
+# Bounty:
+# - Triggered only by foraging breaks, including sweep breaks.
+# - Chance comes from the held tool stat: bounty 5 = 5%.
+#
+# Overbloom / 溢绽:
+# - Triggered only when a player harvests a mature farming crop.
+# - Chance comes from the held tool stat: overbloom 5 = 5%.
+# - custom_item is resolved from custom_items.yml first.
+# - fallback_material is used when the custom item id is not loaded.
+# - Use /sc admin gatheringloot reload after editing.
+
+bounty:
+  entries:
+    heart_of_the_forest:
+      custom_item: heart_of_the_forest
+      fallback_material: GOLDEN_APPLE
+      amount: 1
+      weight: 120
+      min_foraging_level: 0
+      xp: 4
+    resin_amber:
+      custom_item: resin_amber
+      fallback_material: HONEYCOMB
+      amount: 1
+      weight: 55
+      min_foraging_level: 15
+      xp: 8
+    living_bark:
+      custom_item: living_bark
+      fallback_material: OAK_LOG
+      amount: 1
+      weight: 32
+      min_foraging_level: 30
+      xp: 12
+    whispering_leaf:
+      custom_item: whispering_leaf
+      fallback_material: OAK_LEAVES
+      amount: 1
+      weight: 14
+      min_foraging_level: 45
+      xp: 18
+    forest_core:
+      custom_item: forest_core
+      fallback_material: EMERALD
+      amount: 1
+      weight: 6
+      min_foraging_level: 60
+      xp: 30
+    elder_sap_seed:
+      custom_item: elder_sap_seed
+      fallback_material: NETHER_STAR
+      amount: 1
+      weight: 2
+      min_foraging_level: 80
+      xp: 70
+
+overbloom:
+  entries:
+    overgrown_essence:
+      custom_item: overgrown_essence
+      fallback_material: GLOW_BERRIES
+      amount: 1
+      weight: 120
+      min_farming_level: 0
+      xp: 4
+    fertile_spore:
+      custom_item: fertile_spore
+      fallback_material: BROWN_MUSHROOM
+      amount: 1
+      weight: 60
+      min_farming_level: 15
+      xp: 7
+    moonlit_pollen:
+      custom_item: moonlit_pollen
+      fallback_material: SPORE_BLOSSOM
+      amount: 1
+      weight: 28
+      min_farming_level: 30
+      xp: 12
+    harvest_gem:
+      custom_item: harvest_gem
+      fallback_material: GLOWSTONE_DUST
+      amount: 1
+      weight: 12
+      min_farming_level: 45
+      xp: 20
+    verdant_core:
+      custom_item: verdant_core
+      fallback_material: HEART_OF_THE_SEA
+      amount: 1
+      weight: 6
+      min_farming_level: 60
+      xp: 32
+    genesis_pod:
+      custom_item: genesis_pod
+      fallback_material: CHORUS_FRUIT
+      amount: 1
+      weight: 2
+      min_farming_level: 80
+      xp: 75
+
+mining:
+  entries:
+    iron_nodule:
+      custom_item: iron_nodule
+      fallback_material: RAW_IRON
+      amount: 1
+      weight: 100
+      min_mining_level: 0
+      ore_types: [NORMAL, MAGIC_METAL]
+      xp: 6
+    metal_spark:
+      custom_item: metal_spark
+      fallback_material: RAW_GOLD
+      amount: 1
+      weight: 42
+      min_mining_level: 20
+      ore_types: [MAGIC_METAL]
+      xp: 16
+    gem_dust:
+      custom_item: gem_dust
+      fallback_material: AMETHYST_SHARD
+      amount: 1
+      weight: 28
+      min_mining_level: 35
+      ore_types: [GEMSTONE, MAGIC_CRYSTAL]
+      xp: 24
+    crystal_echo:
+      custom_item: crystal_echo
+      fallback_material: ECHO_SHARD
+      amount: 1
+      weight: 9
+      min_mining_level: 55
+      ore_types: [MAGIC_CRYSTAL]
+      xp: 45
+    geode_heart:
+      custom_item: geode_heart
+      fallback_material: DIAMOND
+      amount: 1
+      weight: 3
+      min_mining_level: 75
+      ore_types: [GEMSTONE, MAGIC_CRYSTAL]
+      sources: [diamond, emerald, amethyst]
+      xp: 90
+
+fishing:
+  sea_creatures:
+    entries:
+      deep_drowned:
+        entity_type: DROWNED
+        mythic_mob: ""
+        name: "Deep Drowned"
+        biome_tags: "OCEAN,RIVER,SWAMP"
+        min_fishing_level: 1
+        weight: 120
+        base_health: 24
+        mod: 1.0
+        xp: 8
+      reef_guardian:
+        entity_type: GUARDIAN
+        mythic_mob: ""
+        name: "Reef Guardian"
+        biome_tags: "OCEAN,WARM"
+        min_fishing_level: 10
+        weight: 80
+        base_health: 42
+        mod: 1.4
+        xp: 18
+      abyss_guardian:
+        entity_type: GUARDIAN
+        mythic_mob: ""
+        name: "Abyss Guardian"
+        biome_tags: "DEEP_OCEAN,COLD,FROZEN"
+        min_fishing_level: 25
+        weight: 42
+        base_health: 80
+        mod: 2.0
+        xp: 36
+      storm_eel:
+        entity_type: DROWNED
+        mythic_mob: ""
+        name: "Storm Eel"
+        biome_tags: "OCEAN,DEEP_OCEAN"
+        min_fishing_level: 35
+        weight: 20
+        base_health: 110
+        mod: 2.6
+        xp: 52
+      elder_tidecaller:
+        entity_type: ELDER_GUARDIAN
+        mythic_mob: ""
+        name: "Elder Tidecaller"
+        biome_tags: "DEEP_OCEAN"
+        min_fishing_level: 45
+        weight: 10
+        base_health: 180
+        mod: 4.0
+        xp: 80
+      leviathan_echo:
+        entity_type: ELDER_GUARDIAN
+        mythic_mob: ""
+        name: "Leviathan Echo"
+        biome_tags: "DEEP_OCEAN"
+        min_fishing_level: 70
+        weight: 3
+        base_health: 360
+        mod: 6.0
+        xp: 160
+  treasures:
+    rare:
+      weight: 78
+      min_fishing_level: 0
+      entries:
+        deep_sea_cache:
+          custom_item: deep_sea_cache
+          fallback_material: PRISMARINE_CRYSTALS
+          amount: 1
+          weight: 90
+          min_fishing_level: 1
+          xp: 6
+        sunken_emerald:
+          custom_item: sunken_emerald
+          fallback_material: EMERALD
+          amount: 1
+          weight: 50
+          min_fishing_level: 5
+          xp: 8
+        pearl_cluster:
+          custom_item: pearl_cluster
+          fallback_material: ENDER_PEARL
+          amount: 1
+          weight: 26
+          min_fishing_level: 15
+          xp: 12
+        drowned_map_fragment:
+          custom_item: drowned_map_fragment
+          fallback_material: MAP
+          amount: 1
+          weight: 10
+          min_fishing_level: 25
+          xp: 18
+    epic:
+      weight: 19
+      min_fishing_level: 12
+      entries:
+        ancient_shell:
+          custom_item: ancient_shell
+          fallback_material: NAUTILUS_SHELL
+          amount: 1
+          weight: 40
+          min_fishing_level: 12
+          xp: 18
+        reef_glass:
+          custom_item: reef_glass
+          fallback_material: PRISMARINE_SHARD
+          amount: 1
+          weight: 22
+          min_fishing_level: 25
+          xp: 28
+        stormfish_scale:
+          custom_item: stormfish_scale
+          fallback_material: PHANTOM_MEMBRANE
+          amount: 1
+          weight: 8
+          min_fishing_level: 40
+          xp: 45
+    legendary:
+      weight: 3
+      min_fishing_level: 35
+      entries:
+        tide_heart:
+          custom_item: tide_heart
+          fallback_material: HEART_OF_THE_SEA
+          amount: 1
+          weight: 9
+          min_fishing_level: 35
+          xp: 60
+        abyssal_pearl:
+          custom_item: abyssal_pearl
+          fallback_material: ECHO_SHARD
+          amount: 1
+          weight: 4
+          min_fishing_level: 55
+          xp: 110
+        leviathan_lure_core:
+          custom_item: leviathan_lure_core
+          fallback_material: CONDUIT
+          amount: 1
+          weight: 1
+          min_fishing_level: 75
+          xp: 220
+
+excavation:
+  creatures:
+    entries:
+      burrowling:
+        entity_type: RABBIT
+        mythic_mob: ""
+        name: "Tracked Burrowling"
+        min_excavation_level: 0
+        weight: 120
+        base_health: 18
+        mod: 1.0
+        xp: 8
+      sand_wraith:
+        entity_type: HUSK
+        mythic_mob: ""
+        name: "Sand Wraith"
+        sources: [sand, red_sand]
+        min_excavation_level: 20
+        weight: 42
+        base_health: 42
+        mod: 1.6
+        xp: 24
+      mud_golem:
+        entity_type: SLIME
+        mythic_mob: ""
+        name: "Mud Golem"
+        sources: [mud, clay, dirt]
+        min_excavation_level: 30
+        weight: 26
+        base_health: 64
+        mod: 2.0
+        xp: 36
+      relic_guardian:
+        entity_type: SKELETON
+        mythic_mob: ""
+        name: "Relic Guardian"
+        min_excavation_level: 45
+        weight: 12
+        base_health: 90
+        mod: 2.8
+        xp: 70
+      fossil_colossus:
+        entity_type: IRON_GOLEM
+        mythic_mob: ""
+        name: "Fossil Colossus"
+        min_excavation_level: 70
+        weight: 3
+        base_health: 260
+        mod: 4.5
+        xp: 150
+  treasures:
+    rare:
+      weight: 78
+      min_excavation_level: 0
+      entries:
+        buried_relic:
+          custom_item: buried_relic
+          fallback_material: AMETHYST_SHARD
+          amount: 1
+          weight: 110
+          min_excavation_level: 0
+          xp: 10
+        chipped_idol:
+          custom_item: chipped_idol
+          fallback_material: BRICK
+          amount: 1
+          weight: 48
+          min_excavation_level: 10
+          sources: [dirt, mud, clay]
+          xp: 14
+        clay_tablet:
+          custom_item: clay_tablet
+          fallback_material: CLAY_BALL
+          amount: 1
+          weight: 22
+          min_excavation_level: 18
+          sources: [clay, mud]
+          xp: 20
+    epic:
+      weight: 19
+      min_excavation_level: 20
+      entries:
+        ancient_coin:
+          custom_item: ancient_coin
+          fallback_material: GOLD_INGOT
+          amount: 1
+          weight: 70
+          min_excavation_level: 20
+          xp: 25
+        fossilized_heart:
+          custom_item: fossilized_heart
+          fallback_material: BONE
+          amount: 1
+          weight: 26
+          min_excavation_level: 35
+          sources: [gravel, dirt, clay]
+          xp: 40
+        null_scarab:
+          custom_item: null_scarab
+          fallback_material: ECHO_SHARD
+          amount: 1
+          weight: 8
+          min_excavation_level: 50
+          sources: [soul]
+          xp: 70
+    legendary:
+      weight: 3
+      min_excavation_level: 50
+      entries:
+        buried_crown:
+          custom_item: buried_crown
+          fallback_material: HEART_OF_THE_SEA
+          amount: 1
+          weight: 12
+          min_excavation_level: 50
+          xp: 80
+        timeworn_compass:
+          custom_item: timeworn_compass
+          fallback_material: CLOCK
+          amount: 1
+          weight: 5
+          min_excavation_level: 65
+          xp: 130
+        architect_tablet:
+          custom_item: architect_tablet
+          fallback_material: RECOVERY_COMPASS
+          amount: 1
+          weight: 2
+          min_excavation_level: 80
+          xp: 240

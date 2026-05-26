@@ -1,0 +1,66 @@
+# Recycling prices. This file is copied to plugins/ServerCore/recycle.yml on first start.
+#
+# item_ids win over material prices; material prices win over rarity prices.
+# Price is per item in the stack.
+prices:
+  rarity:
+    COMMON: 1
+    UNCOMMON: 5
+    RARE: 10
+    EPIC: 50
+    LEGENDARY: 100
+    MYTHIC: 1000
+
+  item_ids:
+    heart_of_the_forest: 35
+    resin_amber: 80
+    living_bark: 150
+    whispering_leaf: 220
+    forest_core: 520
+    elder_sap_seed: 1400
+
+    overgrown_essence: 35
+    fertile_spore: 75
+    moonlit_pollen: 150
+    harvest_gem: 240
+    verdant_core: 520
+    genesis_pod: 1400
+
+    iron_nodule: 30
+    metal_spark: 150
+    gem_dust: 210
+    crystal_echo: 620
+    geode_heart: 1600
+    star_forged_core: 2600
+
+    deep_sea_cache: 45
+    sunken_emerald: 90
+    pearl_cluster: 170
+    drowned_map_fragment: 260
+    ancient_shell: 300
+    reef_glass: 360
+    stormfish_scale: 700
+    tide_heart: 760
+    abyssal_pearl: 1500
+    leviathan_lure_core: 2600
+
+    buried_relic: 45
+    chipped_idol: 90
+    clay_tablet: 180
+    ancient_coin: 260
+    fossilized_heart: 340
+    null_scarab: 680
+    buried_crown: 760
+    timeworn_compass: 1500
+    architect_tablet: 2600
+
+    canopy_harvester: 2800
+    verdant_cultivator: 2800
+    tidecaller_rod: 3000
+    relic_spade: 2800
+    geodebreaker_pick: 4200
+    gatherers_compass: 5200
+
+  materials:
+    # ENDER_PEARL: 2
+    # SUSPICIOUS_STEW: 3

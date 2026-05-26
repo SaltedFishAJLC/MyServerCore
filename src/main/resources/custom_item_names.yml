@@ -1,0 +1,10 @@
+# Runtime overrides copied to plugins/ServerCore/custom_item_names.yml on first start.
+# Item id overrides win over material names, so custom/mythic items can keep hand-written Chinese names.
+item_ids:
+  example_custom_sword: "示例长剑"
+  mythic_example_blade: "示例神话刀刃"
+
+# Material names override the bundled Minecraft 1.21 zh_cn table.
+material_names:
+  ENDER_PEARL: "末影珍珠"
+  SUSPICIOUS_STEW: "谜之炖菜"

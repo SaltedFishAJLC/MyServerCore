@@ -1,0 +1,49 @@
+# Coordinate-triggered unique mob spawn points for dungeon or structure set pieces.
+#
+# Put one entry under spawns for each generated structure instance that should
+# have its own one-off elite mob.
+#
+# mob: ServerCore rule ID from custom_mobs.yml. If that rule has match_mythic_id,
+# ServerCore asks MythicMobs to spawn that internal mob, then applies ServerCore
+# level/health/drop rules.
+#
+# spawn_once: true means ServerCore creates at most one entity for this point.
+# death_locks: true means a killed entity permanently locks this point.
+# State is stored in plugins/ServerCore/unique_mob_spawns_state.yml.
+
+spawns:
+  wda_dungeon_elite_001:
+    enabled: false
+    mob: WDA_Dungeon_Guard
+    world: world
+    x: 0.5
+    y: 64.0
+    z: 0.5
+    yaw: 0.0
+    pitch: 0.0
+    trigger_radius: 32.0
+    spawn_once: true
+    death_locks: true
+    persistent: true
+    remove_when_far_away: false
+
+# Marker mode is the recommended workflow for structures that can appear many
+# times in one world. Put an invisible ArmorStand or marker entity into the
+# structure template with this scoreboard tag. Each generated copy gets its own
+# marker position, so ServerCore creates one independent boss per structure.
+markers:
+  wda_dungeon_elite:
+    enabled: true
+    mob: WDA_Dungeon_Guard
+    match_scoreboard_tag: "servercore_unique_spawn:wda_dungeon_elite"
+    # Optional narrowers:
+    # match_entity_type: ARMOR_STAND
+    # match_name: "servercore_unique_spawn:wda_dungeon_elite"
+    x_offset: 0.0
+    y_offset: 0.0
+    z_offset: 0.0
+    spawn_once: true
+    death_locks: true
+    persistent: true
+    remove_when_far_away: false
+    remove_marker: true
