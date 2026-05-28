@@ -184,6 +184,10 @@ public class CustomMobRegistry {
     }
 
     public List<ItemStack> rollDrops(String mobId) {
+        return rollDrops(mobId, null);
+    }
+
+    public List<ItemStack> rollDrops(String mobId, org.bukkit.entity.Player killer) {
         Rule rule = getRule(mobId);
         if (rule == null || rule.drops().isEmpty()) {
             return List.of();
@@ -192,7 +196,7 @@ public class CustomMobRegistry {
         List<ItemStack> result = new ArrayList<>();
         ThreadLocalRandom random = ThreadLocalRandom.current();
         for (DropRule drop : rule.drops()) {
-            ItemStack item = drop.roll(random);
+            ItemStack item = drop.roll(random, killer);
             if (item != null && !item.getType().isAir()) {
                 result.add(item);
             }
@@ -833,8 +837,15 @@ public class CustomMobRegistry {
             int minAmount,
             int maxAmount
     ) {
-        ItemStack roll(ThreadLocalRandom random) {
-            if (chance <= 0.0 || random.nextDouble() > chance) {
+        ItemStack roll(ThreadLocalRandom random, org.bukkit.entity.Player killer) {
+            boolean success;
+            GlobalStatManager globalStatManager = GlobalStatManager.getInstance();
+            if (killer != null && globalStatManager != null) {
+                success = globalStatManager.rollRareDrop(killer, chance, random);
+            } else {
+                success = chance > 0.0 && random.nextDouble() <= chance;
+            }
+            if (!success) {
                 return null;
             }
 

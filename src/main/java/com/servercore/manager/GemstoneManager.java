@@ -161,6 +161,7 @@ public class GemstoneManager {
             case "crit_chance" -> pdc.KEY_CRIT_CHANCE;
             case "crit_damage" -> pdc.KEY_CRIT_DAMAGE;
             case "brutality" -> pdc.KEY_BRUTALITY;
+            case "lifesteal" -> pdc.KEY_LIFESTEAL;
             case "armor_pen" -> pdc.KEY_ARMOR_PEN;
             case "base_armor" -> pdc.KEY_BASE_ARMOR;
             case "attack_speed_bonus" -> pdc.KEY_ATTACK_SPEED_BONUS;

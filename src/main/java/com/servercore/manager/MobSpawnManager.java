@@ -310,7 +310,7 @@ public class MobSpawnManager implements Listener {
             event.getDrops().clear();
         }
 
-        List<ItemStack> drops = customMobRegistry.rollDrops(registryMobId);
+        List<ItemStack> drops = customMobRegistry.rollDrops(registryMobId, entity.getKiller());
         if (!drops.isEmpty()) {
             event.getDrops().addAll(drops);
         }

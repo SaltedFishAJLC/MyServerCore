@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Converts the five core attributes into non-combat global stats.
@@ -57,7 +58,9 @@ public class GlobalStatManager {
      * 1 Luck -> 0.5 Magic Find.
      */
     public double getMagicFind(Player player) {
-        return Math.max(0.0, getLuck(player) * MAGIC_FIND_PER_LUCK);
+        ClassManager classManager = ClassManager.getInstance();
+        double classBonus = classManager == null ? 0.0 : classManager.getMagicFindBonus(player);
+        return Math.max(0.0, getLuck(player) * MAGIC_FIND_PER_LUCK + classBonus);
     }
 
     /**
@@ -68,6 +71,23 @@ public class GlobalStatManager {
             return baseChance;
         }
         return baseChance * (100.0 + getMagicFind(player)) / 100.0;
+    }
+
+    public boolean rollRareDrop(Player player, double baseChance, ThreadLocalRandom random) {
+        if (player == null) {
+            return baseChance > 0.0 && random.nextDouble() < Math.min(1.0, baseChance);
+        }
+        double chance = Math.max(0.0, Math.min(1.0, applyMagicFind(player, baseChance)));
+        if (chance <= 0.0) {
+            return false;
+        }
+
+        boolean firstRoll = random.nextDouble() < chance;
+        ClassManager classManager = ClassManager.getInstance();
+        if (classManager == null || classManager.getPlayerClass(player) != ClassManager.PlayerClass.GAMBLER || baseChance >= 0.05) {
+            return firstRoll;
+        }
+        return firstRoll || random.nextDouble() < chance;
     }
 
     public void tickAgilityBreakSpeed() {

@@ -18,6 +18,7 @@ public class PDCManager {
     public final NamespacedKey KEY_CRIT_CHANCE;
     public final NamespacedKey KEY_CRIT_DAMAGE;
     public final NamespacedKey KEY_BRUTALITY;
+    public final NamespacedKey KEY_LIFESTEAL;
     public final NamespacedKey KEY_ARMOR_PEN;
     public final NamespacedKey KEY_BASE_ARMOR;
     public final NamespacedKey KEY_ATTACK_SPEED_BONUS;
@@ -104,6 +105,7 @@ public class PDCManager {
         this.KEY_CRIT_CHANCE = key("crit_chance");
         this.KEY_CRIT_DAMAGE = key("crit_damage");
         this.KEY_BRUTALITY = key("brutality");
+        this.KEY_LIFESTEAL = key("lifesteal");
         this.KEY_ARMOR_PEN = key("armor_pen");
         this.KEY_BASE_ARMOR = key("base_armor");
         this.KEY_ATTACK_SPEED_BONUS = key("attack_speed_bonus");

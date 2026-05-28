@@ -41,7 +41,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * 五维属性 (5-Dimension Attributes) 计算引擎。
- * 聚合防具、饰品和护符包上的坚韧、敏捷、智慧、意志、幸运，并派生到战斗系统。
+ * 聚合防具、饰品和护符包上的力量、敏捷、智慧、意志、幸运，并派生到战斗系统。
+ * 底层仍兼容旧的 attr_toughness 存储键；AuraSkills 的坚韧继续接入本插件敏捷。
  */
 public class AttributeManager implements Listener {
 
@@ -85,10 +86,14 @@ public class AttributeManager implements Listener {
     }
 
     /**
-     * 获取玩家身上的 坚韧 (Toughness) 总值
+     * 获取玩家身上的 力量 (Strength) 总值。
      */
     public int getToughness(Player player) {
         return getSnapshot(player).toughness();
+    }
+
+    public int getStrength(Player player) {
+        return getToughness(player);
     }
 
     /**
@@ -241,6 +246,10 @@ public class AttributeManager implements Listener {
         player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation().add(0.0, 1.0, 0.0), 16, 0.35, 0.45, 0.35, 0.02);
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.45f, 1.65f);
         player.sendActionBar(Component.text("闪避!"));
+        ClassPassiveManager classPassiveManager = ClassPassiveManager.getInstance();
+        if (classPassiveManager != null) {
+            classPassiveManager.onPlayerDodged(player);
+        }
         return true;
     }
 
@@ -486,7 +495,7 @@ public class AttributeManager implements Listener {
     }
 
     public enum CoreAttribute {
-        TOUGHNESS("tou", "坚韧", "Tou"),
+        TOUGHNESS("str", "力量", "Str"),
         AGILITY("agi", "敏捷", "Agi"),
         INTELLIGENCE("int", "智慧", "Int"),
         WILLPOWER("wil", "意志", "Wil"),
@@ -535,7 +544,7 @@ public class AttributeManager implements Listener {
 
             String normalized = input.toLowerCase(Locale.ROOT);
             return switch (normalized) {
-                case "tou", "toughness", "坚韧" -> TOUGHNESS;
+                case "str", "strength", "力量", "tou", "toughness", "坚韧" -> TOUGHNESS;
                 case "agi", "agility", "敏捷" -> AGILITY;
                 case "int", "intelligence", "智慧" -> INTELLIGENCE;
                 case "wil", "will", "willpower", "意志" -> WILLPOWER;

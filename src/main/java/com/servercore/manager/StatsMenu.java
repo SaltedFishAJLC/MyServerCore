@@ -197,6 +197,10 @@ public class StatsMenu {
         ItemMeta meta = item.getItemMeta();
         meta.displayName(ServerCorePlugin.getMiniMessage().deserialize("<red><bold>⚔ 近战流派面板</bold></red>")
                 .decoration(TextDecoration.ITALIC, false));
+        ClassManager classManager = ClassManager.getInstance();
+        double lifesteal = classManager == null
+                ? stats.lifesteal()
+                : (stats.lifesteal() + classManager.getBaseLifesteal(player)) * classManager.getLifestealMultiplier(player);
 
         List<Component> lore = new ArrayList<>();
         lore.add(Component.empty());
@@ -211,6 +215,9 @@ public class StatsMenu {
                 .decoration(TextDecoration.ITALIC, false));
         lore.add(ServerCorePlugin.getMiniMessage()
                 .deserialize("<gray>残暴等级: <dark_red>" + stats.brutality() + "</dark_red></gray>")
+                .decoration(TextDecoration.ITALIC, false));
+        lore.add(ServerCorePlugin.getMiniMessage()
+                .deserialize("<gray>吸血: <dark_red>" + String.format(java.util.Locale.US, "%.1f", lifesteal * 100.0) + "%</dark_red></gray>")
                 .decoration(TextDecoration.ITALIC, false));
         lore.add(Component.empty());
         lore.add(ServerCorePlugin.getMiniMessage().deserialize("<dark_gray><i>满蓄力平A必定打出残暴追击！</i></dark_gray>")

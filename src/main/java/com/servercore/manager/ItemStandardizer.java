@@ -261,6 +261,7 @@ public class ItemStandardizer implements Listener {
                 || container.has(pdc.KEY_CRIT_CHANCE, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_CRIT_DAMAGE, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_BRUTALITY, PersistentDataType.DOUBLE)
+                || container.has(pdc.KEY_LIFESTEAL, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_ARMOR_PEN, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_BASE_ARMOR, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_ATTACK_SPEED_BONUS, PersistentDataType.DOUBLE)

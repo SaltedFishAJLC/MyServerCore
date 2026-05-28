@@ -371,13 +371,14 @@ public class ItemFormatManager implements Listener {
         addStat(lore, "暴击几率", pdc.getStat(item, pdc.KEY_CRIT_CHANCE), StatFormat.PERCENT, NamedTextColor.YELLOW);
         addStat(lore, "暴击伤害", pdc.getStat(item, pdc.KEY_CRIT_DAMAGE), StatFormat.PERCENT, NamedTextColor.YELLOW);
         addStat(lore, "残暴", pdc.getStat(item, pdc.KEY_BRUTALITY), StatFormat.NUMBER, NamedTextColor.DARK_RED);
+        addStat(lore, "吸血", pdc.getStat(item, pdc.KEY_LIFESTEAL), StatFormat.PERCENT, NamedTextColor.DARK_RED);
         addStat(lore, "破甲", pdc.getStat(item, pdc.KEY_ARMOR_PEN), StatFormat.NUMBER, NamedTextColor.GREEN);
         addStat(lore, "护甲", pdc.getStat(item, pdc.KEY_BASE_ARMOR), StatFormat.NUMBER, NamedTextColor.GREEN);
         addStat(lore, "攻速加成", pdc.getStat(item, pdc.KEY_ATTACK_SPEED_BONUS), StatFormat.PERCENT_POINTS, NamedTextColor.AQUA);
         addStat(lore, "格挡阈值", pdc.getStat(item, pdc.KEY_SHIELD_BLOCK_THRESHOLD), StatFormat.NUMBER, NamedTextColor.BLUE);
         addStat(lore, "有效格挡", pdc.getStat(item, pdc.KEY_SHIELD_EFFECTIVE_BLOCK), StatFormat.PERCENT, NamedTextColor.BLUE);
         addStat(lore, "盾牌冷却", pdc.getStat(item, pdc.KEY_SHIELD_COOLDOWN_SECONDS), StatFormat.SECONDS, NamedTextColor.BLUE);
-        addStat(lore, "坚韧", pdc.getStat(item, pdc.KEY_ATTR_TOUGHNESS), StatFormat.NUMBER, NamedTextColor.RED);
+        addStat(lore, "力量", pdc.getStat(item, pdc.KEY_ATTR_TOUGHNESS), StatFormat.NUMBER, NamedTextColor.RED);
         addStat(lore, "敏捷", pdc.getStat(item, pdc.KEY_ATTR_AGILITY), StatFormat.NUMBER, NamedTextColor.GREEN);
         addStat(lore, "智慧", pdc.getStat(item, pdc.KEY_ATTR_INTELLIGENCE), StatFormat.NUMBER, NamedTextColor.AQUA);
         addStat(lore, "意志", pdc.getStat(item, pdc.KEY_ATTR_WILLPOWER), StatFormat.NUMBER, NamedTextColor.YELLOW);
@@ -671,6 +672,7 @@ public class ItemFormatManager implements Listener {
                 || container.has(pdc.KEY_CRIT_CHANCE, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_CRIT_DAMAGE, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_BRUTALITY, PersistentDataType.DOUBLE)
+                || container.has(pdc.KEY_LIFESTEAL, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_ARMOR_PEN, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_BASE_ARMOR, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_ATTACK_SPEED_BONUS, PersistentDataType.DOUBLE)

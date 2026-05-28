@@ -174,7 +174,7 @@ public class AuraSkillsMenuHijacker implements Listener {
 
     private void addDimensionIcons(StaticPane pane, Player player) {
         AttributeManager.AttributeSnapshot bonuses = bridge.getAttributeBonuses(player);
-        pane.addItem(new GuiItem(createDimensionIcon(Material.RED_DYE, "坚韧", "red", bonuses.toughness(), "Aura Health"), plugin), 2, 0);
+        pane.addItem(new GuiItem(createDimensionIcon(Material.RED_DYE, "力量", "red", bonuses.toughness(), "Aura Health"), plugin), 2, 0);
         pane.addItem(new GuiItem(createDimensionIcon(Material.LIME_DYE, "敏捷", "green", bonuses.agility(), "Aura Toughness"), plugin), 3, 0);
         pane.addItem(new GuiItem(createDimensionIcon(Material.LIGHT_BLUE_DYE, "智慧", "aqua", bonuses.intelligence(), "Aura Wisdom"), plugin), 4, 0);
         pane.addItem(new GuiItem(createDimensionIcon(Material.YELLOW_DYE, "意志", "yellow", bonuses.willpower(), "Aura Regeneration"), plugin), 5, 0);

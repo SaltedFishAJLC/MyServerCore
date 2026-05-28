@@ -72,9 +72,14 @@ public class CombatManager implements Listener {
 
         // 获取玩家的动态属性快照
         CombatStats stats = getCombatStats(player);
+        ClassManager classManager = ClassManager.getInstance();
+        ClassPassiveManager passiveManager = ClassPassiveManager.getInstance();
         
         double finalDamage = 0.0;
         boolean isMagic = event.getCause() == DamageCause.MAGIC;
+        boolean spellbladeMelee = classManager != null && classManager.usesSpellbladeMeleeDamage(player, isRanged, isMagic);
+        boolean usesMagicDamage = isMagic || spellbladeMelee;
+        double lifestealEffectiveDamage = 0.0;
         
         // 1. 获取纯净的基础面板伤害
         double baseDamage;
@@ -111,8 +116,8 @@ public class CombatManager implements Listener {
         }
 
         // 2. 流派分支计算
-        if (isMagic) {
-            // 【魔法流派】: 面板 * 乘区(含法强)
+        if (usesMagicDamage) {
+            // 【魔法流派】: 面板 * 乘区(含法强)。魔剑士近战也走该乘区。
             // 法强 = (最大法力 - 100) / 400
             double maxMana = 100.0;
             AttributeManager attributeManager = AttributeManager.getInstance();
@@ -122,17 +127,29 @@ public class CombatManager implements Listener {
                 maxMana = auraSkills.getUser(player.getUniqueId()).getMaxMana();
             }
             double magicPower = Math.max(0.0, (maxMana - 100.0) / 400.0);
-            ClassManager classManager = ClassManager.getInstance();
             double classMagicMultiplier = classManager == null ? 0.0 : classManager.getMagicMultiplierBonus(player);
             double skillMultiplier = getSkillMultiplier(player, "sorcery");
+            double magicMultiplier = stats.baseMultiplier() + magicPower + classMagicMultiplier;
             
-            finalDamage = baseDamage * (stats.baseMultiplier() + magicPower + classMagicMultiplier) * skillMultiplier;
+            finalDamage = baseDamage * magicMultiplier * skillMultiplier;
+
+            if (spellbladeMelee) {
+                double brutalityMultiplier = rollBrutalityMultiplier(stats.brutality());
+                finalDamage *= brutalityMultiplier;
+                lifestealEffectiveDamage = baseDamage * magicMultiplier * skillMultiplier * brutalityMultiplier;
+            }
             
         } else {
             // 【物理流派（近战/远程）】: 面板 * 暴击 * 乘区 * (破甲/残暴)
-            boolean isCrit = Math.random() < stats.critChance();
+            boolean isCrit = passiveManager == null
+                    ? Math.random() < stats.critChance()
+                    : passiveManager.rollCritical(player, stats.critChance());
             double critMult = isCrit ? stats.critDamage() : 1.0;
             double skillMultiplier = getSkillMultiplier(player, isRanged ? "archery" : "fighting");
+            double reaperMultiplier = event.getEntity() instanceof LivingEntity target && passiveManager != null
+                    ? passiveManager.getReaperDamageMultiplier(player, target)
+                    : 1.0;
+            double multiplierDamage = baseDamage * stats.baseMultiplier() * skillMultiplier * reaperMultiplier;
             
             if (isCrit && event.getEntity() instanceof LivingEntity target) {
                 target.getWorld().spawnParticle(Particle.CRIT, target.getLocation().add(0, 1, 0), 15, 0.5, 0.5, 0.5, 0.1);
@@ -141,31 +158,20 @@ public class CombatManager implements Listener {
             if (isRanged) {
                 // 远程伤害
                 double armorPenMult = 1.0 + (stats.armorPen() / 100.0); // 暂定基础倍率，未来可根据怪物护甲微调
-                finalDamage = baseDamage * critMult * stats.baseMultiplier() * skillMultiplier * armorPenMult;
+                double classRangedMultiplier = classManager == null ? 1.0 : classManager.getPhysicalRangedDamageMultiplier(player);
+                finalDamage = multiplierDamage * critMult * armorPenMult * classRangedMultiplier;
             } else {
                 // 近战伤害
-                finalDamage = baseDamage * critMult * stats.baseMultiplier() * skillMultiplier;
-                
-                // 残暴计算
-                double brutality = stats.brutality();
-                int p = (int) (brutality / 100);
-                double q = brutality % 100;
-                
-                int extraHits = p;
-                if (Math.random() < (q / 100.0)) {
-                    extraHits++;
-                }
-                
-                if (extraHits > 0) {
-                    // 用户需求：不模拟真实连击导致无敌帧，直接将伤害合并计算
-                    // TODO: 后续接入全息伤害显示插件时，可在此处额外生成 extraHits 条浮空文本以满足视觉需求
-                    finalDamage *= (1 + extraHits);
-                }
+                double brutalityMultiplier = rollBrutalityMultiplier(stats.brutality());
+                finalDamage = multiplierDamage * critMult * brutalityMultiplier;
+                lifestealEffectiveDamage = multiplierDamage * brutalityMultiplier;
             }
         }
 
         if (event.getEntity() instanceof LivingEntity target) {
-            finalDamage *= EnchantTargetMatcher.resolveHighestMultiplier(player.getInventory().getItemInMainHand(), target);
+            double targetMultiplier = EnchantTargetMatcher.resolveHighestMultiplier(player.getInventory().getItemInMainHand(), target);
+            finalDamage *= targetMultiplier;
+            lifestealEffectiveDamage *= targetMultiplier;
 
             if (target instanceof Player targetPlayer) {
                 ShieldManager shieldManager = ShieldManager.getInstance();
@@ -182,7 +188,7 @@ public class CombatManager implements Listener {
                     finalDamage *= Math.max(0.0, 1.0 - Math.min(0.50, reduction));
                 }
 
-                if (isMagic) {
+                if (usesMagicDamage) {
                     double magicResist = target.getPersistentDataContainer()
                             .getOrDefault(pdc.KEY_MOB_MAGIC_RESIST, PersistentDataType.DOUBLE, 0.0);
                     if (magicResist > 0.0) {
@@ -194,6 +200,19 @@ public class CombatManager implements Listener {
 
         // 覆盖最终伤害
         event.setDamage(finalDamage);
+
+        if (event.getEntity() instanceof LivingEntity target && finalDamage > 0.0) {
+            if (passiveManager != null) {
+                passiveManager.onPlayerDealtDamage(player, target);
+            }
+            double lifestealRate = stats.lifesteal();
+            if (classManager != null) {
+                lifestealRate = (lifestealRate + classManager.getBaseLifesteal(player)) * classManager.getLifestealMultiplier(player);
+            }
+            if (passiveManager != null) {
+                passiveManager.applyLifesteal(player, lifestealEffectiveDamage, lifestealRate, isRanged, usesMagicDamage, spellbladeMelee);
+            }
+        }
     }
 
     /**
@@ -201,6 +220,18 @@ public class CombatManager implements Listener {
      */
     private CombatStats getCombatStats(Player player) {
         return CombatStats.getFullStats(player);
+    }
+
+    private double rollBrutalityMultiplier(double brutality) {
+        double safeBrutality = Math.max(0.0, brutality);
+        int guaranteedExtraHits = (int) (safeBrutality / 100.0);
+        double chance = safeBrutality % 100.0;
+
+        int extraHits = guaranteedExtraHits;
+        if (Math.random() < (chance / 100.0)) {
+            extraHits++;
+        }
+        return 1.0 + extraHits;
     }
 
     private double getSkillMultiplier(Player player, String skillType) {

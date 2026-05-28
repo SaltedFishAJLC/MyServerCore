@@ -45,6 +45,7 @@ import com.servercore.manager.AttributeManager;
 import com.servercore.manager.AuraSkillsBridge;
 import com.servercore.manager.AuraSkillsMenuHijacker;
 import com.servercore.manager.CollectionSkillManager;
+import com.servercore.manager.ClassPassiveManager;
 import com.servercore.manager.ClassManager;
 import com.servercore.manager.FishingManager;
 import com.servercore.manager.GlobalStatManager;
@@ -95,6 +96,7 @@ public final class ServerCorePlugin extends JavaPlugin {
     private VanillaItemOverrideManager vanillaItemOverrideManager;
     private UniqueMobSpawnManager uniqueMobSpawnManager;
     private ShieldManager shieldManager;
+    private ClassPassiveManager classPassiveManager;
     private StatusService statusService;
     private FrostService frostService;
     private StunController stunController;
@@ -157,6 +159,7 @@ public final class ServerCorePlugin extends JavaPlugin {
         new ItemStandardizer(this);
         new WeaponAbilityManager(this);
         new RangedWeaponManager(this);
+        this.classPassiveManager = new ClassPassiveManager(this);
         this.customMobRegistry = new CustomMobRegistry(this);
         this.customMobRegistry.loadConfig();
         this.customRecipeManager = new CustomRecipeManager(this);
@@ -754,13 +757,14 @@ public final class ServerCorePlugin extends JavaPlugin {
                         case "crit" -> pdc.KEY_CRIT_CHANCE;
                         case "critdmg" -> pdc.KEY_CRIT_DAMAGE;
                         case "brutality" -> pdc.KEY_BRUTALITY;
+                        case "lifesteal", "life_steal", "vampirism", "vamp" -> pdc.KEY_LIFESTEAL;
                         case "armorpen" -> pdc.KEY_ARMOR_PEN;
                         case "armor" -> pdc.KEY_BASE_ARMOR;
                         case "attackspeed", "attack_speed", "attack_speed_bonus", "aspeed" -> pdc.KEY_ATTACK_SPEED_BONUS;
                         case "shieldthreshold", "shield_threshold", "block_threshold", "shield_block_threshold" -> pdc.KEY_SHIELD_BLOCK_THRESHOLD;
                         case "effectiveblock", "effective_block", "shield_effective_block" -> pdc.KEY_SHIELD_EFFECTIVE_BLOCK;
                         case "shieldcooldown", "shield_cooldown", "shield_cooldown_seconds" -> pdc.KEY_SHIELD_COOLDOWN_SECONDS;
-                        case "tou", "toughness" -> pdc.KEY_ATTR_TOUGHNESS;
+                        case "str", "strength", "tou", "toughness" -> pdc.KEY_ATTR_TOUGHNESS;
                         case "agi", "agility" -> pdc.KEY_ATTR_AGILITY;
                         case "int", "intelligence" -> pdc.KEY_ATTR_INTELLIGENCE;
                         case "wil", "will", "willpower" -> pdc.KEY_ATTR_WILLPOWER;
@@ -789,7 +793,7 @@ public final class ServerCorePlugin extends JavaPlugin {
                     };
                     
                     if (key == null) {
-                        player.sendMessage(MINI_MESSAGE.deserialize("<red>未知属性！可用: damage, mult, crit, critdmg, brutality, armorpen, armor, tou, agi, int, wil, luk, bounty, farmingfortune, overbloom, fishingspeed</red>"));
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>未知属性！可用: damage, mult, crit, critdmg, brutality, lifesteal, armorpen, armor, str, agi, int, wil, luk, bounty, farmingfortune, overbloom, fishingspeed</red>"));
                         return true;
                     }
                     
@@ -880,6 +884,10 @@ public final class ServerCorePlugin extends JavaPlugin {
 
         if (weaponTemplateManager != null) {
             weaponTemplateManager.stop();
+        }
+
+        if (classPassiveManager != null) {
+            classPassiveManager.stop();
         }
 
         if (mobSpawnManager != null) {

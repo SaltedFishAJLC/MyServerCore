@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
  * @param critChance 暴击率 (0.0 ~ 1.0)
  * @param critDamage 暴击倍率 (基础通常为 1.5)
  * @param brutality 残暴值 (近战专属)
+ * @param lifesteal 吸血率 (0.025 = 2.5%)
  * @param armorPen 破甲值 (远程专属)
  */
 public record CombatStats(
@@ -19,6 +20,7 @@ public record CombatStats(
         double critChance,
         double critDamage,
         double brutality,
+        double lifesteal,
         double armorPen
 ) {
     /**
@@ -28,7 +30,7 @@ public record CombatStats(
     public static CombatStats calculateStatic(Player player) {
         PDCManager pdc = PDCManager.getInstance();
         if (pdc == null) {
-            return new CombatStats(0.0, 1.0, 0.0, 1.5, 0.0, 0.0);
+            return new CombatStats(0.0, 1.0, 0.0, 1.5, 0.0, 0.0, 0.0);
         }
 
         double totalBaseDamage = 0.0;
@@ -36,6 +38,7 @@ public record CombatStats(
         double totalCritChance = 0.0;
         double totalCritDamage = 1.5; // 基础暴击倍率 150%
         double totalBrutality = 0.0;
+        double totalLifesteal = 0.0;
         double totalArmorPen = 0.0;
 
         // 1. 扫描全套防具
@@ -46,6 +49,7 @@ public record CombatStats(
                 totalCritChance += pdc.getStat(armor, pdc.KEY_CRIT_CHANCE);
                 totalCritDamage += pdc.getStat(armor, pdc.KEY_CRIT_DAMAGE);
                 totalBrutality += pdc.getStat(armor, pdc.KEY_BRUTALITY);
+                totalLifesteal += pdc.getStat(armor, pdc.KEY_LIFESTEAL);
                 totalArmorPen += pdc.getStat(armor, pdc.KEY_ARMOR_PEN);
             }
         }
@@ -60,6 +64,7 @@ public record CombatStats(
                     totalCritChance += pdc.getStat(acc, pdc.KEY_CRIT_CHANCE);
                     totalCritDamage += pdc.getStat(acc, pdc.KEY_CRIT_DAMAGE);
                     totalBrutality += pdc.getStat(acc, pdc.KEY_BRUTALITY);
+                    totalLifesteal += pdc.getStat(acc, pdc.KEY_LIFESTEAL);
                     totalArmorPen += pdc.getStat(acc, pdc.KEY_ARMOR_PEN);
                 }
             }
@@ -72,6 +77,7 @@ public record CombatStats(
                     totalCritChance += pdc.getStat(tal, pdc.KEY_CRIT_CHANCE);
                     totalCritDamage += pdc.getStat(tal, pdc.KEY_CRIT_DAMAGE);
                     totalBrutality += pdc.getStat(tal, pdc.KEY_BRUTALITY);
+                    totalLifesteal += pdc.getStat(tal, pdc.KEY_LIFESTEAL);
                     totalArmorPen += pdc.getStat(tal, pdc.KEY_ARMOR_PEN);
                 }
             }
@@ -89,9 +95,12 @@ public record CombatStats(
             totalCritChance += classManager.getBonusCritChance(player);
             totalCritDamage += classManager.getBonusCritDamage(player);
             totalArmorPen += classManager.getBonusArmorPen(player);
+            if (classManager.suppressesCriticalHits(player)) {
+                totalCritChance = 0.0;
+            }
         }
 
-        return new CombatStats(totalBaseDamage, totalBaseMultiplier, totalCritChance, totalCritDamage, totalBrutality, totalArmorPen);
+        return new CombatStats(totalBaseDamage, totalBaseMultiplier, totalCritChance, totalCritDamage, totalBrutality, totalLifesteal, totalArmorPen);
     }
 
     /**
@@ -116,6 +125,7 @@ public record CombatStats(
         double totalCritChance = cached.critChance();
         double totalCritDamage = cached.critDamage();
         double totalBrutality = cached.brutality();
+        double totalLifesteal = cached.lifesteal();
         double totalArmorPen = cached.armorPen();
         
         // 主手武器的所有属性完全从 PDC 读取，不再依赖原版 AttributeModifier
@@ -132,6 +142,8 @@ public record CombatStats(
         totalCritChance += pdc.getStat(mainHand, pdc.KEY_CRIT_CHANCE) * mainMultiplier;
         totalCritDamage += pdc.getStat(mainHand, pdc.KEY_CRIT_DAMAGE) * mainMultiplier;
         totalBrutality += pdc.getStat(mainHand, pdc.KEY_BRUTALITY) * mainMultiplier;
+        totalLifesteal += pdc.getStat(mainHand, pdc.KEY_LIFESTEAL) * mainMultiplier;
+        totalLifesteal += getVampirismLifesteal(mainHand) * mainMultiplier;
         totalArmorPen += pdc.getStat(mainHand, pdc.KEY_ARMOR_PEN) * mainMultiplier;
 
         totalBaseDamage += pdc.getStat(offHand, pdc.KEY_BASE_DAMAGE) * offMultiplier;
@@ -139,8 +151,23 @@ public record CombatStats(
         totalCritChance += pdc.getStat(offHand, pdc.KEY_CRIT_CHANCE) * offMultiplier;
         totalCritDamage += pdc.getStat(offHand, pdc.KEY_CRIT_DAMAGE) * offMultiplier;
         totalBrutality += pdc.getStat(offHand, pdc.KEY_BRUTALITY) * offMultiplier;
+        totalLifesteal += pdc.getStat(offHand, pdc.KEY_LIFESTEAL) * offMultiplier;
+        totalLifesteal += getVampirismLifesteal(offHand) * offMultiplier;
         totalArmorPen += pdc.getStat(offHand, pdc.KEY_ARMOR_PEN) * offMultiplier;
+
+        ClassManager classManager = ClassManager.getInstance();
+        if (classManager != null && classManager.suppressesCriticalHits(player)) {
+            totalCritChance = 0.0;
+        }
         
-        return new CombatStats(totalBaseDamage, totalBaseMultiplier, totalCritChance, totalCritDamage, totalBrutality, totalArmorPen);
+        return new CombatStats(totalBaseDamage, totalBaseMultiplier, totalCritChance, totalCritDamage, totalBrutality, totalLifesteal, totalArmorPen);
+    }
+
+    private static double getVampirismLifesteal(ItemStack item) {
+        EnchantManager enchantManager = EnchantManager.getInstance();
+        if (enchantManager == null || item == null || item.getType().isAir()) {
+            return 0.0;
+        }
+        return enchantManager.getCustomEnchantLevel(item, "vampirism") * 0.005;
     }
 }

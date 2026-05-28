@@ -277,6 +277,7 @@ public class VanillaItemOverrideManager implements Listener {
             case "crit_chance" -> pdc.KEY_CRIT_CHANCE;
             case "crit_damage" -> pdc.KEY_CRIT_DAMAGE;
             case "brutality" -> pdc.KEY_BRUTALITY;
+            case "lifesteal" -> pdc.KEY_LIFESTEAL;
             case "armor_pen" -> pdc.KEY_ARMOR_PEN;
             case "base_armor" -> pdc.KEY_BASE_ARMOR;
             case "attack_speed_bonus" -> pdc.KEY_ATTACK_SPEED_BONUS;
@@ -321,13 +322,14 @@ public class VanillaItemOverrideManager implements Listener {
             case "crit", "crit_chance" -> "crit_chance";
             case "critdmg", "crit_damage" -> "crit_damage";
             case "brutality" -> "brutality";
+            case "lifesteal", "life_steal", "vampirism", "vamp" -> "lifesteal";
             case "armorpen", "armor_pen" -> "armor_pen";
             case "armor", "base_armor" -> "base_armor";
             case "attackspeed", "attack_speed", "attack_speed_bonus", "aspeed" -> "attack_speed_bonus";
             case "shieldthreshold", "shield_threshold", "block_threshold", "shield_block_threshold" -> "shield_block_threshold";
             case "effectiveblock", "effective_block", "shield_effective_block" -> "shield_effective_block";
             case "shieldcooldown", "shield_cooldown", "shield_cooldown_seconds" -> "shield_cooldown_seconds";
-            case "tou", "toughness", "attr_toughness" -> "attr_toughness";
+            case "str", "strength", "attr_strength", "tou", "toughness", "attr_toughness" -> "attr_toughness";
             case "agi", "agility", "attr_agility" -> "attr_agility";
             case "int", "intelligence", "attr_intelligence" -> "attr_intelligence";
             case "wil", "will", "willpower", "attr_willpower" -> "attr_willpower";
