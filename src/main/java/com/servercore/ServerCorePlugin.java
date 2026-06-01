@@ -100,6 +100,7 @@ public final class ServerCorePlugin extends JavaPlugin {
     private StatusService statusService;
     private FrostService frostService;
     private StunController stunController;
+    private int banFlowerDeliveryTaskId = -1;
 
     @Override
     public void onEnable() {
@@ -158,6 +159,29 @@ public final class ServerCorePlugin extends JavaPlugin {
         this.vanillaItemOverrideManager = new VanillaItemOverrideManager(this);
         new ItemStandardizer(this);
         new WeaponAbilityManager(this);
+
+        // 注册"小红花"技能处理器
+        customItemRegistry.registerAbilityHandler("ban_flower", context -> {
+            Player player = context.player();
+            int seconds = 30 + (int)(Math.random() * 61); // 30-90s 随机封禁
+            String reason = "小红花惩罚：你被封禁了 " + seconds + " 秒";
+            java.util.Date expires = java.util.Date.from(java.time.Instant.now().plusSeconds(seconds));
+            org.bukkit.BanList<org.bukkit.profile.PlayerProfile> banList = org.bukkit.Bukkit.getBanList(org.bukkit.BanList.Type.PROFILE);
+            banList.addBan(player.getPlayerProfile(), reason, expires, "小红花");
+            player.kick(MINI_MESSAGE.deserialize("<red>" + reason + "</red>"));
+
+            // 全服广播
+            var msg = MINI_MESSAGE.deserialize("<yellow><bold>" + player.getName() + " 因触碰小红花被封印了 " + seconds + " 秒！</bold></yellow>");
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                p.sendMessage(msg);
+            }
+            getComponentLogger().info(MINI_MESSAGE.deserialize("<yellow>" + player.getName() + " 触发小红花封禁 " + seconds + "s</yellow>"));
+            return true;
+        });
+
+        // 启动小红花随机快递定时器
+        startBanFlowerDelivery();
+
         new RangedWeaponManager(this);
         this.classPassiveManager = new ClassPassiveManager(this);
         this.customMobRegistry = new CustomMobRegistry(this);
@@ -905,12 +929,17 @@ public final class ServerCorePlugin extends JavaPlugin {
         if (customRecipeManager != null) {
             customRecipeManager.unregisterAll();
         }
-        
+
+        if (banFlowerDeliveryTaskId >= 0) {
+            Bukkit.getScheduler().cancelTask(banFlowerDeliveryTaskId);
+            banFlowerDeliveryTaskId = -1;
+        }
+
         // 关闭数据库连接池
         if (databaseManager != null) {
             databaseManager.close();
         }
-        
+
         getComponentLogger().info(MINI_MESSAGE.deserialize("<red>ServerCore 插件已卸载，经济数据已安全保存。</red>"));
     }
 
@@ -922,6 +951,45 @@ public final class ServerCorePlugin extends JavaPlugin {
             // 警告日志，采用红色醒目提示
             getComponentLogger().warn(MINI_MESSAGE.deserialize("<red>⚠ 未检测到 PlaceholderAPI! 部分依赖 PAPI 的系统可能无法正常工作。</red>"));
         }
+    }
+
+    private void startBanFlowerDelivery() {
+        startBanFlowerDelivery(false);
+    }
+
+    private void startBanFlowerDelivery(boolean shortDelay) {
+        long delaySeconds = shortDelay
+                ? 3600 + (long)(Math.random() * 601)    // 1h ~ 1h10m, 没人时快速重试
+                : 7200 + (long)(Math.random() * 7201);  // 2h ~ 4h, 正常间隔
+        banFlowerDeliveryTaskId = Bukkit.getScheduler().runTaskLater(this, () -> {
+            var players = new java.util.ArrayList<>(Bukkit.getOnlinePlayers());
+            if (players.isEmpty()) {
+                scheduleNext(true);
+                return;
+            }
+            Player target = players.get((int)(Math.random() * players.size()));
+
+            ItemStack flower = customItemRegistry.createItem("little_red_flower");
+            if (flower == null) {
+                scheduleNext(false);
+                return;
+            }
+
+            java.util.Map<Integer, ItemStack> overflow = target.getInventory().addItem(flower);
+            for (ItemStack leftover : overflow.values()) {
+                target.getWorld().dropItemNaturally(target.getLocation(), leftover);
+            }
+
+            target.sendMessage(MINI_MESSAGE.deserialize("<rainbow><bold>♪ 一朵小红花悄悄落入了你的背包... 右键它看看会发生什么？ ♪</bold></rainbow>"));
+            getComponentLogger().info(MINI_MESSAGE.deserialize("<light_purple>小红花已派送给 " + target.getName() + "</light_purple>"));
+
+            scheduleNext(false);
+        }, delaySeconds * 20).getTaskId();
+    }
+
+    private void scheduleNext(boolean shortDelay) {
+        banFlowerDeliveryTaskId = -1;
+        startBanFlowerDelivery(shortDelay);
     }
     
     public static ServerCorePlugin getInstance() {

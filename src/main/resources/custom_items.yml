@@ -447,3 +447,16 @@ items:
       - "适合作为所有采集路线的长期目标。"
     story_lore:
       - "指针不指北，只指向下一笔收益。"
+
+  little_red_flower:
+    material: POPPY
+    name: "小红花"
+    rarity: MYTHIC
+    abilities:
+      ban_flower:
+        trigger: RIGHT_CLICK
+        cooldown: 0
+        lore:
+          - "右键触发随机封禁效果。"
+    story_lore:
+      - "看上去很美。"
