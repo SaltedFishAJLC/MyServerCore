@@ -133,7 +133,7 @@ public class ClassPassiveManager implements Listener {
             return;
         }
 
-        double heal = effectiveDamage * lifestealRate;
+        double heal = Math.min(effectiveDamage * lifestealRate, maxLifestealPerHit(player));
         if (heal <= 0.0) {
             return;
         }
@@ -144,6 +144,13 @@ public class ClassPassiveManager implements Listener {
             return;
         }
         player.setHealth(Math.min(maxHealth, player.getHealth() + heal));
+    }
+
+    private double maxLifestealPerHit(Player player) {
+        AttributeInstance maxHealthAttribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        double maxHealth = maxHealthAttribute == null ? 20.0 : maxHealthAttribute.getValue();
+        double ratio = clamp(plugin.getConfig().getDouble("power.sustain.max_lifesteal_per_hit_ratio", 0.15), 0.0, 1.0);
+        return Math.max(0.0, maxHealth * ratio);
     }
 
     public double getReaperDamageMultiplier(Player player, LivingEntity target) {

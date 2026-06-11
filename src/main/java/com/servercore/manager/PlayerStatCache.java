@@ -60,6 +60,14 @@ public class PlayerStatCache {
         currentPowerLevels.put(player.getUniqueId(), power);
     }
 
+    public double getSpawnPower(Player player) {
+        return getCurrentPower(player);
+    }
+
+    public void setSpawnPower(Player player, double power) {
+        setCurrentPower(player, power);
+    }
+
     public double getTargetPower(Player player) {
         return targetPowerLevels.getOrDefault(player.getUniqueId(), getCurrentPower(player));
     }

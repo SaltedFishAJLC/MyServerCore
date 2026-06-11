@@ -1,0 +1,105 @@
+power:
+  global_scale: 1.0
+  denominator: 4.0
+  min_power: 1.0
+  max_power: 10000.0
+
+  offense:
+    secondary_weight: 0.25
+    third_weight: 0.10
+
+  sustain:
+    max_sustain_factor: 0.50
+    max_lifesteal_per_hit_ratio: 0.15
+    shield_spawn_weight: 0.50
+
+  spawn_power:
+    mode: ASYMMETRIC_SMOOTHING
+    rise_alpha: 0.25
+    fall_alpha: 0.05
+    update_interval_ticks: 20
+    nearby_radius: 64.0
+
+weapon_templates:
+  ONE_HANDED_SWORD:
+    attack_speed: 1.6
+    attack_range: 3.0
+    default_hand_rule: MAIN_HAND_ONLY
+    reliability_factor: 1.00
+    uptime_factor: 0.90
+
+  TWO_HANDED_SWORD:
+    attack_speed: 0.9
+    attack_range: 4.0
+    default_hand_rule: TWO_HANDED
+    reliability_factor: 0.95
+    uptime_factor: 0.82
+
+  ONE_HANDED_AXE:
+    attack_speed: 1.2
+    attack_range: 2.7
+    default_hand_rule: MAIN_HAND_ONLY
+    reliability_factor: 0.95
+    uptime_factor: 0.88
+
+  TWO_HANDED_AXE:
+    attack_speed: 0.8
+    attack_range: 3.5
+    default_hand_rule: TWO_HANDED
+    reliability_factor: 0.90
+    uptime_factor: 0.80
+
+  HEAVY_HAMMER:
+    attack_speed: 0.6
+    attack_range: 3.5
+    default_hand_rule: TWO_HANDED
+    reliability_factor: 0.85
+    uptime_factor: 0.75
+
+  TRIDENT:
+    attack_speed: 1.0
+    attack_range: 4.0
+    default_hand_rule: TWO_HANDED
+    reliability_factor: 0.95
+    uptime_factor: 0.85
+
+  DAGGER:
+    attack_speed: 1.8
+    attack_range: 2.7
+    default_hand_rule: BOTH_HANDS_ALLOWED
+    reliability_factor: 1.00
+    uptime_factor: 0.95
+
+  SCYTHE:
+    attack_speed: 1.1
+    attack_range: 3.5
+    default_hand_rule: TWO_HANDED
+    reliability_factor: 0.95
+    uptime_factor: 0.82
+
+  SHORTBOW:
+    attack_speed: 2.0
+    attack_range: -1
+    default_hand_rule: TWO_HANDED
+    reliability_factor: 0.90
+    uptime_factor: 0.90
+
+  LONGBOW:
+    attack_speed: 0.75
+    attack_range: -1
+    default_hand_rule: TWO_HANDED
+    reliability_factor: 0.80
+    uptime_factor: 0.75
+
+  CROSSBOW:
+    attack_speed: 0.80
+    attack_range: -1
+    default_hand_rule: MAIN_HAND_ONLY
+    reliability_factor: 0.85
+    uptime_factor: 0.80
+
+  SHIELD:
+    default_hand_rule: OFF_HAND_ONLY
+    shield_block_threshold: 10.0
+    shield_effective_block: 0.6
+    shield_cooldown_seconds: 2.0

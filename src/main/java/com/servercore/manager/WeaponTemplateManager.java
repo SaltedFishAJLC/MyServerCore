@@ -68,6 +68,41 @@ public class WeaponTemplateManager implements Listener {
         return instance;
     }
 
+    public WeaponProfile getProfile(WeaponTemplate template) {
+        if (template == null) {
+            return null;
+        }
+
+        String path = "weapon_templates." + template.name() + ".";
+        double attackSpeed = plugin.getConfig().getDouble(path + "attack_speed", template.attackSpeed);
+        double attackRange = plugin.getConfig().getDouble(path + "attack_range", template.attackRange);
+        HandRule configuredRule = parseHandRule(plugin.getConfig().getString(path + "default_hand_rule"));
+        HandRule defaultRule = configuredRule == null ? template.defaultHandRule() : configuredRule;
+        double reliability = plugin.getConfig().getDouble(path + "reliability_factor", template.reliabilityFactor);
+        double uptime = plugin.getConfig().getDouble(path + "uptime_factor", template.uptimeFactor);
+        double aoe = plugin.getConfig().getDouble(path + "aoe_factor", template.aoeFactor);
+        int cooldownTicks = plugin.getConfig().contains(path + "cooldown_ticks")
+                ? Math.max(0, plugin.getConfig().getInt(path + "cooldown_ticks"))
+                : defaultCooldownTicks(attackSpeed);
+
+        return new WeaponProfile(
+                template,
+                attackSpeed,
+                cooldownTicks,
+                attackRange,
+                defaultRule,
+                defaultRule == HandRule.TWO_HANDED,
+                template.isMelee(),
+                template.isRanged(),
+                clamp(reliability, 0.0, 5.0),
+                clamp(uptime, 0.0, 5.0),
+                clamp(aoe, 0.0, 5.0),
+                plugin.getConfig().getDouble(path + "shield_block_threshold", 10.0),
+                clamp(plugin.getConfig().getDouble(path + "shield_effective_block", 0.6), 0.0, 1.0),
+                plugin.getConfig().getDouble(path + "shield_cooldown_seconds", 2.0)
+        );
+    }
+
     public void stop() {
         if (hasteIsolationTask != null) {
             hasteIsolationTask.cancel();
@@ -78,42 +113,58 @@ public class WeaponTemplateManager implements Listener {
     public enum HandRule {
         MAIN_HAND_ONLY,
         OFF_HAND_ONLY,
+        BOTH_HANDS_ALLOWED,
         BOTH_HANDS,
         TWO_HANDED;
 
         public boolean allowsMainHand() {
-            return this == MAIN_HAND_ONLY || this == BOTH_HANDS || this == TWO_HANDED;
+            return this == MAIN_HAND_ONLY || this == BOTH_HANDS_ALLOWED || this == BOTH_HANDS || this == TWO_HANDED;
         }
 
         public boolean allowsOffHand() {
-            return this == OFF_HAND_ONLY || this == BOTH_HANDS;
+            return this == OFF_HAND_ONLY || this == BOTH_HANDS_ALLOWED || this == BOTH_HANDS;
+        }
+
+        public boolean isBothHandsAllowed() {
+            return this == BOTH_HANDS_ALLOWED || this == BOTH_HANDS;
         }
     }
 
     public enum WeaponTemplate {
-        ONE_HANDED_SWORD(1.6, 3.0, true, HandRule.BOTH_HANDS),
-        TWO_HANDED_SWORD(0.9, 4.0, true, HandRule.TWO_HANDED),
-        ONE_HANDED_AXE(1.2, 2.7, true, HandRule.BOTH_HANDS),
-        TWO_HANDED_AXE(0.8, 3.5, true, HandRule.TWO_HANDED),
-        HEAVY_HAMMER(0.6, 3.5, true, HandRule.TWO_HANDED),
-        TRIDENT(1.0, 4.0, true, HandRule.TWO_HANDED),
-        DAGGER(1.8, 2.7, true, HandRule.BOTH_HANDS),
-        SCYTHE(1.1, 3.5, true, HandRule.TWO_HANDED),
-        SHORTBOW(2.0, 3.0, true, HandRule.TWO_HANDED),
-        LONGBOW(0.0, 0.0, false, HandRule.TWO_HANDED),
-        CROSSBOW(0.0, 0.0, false, HandRule.BOTH_HANDS),
-        SHIELD(0.0, 0.0, false, HandRule.OFF_HAND_ONLY);
+        ONE_HANDED_SWORD(1.6, 3.0, true, HandRule.MAIN_HAND_ONLY, true, false, 1.00, 0.90, 1.0),
+        TWO_HANDED_SWORD(0.9, 4.0, true, HandRule.TWO_HANDED, true, false, 0.95, 0.82, 1.0),
+        ONE_HANDED_AXE(1.2, 2.7, true, HandRule.MAIN_HAND_ONLY, true, false, 0.95, 0.88, 1.0),
+        TWO_HANDED_AXE(0.8, 3.5, true, HandRule.TWO_HANDED, true, false, 0.90, 0.80, 1.0),
+        HEAVY_HAMMER(0.6, 3.5, true, HandRule.TWO_HANDED, true, false, 0.85, 0.75, 1.0),
+        TRIDENT(1.0, 4.0, true, HandRule.TWO_HANDED, true, false, 0.95, 0.85, 1.0),
+        DAGGER(1.8, 2.7, true, HandRule.BOTH_HANDS_ALLOWED, true, false, 1.00, 0.95, 1.0),
+        SCYTHE(1.1, 3.5, true, HandRule.TWO_HANDED, true, false, 0.95, 0.82, 1.0),
+        SHORTBOW(2.0, -1.0, false, HandRule.TWO_HANDED, false, true, 0.90, 0.90, 1.0),
+        LONGBOW(0.75, -1.0, false, HandRule.TWO_HANDED, false, true, 0.80, 0.75, 1.0),
+        CROSSBOW(0.8, -1.0, false, HandRule.MAIN_HAND_ONLY, false, true, 0.85, 0.80, 1.0),
+        SHIELD(0.0, 0.0, false, HandRule.OFF_HAND_ONLY, false, false, 1.0, 1.0, 1.0);
 
         public final double attackSpeed;
         public final double attackRange;
         private final boolean injectVanillaAttributes;
         private final HandRule defaultHandRule;
+        private final boolean melee;
+        private final boolean ranged;
+        private final double reliabilityFactor;
+        private final double uptimeFactor;
+        private final double aoeFactor;
 
-        WeaponTemplate(double attackSpeed, double attackRange, boolean injectVanillaAttributes, HandRule defaultHandRule) {
+        WeaponTemplate(double attackSpeed, double attackRange, boolean injectVanillaAttributes, HandRule defaultHandRule,
+                       boolean melee, boolean ranged, double reliabilityFactor, double uptimeFactor, double aoeFactor) {
             this.attackSpeed = attackSpeed;
             this.attackRange = attackRange;
             this.injectVanillaAttributes = injectVanillaAttributes;
             this.defaultHandRule = defaultHandRule;
+            this.melee = melee;
+            this.ranged = ranged;
+            this.reliabilityFactor = reliabilityFactor;
+            this.uptimeFactor = uptimeFactor;
+            this.aoeFactor = aoeFactor;
         }
 
         public boolean injectVanillaAttributes() {
@@ -124,13 +175,43 @@ public class WeaponTemplateManager implements Listener {
             return defaultHandRule;
         }
 
+        public boolean isMelee() {
+            return melee;
+        }
+
         public boolean isRanged() {
-            return this == SHORTBOW || this == LONGBOW || this == CROSSBOW;
+            return ranged;
         }
 
         public boolean isShield() {
             return this == SHIELD;
         }
+    }
+
+    public record WeaponProfile(
+            WeaponTemplate template,
+            double attackSpeed,
+            int cooldownTicks,
+            double attackRange,
+            HandRule defaultHandRule,
+            boolean twoHanded,
+            boolean melee,
+            boolean ranged,
+            double reliabilityFactor,
+            double uptimeFactor,
+            double aoeFactor,
+            double shieldBlockThreshold,
+            double shieldEffectiveBlock,
+            double shieldCooldownSeconds
+    ) {
+    }
+
+    public record HandValidationResult(
+            boolean canUseMainWeapon,
+            boolean canUseOffhandWeapon,
+            boolean canUseShield,
+            String reason
+    ) {
     }
 
     public void applyTemplateToItem(ItemStack item, WeaponTemplate template) {
@@ -153,7 +234,8 @@ public class WeaponTemplateManager implements Listener {
 
         removeManagedTemplateModifiers(meta);
 
-        if (template.injectVanillaAttributes()) {
+        WeaponProfile profile = getProfile(template);
+        if (template.injectVanillaAttributes() && profile != null) {
             meta.removeAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE);
             meta.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE,
                     new AttributeModifier(
@@ -166,18 +248,20 @@ public class WeaponTemplateManager implements Listener {
             meta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED,
                     new AttributeModifier(
                             weaponAttackSpeedKey,
-                            template.attackSpeed - PLAYER_BASE_ATTACK_SPEED,
+                            profile.attackSpeed() - PLAYER_BASE_ATTACK_SPEED,
                             AttributeModifier.Operation.ADD_NUMBER,
                             EquipmentSlotGroup.MAINHAND
                     ));
 
-            meta.addAttributeModifier(Attribute.PLAYER_ENTITY_INTERACTION_RANGE,
-                    new AttributeModifier(
-                            weaponAttackRangeKey,
-                            template.attackRange - PLAYER_BASE_ENTITY_RANGE,
-                            AttributeModifier.Operation.ADD_NUMBER,
-                            EquipmentSlotGroup.MAINHAND
-                    ));
+            if (profile.attackRange() > 0.0) {
+                meta.addAttributeModifier(Attribute.PLAYER_ENTITY_INTERACTION_RANGE,
+                        new AttributeModifier(
+                                weaponAttackRangeKey,
+                                profile.attackRange() - PLAYER_BASE_ENTITY_RANGE,
+                                AttributeModifier.Operation.ADD_NUMBER,
+                                EquipmentSlotGroup.MAINHAND
+                        ));
+            }
         }
 
         item.setItemMeta(meta);
@@ -257,7 +341,7 @@ public class WeaponTemplateManager implements Listener {
         return switch (normalized) {
             case "MAIN", "MAIN_HAND", "MAINHAND", "MAIN_HAND_ONLY", "MAIN_ONLY", "PRIMARY" -> HandRule.MAIN_HAND_ONLY;
             case "OFF", "OFF_HAND", "OFFHAND", "OFF_HAND_ONLY", "OFF_ONLY", "SECONDARY" -> HandRule.OFF_HAND_ONLY;
-            case "BOTH", "BOTH_HANDS", "EITHER", "EITHER_HAND", "DUAL", "ONE_HANDED" -> HandRule.BOTH_HANDS;
+            case "BOTH", "BOTH_HANDS", "BOTH_HANDS_ALLOWED", "EITHER", "EITHER_HAND", "DUAL", "ONE_HANDED" -> HandRule.BOTH_HANDS_ALLOWED;
             case "TWO_HAND", "TWO_HANDED", "2H", "TWO_HANDED_ONLY" -> HandRule.TWO_HANDED;
             default -> {
                 try {
@@ -331,13 +415,15 @@ public class WeaponTemplateManager implements Listener {
         if (template == null) {
             return null;
         }
+        WeaponProfile profile = getProfile(template);
+        HandRule configuredDefault = profile == null ? template.defaultHandRule() : profile.defaultHandRule();
         if (template == WeaponTemplate.SHIELD) {
             return HandRule.OFF_HAND_ONLY;
         }
         if (isVanillaManagedItem(item) && template != WeaponTemplate.SHIELD) {
-            return template.defaultHandRule() == HandRule.TWO_HANDED ? HandRule.TWO_HANDED : HandRule.MAIN_HAND_ONLY;
+            return configuredDefault == HandRule.TWO_HANDED ? HandRule.TWO_HANDED : HandRule.MAIN_HAND_ONLY;
         }
-        return template.defaultHandRule();
+        return configuredDefault;
     }
 
     public double getEquipmentStatMultiplier(Player player, ItemStack item, EquipmentSlot slot) {
@@ -366,7 +452,7 @@ public class WeaponTemplateManager implements Listener {
             if (rule == HandRule.OFF_HAND_ONLY) {
                 return 1.0;
             }
-            if (rule == HandRule.BOTH_HANDS) {
+            if (rule != null && rule.isBothHandsAllowed()) {
                 return 0.5;
             }
         }
@@ -394,6 +480,31 @@ public class WeaponTemplateManager implements Listener {
 
     public boolean isTwoHandBlocked(Player player, ItemStack item) {
         return getHandRule(item) == HandRule.TWO_HANDED && hasBlockingOffhandItem(player);
+    }
+
+    public HandValidationResult validateHands(Player player) {
+        if (player == null) {
+            return new HandValidationResult(false, false, false, "玩家不存在。");
+        }
+
+        ItemStack mainHand = player.getInventory().getItemInMainHand();
+        ItemStack offHand = player.getInventory().getItemInOffHand();
+        boolean canUseMain = canUseMainHandWeapon(player, mainHand);
+        boolean canUseOffhand = canUseOffhandEquipment(player, offHand);
+        WeaponTemplate offhandTemplate = getTemplate(offHand);
+        boolean canUseShield = offhandTemplate == WeaponTemplate.SHIELD || (offHand != null && offHand.getType() == Material.SHIELD);
+        canUseShield = canUseShield && canUseOffhand;
+
+        String reason = "";
+        if (!canUseMain && isTwoHandBlocked(player, mainHand)) {
+            reason = "双手武器需要空出副手。";
+        } else if (!canUseMain) {
+            reason = "这件武器不能在主手使用。";
+        } else if (offHand != null && !offHand.getType().isAir() && !canUseOffhand) {
+            reason = "这件装备不能在副手使用。";
+        }
+
+        return new HandValidationResult(canUseMain, canUseOffhand, canUseShield, reason);
     }
 
     public void applyPlayerAttackSpeedBonus(Player player, double bonusScore) {
@@ -455,12 +566,13 @@ public class WeaponTemplateManager implements Listener {
     }
 
     public int getCooldownTicks(Player player, WeaponTemplate template) {
-        if (template == null || template.attackSpeed <= 0.0) {
+        WeaponProfile profile = getProfile(template);
+        if (profile == null || profile.attackSpeed() <= 0.0) {
             return 0;
         }
 
         double bonus = getPlayerAttackSpeedBonusScore(player);
-        double cooldown = (20.0 / template.attackSpeed) * 100.0 / (100.0 + bonus);
+        double cooldown = profile.cooldownTicks() * 100.0 / (100.0 + bonus);
         return Math.max(1, (int) Math.round(cooldown));
     }
 
@@ -592,6 +704,13 @@ public class WeaponTemplateManager implements Listener {
                 attribute.removeModifier(modifier);
             }
         }
+    }
+
+    private int defaultCooldownTicks(double attackSpeed) {
+        if (attackSpeed <= 0.0) {
+            return 0;
+        }
+        return Math.max(1, (int) Math.round(20.0 / attackSpeed));
     }
 
     private String normalizeEnumInput(String raw) {

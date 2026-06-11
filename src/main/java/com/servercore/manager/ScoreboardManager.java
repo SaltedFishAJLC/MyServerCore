@@ -89,13 +89,13 @@ public class ScoreboardManager implements Listener {
             objective = board.getObjective(OBJECTIVE_NAME);
         }
 
-        double currentPower = powerLevelManager.getCurrentPower(player);
+        double spawnPower = powerLevelManager.getSpawnPower(player);
         double targetPower = powerLevelManager.calculateTargetPower(player);
         long coins = economyManager.getBalance(player.getUniqueId());
 
         setLine(board, objective, 5, "<dark_gray>────────────</dark_gray>");
-        setLine(board, objective, 4, "<gray>战斗等级</gray>");
-        setLine(board, objective, 3, "<gold>Lv. " + formatPower(currentPower) + "</gold> <dark_gray>/ " + formatPower(targetPower) + "</dark_gray>");
+        setLine(board, objective, 4, "<gray>理论 / 生态</gray>");
+        setLine(board, objective, 3, "<gold>" + formatPower(targetPower) + "</gold> <dark_gray>/ " + formatPower(spawnPower) + "</dark_gray>");
         setLine(board, objective, 2, "<gray>Coins</gray>");
         setLine(board, objective, 1, "<yellow>" + NumberFormat.getIntegerInstance(Locale.US).format(coins) + "</yellow>");
         setLine(board, objective, 0, "<dark_gray>────────────</dark_gray>");

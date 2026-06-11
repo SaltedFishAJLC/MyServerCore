@@ -359,7 +359,8 @@ public class CollectionSkillManager implements Listener {
 
     private void rollBounty(Player player, ItemStack tool, Location location) {
         double chance = Math.min(1.0, Math.max(0.0, readToolStat(tool, bountyKey) / 100.0));
-        if (chance <= 0.0 || ThreadLocalRandom.current().nextDouble() >= chance) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        if (!rollRareGatheringDrop(player, chance, random)) {
             return;
         }
 
@@ -385,7 +386,8 @@ public class CollectionSkillManager implements Listener {
 
     private void rollOverbloom(Player player, ItemStack tool, Location location) {
         double chance = Math.min(1.0, Math.max(0.0, readToolStat(tool, overbloomKey) / 100.0));
-        if (chance <= 0.0 || ThreadLocalRandom.current().nextDouble() >= chance) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        if (!rollRareGatheringDrop(player, chance, random)) {
             return;
         }
 
@@ -509,7 +511,8 @@ public class CollectionSkillManager implements Listener {
         AuraSkillsBridge bridge = AuraSkillsBridge.getInstance();
         int level = bridge == null ? 0 : bridge.getSkillLevel(player, Skills.EXCAVATION);
         double chance = Math.min(0.05, 0.006 + level * 0.00025);
-        if (ThreadLocalRandom.current().nextDouble() >= chance) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        if (!rollRareGatheringDrop(player, chance, random)) {
             return;
         }
 
@@ -532,6 +535,19 @@ public class CollectionSkillManager implements Listener {
         addGatheringXp(player, Skills.EXCAVATION, entry.xp());
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.55f, 1.45f);
         player.sendActionBar(Component.text("Excavation treasure unearthed: " + tier.id() + "."));
+    }
+
+    private boolean rollRareGatheringDrop(Player player, double baseChance, ThreadLocalRandom random) {
+        double chance = Math.max(0.0, Math.min(1.0, baseChance));
+        if (chance <= 0.0) {
+            return false;
+        }
+
+        GlobalStatManager stats = globalStats == null ? GlobalStatManager.getInstance() : globalStats;
+        if (stats != null) {
+            return stats.rollRareDrop(player, chance, random);
+        }
+        return random.nextDouble() < chance;
     }
 
     private ItemStack createCustomOrMaterial(String itemId, Material fallback, int amount) {

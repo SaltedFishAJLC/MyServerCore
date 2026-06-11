@@ -59,13 +59,12 @@ public class CombatManager implements Listener {
 
         if (!isRanged) {
             WeaponTemplateManager templateManager = WeaponTemplateManager.getInstance();
-            if (templateManager != null && !templateManager.canUseMainHandWeapon(player, player.getInventory().getItemInMainHand())) {
+            WeaponTemplateManager.HandValidationResult handValidation = templateManager == null
+                    ? null
+                    : templateManager.validateHands(player);
+            if (handValidation != null && !handValidation.canUseMainWeapon()) {
                 event.setCancelled(true);
-                if (templateManager.isTwoHandBlocked(player, player.getInventory().getItemInMainHand())) {
-                    player.sendActionBar(net.kyori.adventure.text.Component.text("双手武器需要空出副手。"));
-                } else {
-                    player.sendActionBar(net.kyori.adventure.text.Component.text("这件武器不能在主手使用。"));
-                }
+                player.sendActionBar(net.kyori.adventure.text.Component.text(handValidation.reason()));
                 return;
             }
         }

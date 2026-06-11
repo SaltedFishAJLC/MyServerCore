@@ -35,18 +35,22 @@ public class ShieldManager {
     }
 
     public double applyShieldBeforeReductions(Player defender, EntityDamageEvent event, double incomingDamage) {
+        return resolveShieldBlock(defender, event, incomingDamage).remainingDamage();
+    }
+
+    public ShieldBlockResult resolveShieldBlock(Player defender, EntityDamageEvent event, double incomingDamage) {
         if (defender == null || event == null || incomingDamage <= 0.0 || !defender.isBlocking()) {
-            return incomingDamage;
+            return ShieldBlockResult.none(incomingDamage);
         }
 
         ItemStack shield = defender.getInventory().getItemInOffHand();
         if (!isShield(shield) || defender.hasCooldown(shield.getType())) {
-            return incomingDamage;
+            return ShieldBlockResult.none(incomingDamage);
         }
 
         PDCManager pdc = PDCManager.getInstance();
         if (pdc == null) {
-            return incomingDamage;
+            return ShieldBlockResult.none(incomingDamage);
         }
 
         double threshold = readStatOrDefault(pdc, shield, pdc.KEY_SHIELD_BLOCK_THRESHOLD, DEFAULT_BLOCK_THRESHOLD);
@@ -54,18 +58,20 @@ public class ShieldManager {
         double cooldownSeconds = Math.max(0.0, readStatOrDefault(pdc, shield, pdc.KEY_SHIELD_COOLDOWN_SECONDS, DEFAULT_COOLDOWN_SECONDS));
 
         if (threshold <= 0.0) {
-            return incomingDamage;
+            return ShieldBlockResult.none(incomingDamage);
         }
 
         if (incomingDamage <= threshold) {
             defender.getWorld().playSound(defender.getLocation(), Sound.ITEM_SHIELD_BLOCK, 0.85f, 1.15f);
-            return 0.0;
+            return new ShieldBlockResult(ShieldBlockType.FULL_BLOCK, incomingDamage, 0.0, 0.0, false);
         }
 
         boolean shieldBreak = incomingDamage > threshold * SHIELD_BREAK_MULTIPLIER;
+        ShieldBlockType type = shieldBreak ? ShieldBlockType.SHIELD_BREAK : ShieldBlockType.GUARD_BREAK;
         double blockedDamage = threshold * effectiveBlock;
         double remainingDamage = Math.max(0.0, incomingDamage - blockedDamage);
-        int cooldownTicks = (int) Math.round(cooldownSeconds * (shieldBreak ? SHIELD_BREAK_MULTIPLIER : 1.0) * 20.0);
+        double appliedCooldownSeconds = cooldownSeconds * (shieldBreak ? SHIELD_BREAK_MULTIPLIER : 1.0);
+        int cooldownTicks = (int) Math.round(appliedCooldownSeconds * 20.0);
         if (cooldownTicks > 0) {
             defender.setCooldown(shield.getType(), cooldownTicks);
         }
@@ -74,7 +80,33 @@ public class ShieldManager {
         knockBackBoth(defender, attacker);
         defender.getWorld().playSound(defender.getLocation(), shieldBreak ? Sound.ITEM_SHIELD_BREAK : Sound.ITEM_SHIELD_BLOCK, 1.0f, shieldBreak ? 0.75f : 0.9f);
         defender.sendActionBar(Component.text(shieldBreak ? "盾牌崩裂!" : "格挡被突破!"));
-        return remainingDamage;
+        return new ShieldBlockResult(type, blockedDamage, remainingDamage, appliedCooldownSeconds, true);
+    }
+
+    public double estimateShieldValuePerSecond(Player player, double maxHealth) {
+        if (player == null) {
+            return 0.0;
+        }
+
+        ItemStack shield = player.getInventory().getItemInOffHand();
+        if (!isShield(shield)) {
+            return 0.0;
+        }
+
+        WeaponTemplateManager templateManager = WeaponTemplateManager.getInstance();
+        if (templateManager != null && !templateManager.validateHands(player).canUseShield()) {
+            return 0.0;
+        }
+
+        PDCManager pdc = PDCManager.getInstance();
+        if (pdc == null) {
+            return 0.0;
+        }
+
+        double threshold = readStatOrDefault(pdc, shield, pdc.KEY_SHIELD_BLOCK_THRESHOLD, DEFAULT_BLOCK_THRESHOLD);
+        double effectiveBlock = clamp(readStatOrDefault(pdc, shield, pdc.KEY_SHIELD_EFFECTIVE_BLOCK, DEFAULT_EFFECTIVE_BLOCK), 0.0, 1.0);
+        double cooldownSeconds = Math.max(1.0, readStatOrDefault(pdc, shield, pdc.KEY_SHIELD_COOLDOWN_SECONDS, DEFAULT_COOLDOWN_SECONDS));
+        return Math.min(threshold * effectiveBlock / cooldownSeconds, Math.max(1.0, maxHealth) * 0.10);
     }
 
     private boolean isShield(ItemStack item) {
@@ -124,5 +156,24 @@ public class ShieldManager {
 
     private double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    public enum ShieldBlockType {
+        NONE,
+        FULL_BLOCK,
+        GUARD_BREAK,
+        SHIELD_BREAK
+    }
+
+    public record ShieldBlockResult(
+            ShieldBlockType type,
+            double blockedDamage,
+            double remainingDamage,
+            double cooldownSeconds,
+            boolean knockbackBothSides
+    ) {
+        static ShieldBlockResult none(double incomingDamage) {
+            return new ShieldBlockResult(ShieldBlockType.NONE, 0.0, Math.max(0.0, incomingDamage), 0.0, false);
+        }
     }
 }

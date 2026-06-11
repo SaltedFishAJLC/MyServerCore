@@ -19,12 +19,23 @@
 #
 # Overrides:
 #   display_name: "Abandoned Temple Guard"
-#   override_power_level: 25
+#   level_mode: FIXED       # NATURAL_ADAPTIVE, FIXED, WORLD_CAP, AREA, ADAPTIVE_CLAMPED
+#   override_power_level: 25 # legacy alias for a fixed content level
+#   level: 25               # also accepted for FIXED
+#   base_level: 50          # used by AREA / ADAPTIVE_CLAMPED
+#   player_scale: 0.25      # used by ADAPTIVE_CLAMPED
+#   min_level: 45
+#   max_level: 70
 #   bypass_world_level_cap: true   # optional; dynamic level ignores Overworld/Nether/End caps
 #   mod: 1.8
 #   override_base_hp: 40
 #   fixed_max_health: 500   # optional; final max health, bypasses combat-level health scaling
 #   override_base_atk: 8
+#   spawner_limit_enabled: true
+#   spawner_limit: 6        # optional; max nearby spawner mobs for this rule, 0 blocks spawner spawns
+#   spawner_check_radius: 24
+#   spawner_vertical_radius: 12
+#   spawner_limit_mode: rule # rule = same custom mob rule, type = same vanilla entity type
 #   always_hostile: false   # optional; repeatedly targets nearby players
 #   clear_vanilla_drops: false   # optional; true means replace existing drops instead of appending
 #   drops:
@@ -39,6 +50,7 @@ WDA_Dungeon_Guard:
   match_type: ZOMBIE
   match_name: "Dungeon Guard"
   display_name: "Abandoned Temple Guard"
+  level_mode: FIXED
   override_power_level: 25
   bypass_world_level_cap: true
   mod: 1.8
@@ -52,6 +64,9 @@ WDA_Dungeon_Guard:
 Mythic_Flame_Boss:
   match_mythic_id: "FlameDemon"
   display_name: "Flame Demon"
+  level_mode: FIXED
+  level: 150
+  bypass_world_level_cap: true
   mod: 6.4
   drops:
     - item_id: foundry_flame_sword
@@ -113,21 +128,21 @@ WDA_Avi_Charged_Creeper_0:
     - "wda_aviary"
     - "wda_charged_creeper_0"
   display_name: "蹦蹦炸弹"
-  override_power_level: 200
+  override_power_level: 220
   mod: 1
-  override_base_hp: 15
-  override_base_atk: 30
+  override_base_hp: 18
+  override_base_atk: 18
 
 WDA_Avi_Guardian_3:
   match_type: GUARDIAN
   match_scoreboard_tags:
     - "wda_aviary"
     - "wda_guardian_3"
-  display_name: ""
-  override_power_level: 200
+  display_name: "幻梦守卫者"
+  override_power_level: 220
   mod: 1
-  override_base_hp: 15
-  override_base_atk: 15
+  override_base_hp: 30
+  override_base_atk: 10
 
 WDA_Avi_Skeleton_0:
   match_type: SKELETON
@@ -135,10 +150,10 @@ WDA_Avi_Skeleton_0:
     - "wda_aviary"
     - "wda_skeleton_0"
   display_name: "审判者"
-  override_power_level: 200
+  override_power_level: 220
   mod: 1
-  override_base_hp: 30
-  override_base_atk: 15
+  override_base_hp: 36
+  override_base_atk: 12
 
 WDA_Avi_Phantom_0:
   match_type: PHANTOM
@@ -146,10 +161,10 @@ WDA_Avi_Phantom_0:
     - "wda_aviary"
     - "wda_phantom_0"
   display_name: "恐惧之翼"
-  override_power_level: 250
+  override_power_level: 230
   mod: 1
-  override_base_hp: 20
-  override_base_atk: 30
+  override_base_hp: 24
+  override_base_atk: 14
 
 WDA_Avi_Skeleton_Melee_1:
   match_type: SKELETON
@@ -157,10 +172,10 @@ WDA_Avi_Skeleton_Melee_1:
     - "wda_aviary"
     - "wda_skeleton_melee_1"
   display_name: "塔楼侍卫"
-  override_power_level: 250
+  override_power_level: 230
   mod: 1
-  override_base_hp: 50 
-  override_base_atk: 20
+  override_base_hp: 45
+  override_base_atk: 14
 
 WDA_Avi_Skeleton_Ranged_0:
   match_type: SKELETON
@@ -168,10 +183,10 @@ WDA_Avi_Skeleton_Ranged_0:
     - "wda_aviary"
     - "wda_skeleton_ranged_0"
   display_name: "恶魔之瞳"
-  override_power_level: 250
+  override_power_level: 230
   mod: 1
-  override_base_hp: 15
-  override_base_atk: 30
+  override_base_hp: 24
+  override_base_atk: 12
 
 WDA_BT_Ranged_Illager_0:
   match_type: PILLAGER
@@ -204,7 +219,7 @@ WDA_BT_Skeleton_Assassin_0:
   override_power_level: 100
   mod: 1
   override_base_hp: 16
-  override_base_atk: 16
+  override_base_atk: 12
 
 WDA_BT_Skeleton_Assassin_1:
   match_type: SKELETON
@@ -214,8 +229,8 @@ WDA_BT_Skeleton_Assassin_1:
   display_name: "灾厄杀人狂"
   override_power_level: 100 
   mod: 1
-  override_base_hp: 5
-  override_base_atk: 20
+  override_base_hp: 10
+  override_base_atk: 12
 
 WDA_BT_Skeleton_Juggernaut_0:
   match_type: SKELETON
@@ -266,7 +281,7 @@ WDA_BV_Assassin_0:
   match_scoreboard_tags:
     - "wda_bandit_village"
     - "wda_assassin_0"
-  display_name: ""
+  display_name: "疆盗刺客"
   override_power_level: 20
   mod: 1
   override_base_hp: 10
@@ -277,7 +292,7 @@ WDA_BV_Hoglin_0:
   match_scoreboard_tags:
     - "wda_bandit_towers"
     - "wda_hoglin_0"
-  display_name: ""
+  display_name: "疆盗战猪"
   override_power_level: 20
   mod: 1
   override_base_hp: 40
@@ -299,7 +314,7 @@ WDA_BV_Hoglin_1:
   match_scoreboard_tags:
     - "wda_bandit_towers"
     - "wda_hoglin_1"
-  display_name: ""
+  display_name: "疆盗驮兽"
   override_power_level: 20
   mod: 1
   override_base_hp: 40
@@ -370,6 +385,9 @@ WDA_Fou_Blaze_0:
   mod: 1
   override_base_hp: 27
   override_base_atk: 10
+  spawner_limit: 6
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
 
 WDA_Fou_Magma_0:
   match_type: MAGMA_CUBE
@@ -380,7 +398,10 @@ WDA_Fou_Magma_0:
   override_power_level: 81
   mod: 1
   override_base_hp: 40
-  override_base_atk: 40
+  override_base_atk: 18
+  spawner_limit: 4
+  spawner_check_radius: 32
+  spawner_vertical_radius: 16
 
 WDA_Fou_Magma_1:
   match_type: MAGMA_CUBE
@@ -391,7 +412,10 @@ WDA_Fou_Magma_1:
   override_power_level: 60
   mod: 1
   override_base_hp: 20
-  override_base_atk: 20
+  override_base_atk: 12
+  spawner_limit: 6
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
 
 WDA_Fou_Piglin_0:
   match_type: PIGLIN_BRUTE
@@ -402,7 +426,10 @@ WDA_Fou_Piglin_0:
   override_power_level: 50
   mod: 1
   override_base_hp: 30
-  override_base_atk: 20
+  override_base_atk: 12
+  spawner_limit: 6
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
 
 WDA_Fou_Wither_Skeleton_0:
   match_type: WITHER_SKELETON
@@ -414,6 +441,9 @@ WDA_Fou_Wither_Skeleton_0:
   mod: 1
   override_base_hp: 25
   override_base_atk: 10
+  spawner_limit: 6
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
 
 WDA_Fou_Wither_Skeleton_1:
   match_type: WITHER_SKELETON
@@ -425,6 +455,9 @@ WDA_Fou_Wither_Skeleton_1:
   mod: 1.8
   override_base_hp: 20
   override_base_atk: 15
+  spawner_limit: 4
+  spawner_check_radius: 32
+  spawner_vertical_radius: 16
 
 WDA_Fou_Wither_Skeleton_2:
   match_type: WITHER_SKELETON
@@ -436,6 +469,9 @@ WDA_Fou_Wither_Skeleton_2:
   mod: 1
   override_base_hp: 60
   override_base_atk: 15
+  spawner_limit: 5
+  spawner_check_radius: 32
+  spawner_vertical_radius: 16
 
 WDA_Fou_Wither_Skeleton_3:
   match_type: WITHER_SKELETON
@@ -447,28 +483,37 @@ WDA_Fou_Wither_Skeleton_3:
   mod: 1
   override_base_hp: 30
   override_base_atk: 10
+  spawner_limit: 6
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
 
 WDA_Fou_Hoglin_0:
   match_type: HOGLIN
   match_scoreboard_tags:
     - "wda_foundry"
     - "wda_foundry_hoglin_0"
-  display_name: ""
+  display_name: "熔炉战猪"
   override_power_level: 20
   mod: 1
   override_base_hp: 30
   override_base_atk: 5
+  spawner_limit: 4
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
 
 WDA_Fou_Phantom_0:
   match_type: PHANTOM
   match_scoreboard_tags:
     - "wda_foundry"
     - "wda_foundry_phantom_0"
-  display_name: ""
+  display_name: "熔炉烟翼"
   override_power_level: 40
   mod: 1
   override_base_hp: 40
   override_base_atk: 2
+  spawner_limit: 4
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
 
 WDA_GM_Skeleton_0_Red:
   match_type: SKELETON
@@ -508,7 +553,7 @@ WDA_HC_1_Hoglin_0:
   match_scoreboard_tags:
     - "wda_heavenly_challenger"
     - "wda_heavenly_challenger_hoglin_0"
-  display_name: ""
+  display_name: "天际战猪"
   override_power_level: 50
   mod: 1
   override_base_hp: 50
@@ -523,14 +568,14 @@ WDA_HC_1_Rider_1:
   override_power_level: 100
   mod: 1
   override_base_hp: 40
-  override_base_atk: 18
+  override_base_atk: 14
 
 WDA_HC_1_Phantom_0:
   match_type: PHANTOM
   match_scoreboard_tags:
     - "wda_heavenly_challenger"
     - "wda_heavenly_challenger_phantom_0"
-  display_name: ""
+  display_name: "天际幻翼"
   override_power_level: 50
   mod: 1
   override_base_hp: 50
@@ -545,20 +590,20 @@ WDA_HC_1_Rider_2:
   override_power_level: 100
   mod: 1
   override_base_hp: 30
-  override_base_atk: 18
+  override_base_atk: 14
 
 WDA_HC_1_Phantom_1:
   match_type: PHANTOM
   match_scoreboard_tags:
     - "wda_heavenly_challenger"
     - "wda_heavenly_challenger_phantom_1"
-  display_name: ""
+  display_name: "天际疾翼"
   override_power_level: 50
   mod: 1
   override_base_hp: 50
   override_base_atk: 3
 
-NEED_FIX_WDA_HC_1_Juggernaut_0:
+WDA_HC_1_Juggernaut_0:
   match_type: WITHER_SKELETON
   match_scoreboard_tags:
     - "wda_heavenly_challenger"
@@ -600,7 +645,7 @@ WDA_HC_1_Slime_0:
   override_power_level: 50
   mod: 1
   override_base_hp: 20
-  override_base_atk: 20
+  override_base_atk: 10
 
 WDA_HC_1_Skeleton_Theater_1:
   match_type: WITHER_SKELETON
@@ -662,7 +707,7 @@ WDA_HC_2_Mounted_0:
   match_scoreboard_tags:
     - "wda_heavenly_conqueror"
     - "wda_heavenly_conqueror_mounted_0"
-  display_name: ""
+  display_name: "征服者战猪"
   override_power_level: 50
   mod: 1
   override_base_hp: 20
@@ -684,7 +729,7 @@ WDA_HC_2_Phantom_0:
   match_scoreboard_tags:
     - "wda_heavenly_conqueror"
     - "wda_heavenly_conqueror_phantom_0"
-  display_name: ""
+  display_name: "征服者幻翼"
   override_power_level: 50
   mod: 1
   override_base_hp: 20
@@ -717,7 +762,7 @@ WDA_HR_Mounted_Melee_0:
   match_scoreboard_tags:
     - "wda_heavenly_rider"
     - "wda_heavenly_rider_mounted_melee_0"
-  display_name: ""
+  display_name: "骑士团战猪"
   override_power_level: 50
   mod: 1
   override_base_hp: 20
@@ -739,7 +784,7 @@ WDA_HR_Mounted_Skeleton_0:
   match_scoreboard_tags:
     - "wda_heavenly_rider"
     - "wda_heavenly_rider_mounted_skeleton_0"
-  display_name: ""
+  display_name: "骑士团幻翼"
   override_power_level: 50
   mod: 1
   override_base_hp: 20
@@ -1092,9 +1137,10 @@ WDA_MH_Piglin_1:
   override_base_hp: 20
   override_base_atk: 5
 
-NEED_FIX_WDA_MH_Piglin_2:
+WDA_MH_Piglin_2:
   match_type: PIGLIN
   match_scoreboard_tags:
+    - "wda_mushroom_house"
     - "wda_mushroom_house_pinglin_2"
   display_name: "哞菇流氓"
   override_power_level: 30
@@ -1135,9 +1181,10 @@ WDA_MM_Zombie_1:
   override_base_hp: 20
   override_base_atk: 15
 
-NEED_FIX_WDA_MV_Piglin_Brute_0:
+WDA_MV_Piglin_Brute_0:
   match_type: PIGLIN_BRUTE
   match_scoreboard_tags:
+    - "wda_mushroom_village"
     - "wda_mushroom_village_piglin_brute_0"
   display_name: "哞菇流氓"
   override_power_level: 30
@@ -1183,7 +1230,7 @@ WDA_MV_Cow_0:
   match_scoreboard_tags:
     - "wda_mushroom_village"
     - "wda_mushroom_village_cow_0"
-  display_name: ""
+  display_name: "哞菇役牛"
   override_power_level: 30
   mod: 1
   override_base_hp: 10
@@ -1233,7 +1280,7 @@ WDA_PA_Skeleton_0:
   override_base_hp: 50
   override_base_atk: 8
 
-NEED_FIX_WDA_PA_Skeleton_1:
+WDA_PA_Skeleton_1:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_plague_asylum"
@@ -1315,415 +1362,415 @@ WDA_SP_Axe_Illusion_2:
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_axe_illusion_2"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花幻斧手"
+  override_power_level: 90
+  mod: 1
+  override_base_hp: 24
+  override_base_atk: 11
 
 WDA_SP_Crossbow_Illusion_1:
   match_type: PILLAGER
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_crossbow_illusion_1"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花弩手"
+  override_power_level: 90
+  mod: 1
+  override_base_hp: 24
+  override_base_atk: 8
 
 WDA_SP_Husk_Elite_0:
   match_type: HUSK
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_husk_elite_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花宫殿卫士"
+  override_power_level: 95
+  mod: 1.8
+  override_base_hp: 28
+  override_base_atk: 9
 
 WDA_SP_Husk_Garden_0:
   match_type: HUSK
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_husk_garden_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花园丁"
+  override_power_level: 75
+  mod: 1
+  override_base_hp: 22
+  override_base_atk: 7
 
 WDA_SP_Husk_Garden_1:
   match_type: HUSK
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_husk_garden_1"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花园卫"
+  override_power_level: 80
+  mod: 1
+  override_base_hp: 24
+  override_base_atk: 8
 
 WDA_SP_Husk_Garden_Exterior_0:
   match_type: HUSK
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_husk_garden_exterior_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花外庭守卫"
+  override_power_level: 70
+  mod: 1
+  override_base_hp: 20
+  override_base_atk: 6
 
 WDA_SP_Cow_0:
   match_type: COW
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_cow_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花坐骑"
+  override_power_level: 70
+  mod: 1
+  override_base_hp: 25
+  override_base_atk: 2
 
 WDA_SP_Husk_Tower_0:
   match_type: HUSK
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_husk_tower_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花塔卫"
+  override_power_level: 90
+  mod: 1
+  override_base_hp: 28
+  override_base_atk: 9
 
 WDA_SP_Skeleton_Elite_0:
   match_type: WITHER_SKELETON
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_skeleton_elite_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花近卫射手"
+  override_power_level: 100
+  mod: 1.8
+  override_base_hp: 30
+  override_base_atk: 10
 
 WDA_SP_Skeleton_Garden_1:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_skeleton_garden_1"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花园弓手"
+  override_power_level: 75
+  mod: 1
+  override_base_hp: 20
+  override_base_atk: 7
 
 WDA_SP_Skeleton_Garden_Exterior_1:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_skeleton_garden_exterior_1"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花外庭弓手"
+  override_power_level: 70
+  mod: 1
+  override_base_hp: 20
+  override_base_atk: 6
 
 WDA_SP_Cow_1:
   match_type: COW
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_cow_1"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花驮牛"
+  override_power_level: 75
+  mod: 1
+  override_base_hp: 30
+  override_base_atk: 2
 
 WDA_SP_Skeleton_Illusion_0:
   match_type: WITHER_SKELETON
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_skeleton_illusion_0"
-  display_name: "Dinnerbone"
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "倒影宫卫"
+  override_power_level: 85
+  mod: 1
+  override_base_hp: 24
+  override_base_atk: 8
 
 WDA_SP_Skeleton_Library_0:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_skeleton_library_0"
-  display_name: "Dinnerbone"
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花书吏"
+  override_power_level: 80
+  mod: 1
+  override_base_hp: 20
+  override_base_atk: 6
 
 WDA_SP_Skeleton_Tower_1:
   match_type: WITHER_SKELETON
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_skeleton_tower_1"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "繁花塔楼近卫"
+  override_power_level: 95
+  mod: 1
+  override_base_hp: 30
+  override_base_atk: 10
 
 WDA_SP_Spider_0:
   match_type: CAVE_SPIDER
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_spider_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "隐身洞穴蛛"
+  override_power_level: 70
+  mod: 1
+  override_base_hp: 12
+  override_base_atk: 4
 
 WDA_SP_Spider_1:
   match_type: CAVE_SPIDER
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_spider_1"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "喷泉洞穴蛛"
+  override_power_level: 70
+  mod: 1
+  override_base_hp: 12
+  override_base_atk: 4
 
 WDA_SP_Spider_2:
   match_type: CAVE_SPIDER
   match_scoreboard_tags:
     - "wda_shiraz_palace"
     - "wda_shiraz_palace_spider_2"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "宫墙洞穴蛛"
+  override_power_level: 75
+  mod: 1
+  override_base_hp: 14
+  override_base_atk: 5
 
 WDA_SB_Skeleton_0:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_small_blimp"
     - "wda_small_blimp_skeleton_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "盲雾骷髅"
+  override_power_level: 55
+  mod: 1
+  override_base_hp: 20
+  override_base_atk: 7
 
 WDA_SB_Skeleton_1:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_small_blimp"
     - "wda_small_blimp_skeleton_1"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "火石骷髅"
+  override_power_level: 60
+  mod: 1
+  override_base_hp: 22
+  override_base_atk: 8
 
-NEED_FIX_WDA_SB_Skeleton_2:
+WDA_SB_Skeleton_2:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_small_blimp"
     - "wda_small_blimp_skeleton_2"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "金斧骷髅"
+  override_power_level: 55
+  mod: 1
+  override_base_hp: 24
+  override_base_atk: 9
 
 WDA_SB_Magma_0:
   match_type: MAGMA_CUBE
   match_scoreboard_tags:
     - "wda_small_blimp"
     - "wda_small_blimp_magma_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "艇舱岩浆怪"
+  override_power_level: 45
+  mod: 1
+  override_base_hp: 16
+  override_base_atk: 6
 
 WDA_TT_Skeleton_Juggernaut_0:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_thornborn_towers"
     - "wda_thornborn_towers_skeleton_juggernaut_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "荆棘重装守卫"
+  override_power_level: 75
+  mod: 1
+  override_base_hp: 36
+  override_base_atk: 9
 
-NEED_FIX_WDA_TT_Skeleton_Juggernaut_1:
+WDA_TT_Skeleton_Juggernaut_1:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_thornborn_towers"
     - "wda_thornborn_towers_skeleton_juggernaut_1"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "荆棘石剑卫士"
+  override_power_level: 70
+  mod: 1
+  override_base_hp: 30
+  override_base_atk: 10
 
 WDA_TT_Skeleton_Ranged_0:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_thornborn_towers"
     - "wda_thornborn_towers_skeleton_ranged_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "荆棘弓卫"
+  override_power_level: 70
+  mod: 1
+  override_base_hp: 24
+  override_base_atk: 7
 
 WDA_TT_Skeleton_Fly_0:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_thornborn_towers"
     - "wda_thornborn_towers_skeleton_fly_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "荆棘幻翼骑士"
+  override_power_level: 80
+  mod: 1
+  override_base_hp: 28
+  override_base_atk: 9
 
 WDA_TT_Top_Phantom_0:
   match_type: PHANTOM
   match_scoreboard_tags:
     - "wda_thornborn_towers"
     - "wda_thornborn_towers_top_phantom_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "荆棘塔顶幻翼"
+  override_power_level: 70
+  mod: 1
+  override_base_hp: 20
+  override_base_atk: 8
 
 WDA_TT_Top_Skeleton_Juggernaut_0:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_thornborn_towers"
     - "wda_thornborn_towers_top_skeleton_juggernaut_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "荆棘塔顶重装"
+  override_power_level: 85
+  mod: 1
+  override_base_hp: 40
+  override_base_atk: 10
 
 WDA_TT_Top_Skeleton_Ranged_0:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_thornborn_towers"
     - "wda_thornborn_towers_top_skeleton_ranged_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "荆棘塔顶弩手"
+  override_power_level: 80
+  mod: 1
+  override_base_hp: 26
+  override_base_atk: 8
 
 WDA_TT_Witch_0:
   match_type: WITCH
   match_scoreboard_tags:
     - "wda_thornborn_towers"
     - "wda_thornborn_towers_witch_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "荆棘堡女巫"
+  override_power_level: 70
+  mod: 1
+  override_base_hp: 26
+  override_base_atk: 5
 
 WDA_UPS_Captain_0:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_undead_pirate_ship"
     - "wda_undead_pirate_ship_captain_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "幽灵船长"
+  override_power_level: 75
+  mod: 1.8
+  override_base_hp: 30
+  override_base_atk: 10
 
 WDA_UPS_Dolphin_Rider_0:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_undead_pirate_ship"
     - "wda_undead_pirate_ship_dolphin_rider_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "幽灵海骑兵"
+  override_power_level: 60
+  mod: 1
+  override_base_hp: 24
+  override_base_atk: 8
 
 WDA_UPS_Dolphin_0:
   match_type: DOLPHIN
   match_scoreboard_tags:
     - "wda_undead_pirate_ship"
     - "wda_undead_pirate_ship_dolphin_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "幽灵海豚"
+  override_power_level: 50
+  mod: 1
+  override_base_hp: 20
+  override_base_atk: 3
 
 WDA_UPS_Skeleton_Ranged_0:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_undead_pirate_ship"
     - "wda_undead_pirate_ship_skeleton_ranged_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "幽灵弓手"
+  override_power_level: 55
+  mod: 1
+  override_base_hp: 20
+  override_base_atk: 7
 
 WDA_UPS_Skeleton_Juggernaut_0:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_undead_pirate_ship"
     - "wda_undead_pirate_ship_skeleton_juggernaut_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "幽灵剑士"
+  override_power_level: 60
+  mod: 1
+  override_base_hp: 26
+  override_base_atk: 9
 
 WDA_UPS_Skeleton_Juggernaut_1:
   match_type: SKELETON
   match_scoreboard_tags:
     - "wda_undead_pirate_ship"
     - "wda_undead_pirate_ship_skeleton_juggernaut_1"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "幽灵水手长"
+  override_power_level: 65
+  mod: 1
+  override_base_hp: 30
+  override_base_atk: 10
 
 WDA_UPS_Parrot_0:
   match_type: PARROT
   match_scoreboard_tags:
     - "wda_undead_pirate_ship"
     - "wda_undead_pirate_ship_parrot_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "幽灵鹦鹉"
+  override_power_level: 40
+  mod: 1
+  override_base_hp: 8
+  override_base_atk: 1
 
 WDA_UPS_Silverfish_0:
   match_type: SILVERFISH
   match_scoreboard_tags:
     - "wda_undead_pirate_ship"
     - "wda_undead_pirate_ship_silverfish_0"
-  display_name: ""
-  override_power_level:
-  mod:
-  override_base_hp:
-  override_base_atk:
+  display_name: "船舱蠹虫"
+  override_power_level: 45
+  mod: 1
+  override_base_hp: 8
+  override_base_atk: 4

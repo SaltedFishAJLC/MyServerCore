@@ -43,6 +43,9 @@ public class CustomMobRegistry {
 
     private static final double DEFAULT_MOD = 1.0;
     private static final double MIN_MOD = 0.1;
+    private static final int DEFAULT_SPAWNER_LIMIT = 16;
+    private static final double DEFAULT_SPAWNER_HORIZONTAL_RADIUS = 32.0;
+    private static final double DEFAULT_SPAWNER_VERTICAL_RADIUS = 16.0;
     private static final List<String> MYTHIC_PDC_KEYS = List.of(
             "mythicmobs:mobtype",
             "mythicmobs:mob_type",
@@ -157,6 +160,37 @@ public class CustomMobRegistry {
         return rule == null || rule.overridePowerLevel() == null ? -1 : rule.overridePowerLevel();
     }
 
+    public MobLevelMode getLevelMode(String mobId) {
+        Rule rule = getRule(mobId);
+        return rule == null ? MobLevelMode.NATURAL_ADAPTIVE : rule.levelMode();
+    }
+
+    public double getBaseLevel(String mobId) {
+        Rule rule = getRule(mobId);
+        if (rule == null) {
+            return 1.0;
+        }
+        if (rule.baseLevel() != null) {
+            return rule.baseLevel();
+        }
+        return rule.overridePowerLevel() == null ? 1.0 : rule.overridePowerLevel();
+    }
+
+    public double getMinLevel(String mobId) {
+        Rule rule = getRule(mobId);
+        return rule == null || rule.minLevel() == null ? 1.0 : rule.minLevel();
+    }
+
+    public double getMaxLevel(String mobId) {
+        Rule rule = getRule(mobId);
+        return rule == null || rule.maxLevel() == null ? Double.MAX_VALUE : rule.maxLevel();
+    }
+
+    public double getPlayerScale(String mobId) {
+        Rule rule = getRule(mobId);
+        return rule == null || rule.playerScale() == null ? 0.0 : rule.playerScale();
+    }
+
     /**
      * @return true when this rule should use raw nearby-player power without the world cap
      */
@@ -181,6 +215,11 @@ public class CustomMobRegistry {
     public boolean shouldClearVanillaDrops(String mobId) {
         Rule rule = getRule(mobId);
         return rule != null && rule.clearVanillaDrops();
+    }
+
+    public SpawnerThrottle getSpawnerThrottle(String mobId) {
+        Rule rule = getRule(mobId);
+        return rule == null ? SpawnerThrottle.DEFAULT : rule.spawnerThrottle();
     }
 
     public List<ItemStack> rollDrops(String mobId) {
@@ -306,6 +345,11 @@ public class CustomMobRegistry {
         Double fixedMaxHealth = positiveDouble(section, "fixed_max_health", "fixed_health", "max_health");
         Double overrideBaseAtk = nonNegativeDouble(section, "override_base_atk");
         Integer overridePowerLevel = positiveInt(section, "override_power_level", "power_level", "level");
+        MobLevelMode levelMode = parseLevelMode(section.getString("level_mode"), overridePowerLevel, id);
+        Double baseLevel = positiveDouble(section, "base_level", "area_level", "content_level");
+        Double minLevel = positiveDouble(section, "min_level");
+        Double maxLevel = positiveDouble(section, "max_level");
+        Double playerScale = nonNegativeDouble(section, "player_scale");
         boolean bypassWorldLevelCap = firstPresentBoolean(section, false,
                 "bypass_world_level_cap",
                 "ignore_world_level_cap",
@@ -321,6 +365,7 @@ public class CustomMobRegistry {
                 "clear_vanilla_drops",
                 "clear_drops",
                 "replace_drops");
+        SpawnerThrottle spawnerThrottle = parseSpawnerThrottle(id, section);
         List<DropRule> drops = parseDrops(id, section);
 
         return new Rule(
@@ -337,10 +382,16 @@ public class CustomMobRegistry {
                 fixedMaxHealth,
                 overrideBaseAtk,
                 overridePowerLevel,
+                levelMode,
+                baseLevel,
+                minLevel,
+                maxLevel,
+                playerScale,
                 bypassWorldLevelCap,
                 displayName,
                 alwaysHostile,
                 clearVanillaDrops,
+                spawnerThrottle,
                 drops
         );
     }
@@ -364,6 +415,7 @@ public class CustomMobRegistry {
         config.set("WDA_Dungeon_Guard.match_type", "ZOMBIE");
         config.set("WDA_Dungeon_Guard.match_name", "Dungeon Guard");
         config.set("WDA_Dungeon_Guard.display_name", "Abandoned Temple Guard");
+        config.set("WDA_Dungeon_Guard.level_mode", "FIXED");
         config.set("WDA_Dungeon_Guard.override_power_level", 25);
         config.set("WDA_Dungeon_Guard.bypass_world_level_cap", true);
         config.set("WDA_Dungeon_Guard.mod", 1.8);
@@ -371,6 +423,8 @@ public class CustomMobRegistry {
         config.set("WDA_Dungeon_Guard.drops", List.of(Map.of("material", "GOLD_NUGGET", "chance", 0.45, "amount", "2-5")));
         config.set("Mythic_Flame_Boss.match_mythic_id", "FlameDemon");
         config.set("Mythic_Flame_Boss.display_name", "Flame Demon");
+        config.set("Mythic_Flame_Boss.level_mode", "FIXED");
+        config.set("Mythic_Flame_Boss.level", 150);
         config.set("Mythic_Flame_Boss.mod", 6.4);
 
         try {
@@ -443,6 +497,68 @@ public class CustomMobRegistry {
             }
         }
         return drops;
+    }
+
+    private SpawnerThrottle parseSpawnerThrottle(String id, ConfigurationSection section) {
+        boolean enabled = firstPresentBoolean(section, true,
+                "spawner_limit_enabled",
+                "spawner_throttle_enabled",
+                "limit_spawner_mobs");
+        Integer limit = nonNegativeInt(section,
+                "spawner_limit",
+                "spawner_max_nearby",
+                "max_nearby_spawner_mobs");
+        Double horizontalRadius = positiveDouble(section,
+                "spawner_check_radius",
+                "spawner_horizontal_radius",
+                "spawner_radius");
+        Double verticalRadius = positiveDouble(section,
+                "spawner_vertical_radius",
+                "spawner_y_radius");
+        SpawnerLimitMode limitMode = parseSpawnerLimitMode(section.getString("spawner_limit_mode"), id);
+
+        return new SpawnerThrottle(
+                enabled,
+                limit == null ? DEFAULT_SPAWNER_LIMIT : limit,
+                horizontalRadius == null ? DEFAULT_SPAWNER_HORIZONTAL_RADIUS : horizontalRadius,
+                verticalRadius == null ? DEFAULT_SPAWNER_VERTICAL_RADIUS : verticalRadius,
+                limitMode
+        );
+    }
+
+    private SpawnerLimitMode parseSpawnerLimitMode(String raw, String id) {
+        if (raw == null || raw.isBlank()) {
+            return SpawnerLimitMode.RULE;
+        }
+
+        String normalized = normalize(raw);
+        return switch (normalized) {
+            case "rule", "mob", "custom_mob", "custom" -> SpawnerLimitMode.RULE;
+            case "type", "entity_type", "entity" -> SpawnerLimitMode.TYPE;
+            default -> {
+                plugin.getLogger().warning("Unknown spawner_limit_mode for custom mob rule '" + id + "': " + raw);
+                yield SpawnerLimitMode.RULE;
+            }
+        };
+    }
+
+    private MobLevelMode parseLevelMode(String raw, Integer overridePowerLevel, String id) {
+        if (raw == null || raw.isBlank()) {
+            return overridePowerLevel == null ? MobLevelMode.NATURAL_ADAPTIVE : MobLevelMode.FIXED;
+        }
+
+        String normalized = normalize(raw).replace('-', '_');
+        return switch (normalized) {
+            case "natural", "natural_adaptive", "adaptive", "dynamic" -> MobLevelMode.NATURAL_ADAPTIVE;
+            case "fixed", "static", "content", "content_level" -> MobLevelMode.FIXED;
+            case "world", "world_cap", "world_tier" -> MobLevelMode.WORLD_CAP;
+            case "area", "area_tier", "structure", "structure_tier" -> MobLevelMode.AREA;
+            case "adaptive_clamped", "clamped", "clamped_adaptive" -> MobLevelMode.ADAPTIVE_CLAMPED;
+            default -> {
+                plugin.getLogger().warning("Unknown level_mode for custom mob rule '" + id + "': " + raw);
+                yield overridePowerLevel == null ? MobLevelMode.NATURAL_ADAPTIVE : MobLevelMode.FIXED;
+            }
+        };
     }
 
     private DropRule parseDrop(String mobId, int index, Map<?, ?> rawDrop) {
@@ -614,6 +730,17 @@ public class CustomMobRegistry {
         return null;
     }
 
+    private Integer nonNegativeInt(ConfigurationSection section, String... keys) {
+        for (String key : keys) {
+            Object raw = section.get(key);
+            if (raw != null && !String.valueOf(raw).isBlank()) {
+                Integer value = intValue(raw);
+                return value == null || value < 0 ? null : value;
+            }
+        }
+        return null;
+    }
+
     private double numberValue(Object raw, double defaultValue) {
         if (raw instanceof Number number) {
             return number.doubleValue();
@@ -741,6 +868,35 @@ public class CustomMobRegistry {
         return method.invoke(target);
     }
 
+    public enum SpawnerLimitMode {
+        RULE,
+        TYPE
+    }
+
+    public enum MobLevelMode {
+        NATURAL_ADAPTIVE,
+        FIXED,
+        WORLD_CAP,
+        AREA,
+        ADAPTIVE_CLAMPED
+    }
+
+    public record SpawnerThrottle(
+            boolean enabled,
+            int maxNearby,
+            double horizontalRadius,
+            double verticalRadius,
+            SpawnerLimitMode limitMode
+    ) {
+        public static final SpawnerThrottle DEFAULT = new SpawnerThrottle(
+                true,
+                DEFAULT_SPAWNER_LIMIT,
+                DEFAULT_SPAWNER_HORIZONTAL_RADIUS,
+                DEFAULT_SPAWNER_VERTICAL_RADIUS,
+                SpawnerLimitMode.RULE
+        );
+    }
+
     private record Rule(
             String id,
             EntityType matchType,
@@ -755,10 +911,16 @@ public class CustomMobRegistry {
             Double fixedMaxHealth,
             Double overrideBaseAtk,
             Integer overridePowerLevel,
+            MobLevelMode levelMode,
+            Double baseLevel,
+            Double minLevel,
+            Double maxLevel,
+            Double playerScale,
             boolean bypassWorldLevelCap,
             String displayName,
             boolean alwaysHostile,
             boolean clearVanillaDrops,
+            SpawnerThrottle spawnerThrottle,
             List<DropRule> drops
     ) {
         boolean hasAnyMatcher() {

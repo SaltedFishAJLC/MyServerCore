@@ -64,7 +64,7 @@ public class GlobalStatManager {
     }
 
     /**
-     * Applies Magic Find only to rare combat drops below 5%.
+     * Applies Magic Find only to rare drops below 5%.
      */
     public double applyMagicFind(Player player, double baseChance) {
         if (baseChance <= 0.0 || baseChance >= 0.05) {

@@ -81,7 +81,7 @@ public class StatsMenu {
         // -- 生存属性 (Slot 29 / X:0 Y:1) --
         statsPane.addItem(new GuiItem(getSurvivalIcon()), 0, 1);
 
-        // -- 生态战力 (Slot 22 / X:2 Y:1) --
+        // -- 理论战力 (Slot 22 / X:2 Y:1) --
         statsPane.addItem(new GuiItem(getPowerIcon()), 2, 1);
 
         // -- 魔法属性 (Slot 31 / X:1 Y:4) --
@@ -329,13 +329,13 @@ public class StatsMenu {
     private ItemStack getPowerIcon() {
         ItemStack item = new ItemStack(Material.NETHER_STAR);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(ServerCorePlugin.getMiniMessage().deserialize("<gold><bold>✦ 生态战斗等级</bold></gold>")
+        meta.displayName(ServerCorePlugin.getMiniMessage().deserialize("<gold><bold>✦ 理论战力</bold></gold>")
                 .decoration(TextDecoration.ITALIC, false));
 
         PowerLevelManager powerLevelManager = PowerLevelManager.getInstance();
         PlayerStatCache cache = PlayerStatCache.getInstance();
-        double currentPower = powerLevelManager == null ? 1.0 : powerLevelManager.getCurrentPower(player);
-        double targetPower = powerLevelManager == null ? currentPower : powerLevelManager.calculateTargetPower(player);
+        double spawnPower = powerLevelManager == null ? 1.0 : powerLevelManager.getSpawnPower(player);
+        double targetPower = powerLevelManager == null ? spawnPower : powerLevelManager.calculateTargetPower(player);
         double cachedTarget = cache == null ? targetPower : cache.getTargetPower(player);
         PowerLevelManager.PowerBreakdown breakdown = powerLevelManager == null ? null
                 : powerLevelManager.calculatePowerBreakdown(player);
@@ -343,35 +343,43 @@ public class StatsMenu {
         List<Component> lore = new ArrayList<>();
         lore.add(Component.empty());
         lore.add(ServerCorePlugin.getMiniMessage()
-                .deserialize("<gray>当前滑动战力: <gold>" + String.format("%.1f", currentPower) + "</gold></gray>")
+                .deserialize("<gray>理论 TargetPower: <gold>" + String.format("%.1f", targetPower) + "</gold></gray>")
                 .decoration(TextDecoration.ITALIC, false));
         lore.add(ServerCorePlugin.getMiniMessage()
                 .deserialize("<gray>缓存目标战力: <yellow>" + String.format("%.1f", cachedTarget) + "</yellow></gray>")
                 .decoration(TextDecoration.ITALIC, false));
         lore.add(ServerCorePlugin.getMiniMessage()
-                .deserialize("<gray>理论极限战力: <white>" + String.format("%.1f", targetPower) + "</white></gray>")
+                .deserialize("<gray>自然 SpawnPower: <white>" + String.format("%.1f", spawnPower) + "</white></gray>")
                 .decoration(TextDecoration.ITALIC, false));
         if (breakdown != null) {
             lore.add(Component.empty());
             lore.add(ServerCorePlugin.getMiniMessage()
                     .deserialize(
-                            "<gray>近战 EDPH: <red>" + String.format("%.1f", breakdown.meleeEdph()) + "</red></gray>")
+                            "<gray>近战 DPS: <red>" + String.format("%.1f", breakdown.meleeDps()) + "</red></gray>")
                     .decoration(TextDecoration.ITALIC, false));
             lore.add(ServerCorePlugin
-                    .getMiniMessage().deserialize("<gray>远程 EDPH: <green>"
-                            + String.format("%.1f", breakdown.rangedEdph()) + "</green></gray>")
+                    .getMiniMessage().deserialize("<gray>远程 DPS: <green>"
+                            + String.format("%.1f", breakdown.rangedDps()) + "</green></gray>")
                     .decoration(TextDecoration.ITALIC, false));
             lore.add(ServerCorePlugin
-                    .getMiniMessage().deserialize("<gray>法术 EDPH: <light_purple>"
-                            + String.format("%.1f", breakdown.magicEdph()) + "</light_purple></gray>")
+                    .getMiniMessage().deserialize("<gray>法术 DPS: <light_purple>"
+                            + String.format("%.1f", breakdown.magicDps()) + "</light_purple></gray>")
+                    .decoration(TextDecoration.ITALIC, false));
+            lore.add(ServerCorePlugin
+                    .getMiniMessage().deserialize("<gray>输出评分: <gold>"
+                            + String.format("%.1f", breakdown.offenseScore()) + "</gold></gray>")
                     .decoration(TextDecoration.ITALIC, false));
             lore.add(ServerCorePlugin
                     .getMiniMessage().deserialize("<gray>有效生命 EHP: <aqua>"
                             + String.format("%.1f", breakdown.effectiveHealth()) + "</aqua></gray>")
                     .decoration(TextDecoration.ITALIC, false));
+            lore.add(ServerCorePlugin
+                    .getMiniMessage().deserialize("<gray>续航评分: <green>+"
+                            + String.format("%.0f", breakdown.sustainFactor() * 100.0) + "%</green></gray>")
+                    .decoration(TextDecoration.ITALIC, false));
         }
         lore.add(Component.empty());
-        lore.add(ServerCorePlugin.getMiniMessage().deserialize("<dark_gray><i>刷怪系统读取滑动战力，避免瞬间换装操控生态等级。</i></dark_gray>")
+        lore.add(ServerCorePlugin.getMiniMessage().deserialize("<dark_gray><i>普通面板显示即时理论战力；自然刷怪读取滑动采样。</i></dark_gray>")
                 .decoration(TextDecoration.ITALIC, false));
 
         meta.lore(lore);

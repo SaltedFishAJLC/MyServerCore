@@ -57,12 +57,18 @@ public class FishingManager implements Listener {
 
     private static FishingManager instance;
     private final ServerCorePlugin plugin;
+    private final GlobalStatManager globalStats;
     private final File gatheringLootFile;
     private volatile List<SeaCreatureEntry> seaCreatures = List.of();
     private volatile List<TreasureTier> treasureTiers = List.of();
 
     public FishingManager(ServerCorePlugin plugin) {
+        this(plugin, GlobalStatManager.getInstance());
+    }
+
+    public FishingManager(ServerCorePlugin plugin, GlobalStatManager globalStats) {
         this.plugin = plugin;
+        this.globalStats = globalStats;
         this.gatheringLootFile = new File(plugin.getDataFolder(), "gathering_loot.yml");
         instance = this;
         reloadLootTables();
@@ -220,7 +226,7 @@ public class FishingManager implements Listener {
 
     private TreasureEntry rollTreasure(Player player, int fishingLevel, ThreadLocalRandom random) {
         double treasureChance = getTreasureChance(player, fishingLevel);
-        if (random.nextDouble() >= treasureChance) {
+        if (!rollRareFishingDrop(player, treasureChance, random)) {
             return null;
         }
 
@@ -241,6 +247,19 @@ public class FishingManager implements Listener {
             }
         }
         return eligible.isEmpty() ? null : eligible.getFirst();
+    }
+
+    private boolean rollRareFishingDrop(Player player, double baseChance, ThreadLocalRandom random) {
+        double chance = Math.max(0.0, Math.min(1.0, baseChance));
+        if (chance <= 0.0) {
+            return false;
+        }
+
+        GlobalStatManager stats = globalStats == null ? GlobalStatManager.getInstance() : globalStats;
+        if (stats != null) {
+            return stats.rollRareDrop(player, chance, random);
+        }
+        return random.nextDouble() < chance;
     }
 
     private ItemStack createTreasureItem(TreasureEntry treasure) {

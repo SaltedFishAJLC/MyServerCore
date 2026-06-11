@@ -4,9 +4,11 @@ import com.servercore.ServerCorePlugin;
 import com.servercore.combat.creature.CreatureTagService;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Enemy;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -18,13 +20,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.SpawnerSpawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
@@ -90,6 +91,22 @@ public class MobSpawnManager implements Listener {
         baseVanillaStats.put(type, new VanillaMobStats(Math.max(1.0, hp), Math.max(0.0, atk)));
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onSpawnerSpawn(SpawnerSpawnEvent event) {
+        if (!(event.getEntity() instanceof LivingEntity entity)) {
+            return;
+        }
+
+        String registryMobId = customMobRegistry == null ? null : customMobRegistry.identifyMob(entity);
+        CustomMobRegistry.SpawnerThrottle throttle = customMobRegistry == null
+                ? CustomMobRegistry.SpawnerThrottle.DEFAULT
+                : customMobRegistry.getSpawnerThrottle(registryMobId);
+        Location spawnerLocation = event.getSpawner() == null ? entity.getLocation() : event.getSpawner().getLocation();
+        if (isSpawnerAreaCrowded(spawnerLocation, entity, registryMobId, throttle)) {
+            event.setCancelled(true);
+        }
+    }
+
     /**
      * 拦截原版怪物生成
      * 1. 获取生成点 64 格内的玩家，计算战斗等级 (Power Level) 中位数。
@@ -130,14 +147,18 @@ public class MobSpawnManager implements Listener {
                 ? customMobRegistry == null ? null : customMobRegistry.identifyMob(entity)
                 : forcedMobId;
         int worldCap = getWorldCap(entity.getWorld());
-        double nearbyPowerLevel = Math.max(1.0, getNearbyMedianPower(entity));
+        double nearbySpawnPower = Math.max(1.0, getNearbyMedianSpawnPower(entity));
         boolean bypassWorldCap = customMobRegistry != null
                 && registryMobId != null
                 && customMobRegistry.bypassesWorldLevelCap(registryMobId);
-        double rawPowerLevel = resolveRawPowerLevel(spawnReason, worldCap, nearbyPowerLevel, bypassWorldCap);
-        int powerLevel = resolvePowerLevel(rawPowerLevel, registryMobId);
+        double rawPowerLevel = resolveRawPowerLevel(spawnReason, worldCap, nearbySpawnPower, registryMobId, bypassWorldCap);
+        int powerLevel = Math.max(1, (int) Math.round(rawPowerLevel));
         MobScalingResult result = applyAttributes(entity, powerLevel, registryMobId);
         applyRegistryDisplayName(entity, registryMobId);
+        if (spawnReason == CreatureSpawnEvent.SpawnReason.SPAWNER) {
+            entity.setPersistent(false);
+            entity.setRemoveWhenFarAway(true);
+        }
         if (registryMobId != null) {
             container.set(pdc.KEY_CUSTOM_MOB_ID, PersistentDataType.STRING, registryMobId);
         }
@@ -203,24 +224,47 @@ public class MobSpawnManager implements Listener {
         return nearest;
     }
 
-    private int resolvePowerLevel(double rawPowerLevel, String registryMobId) {
+    private double resolveRawPowerLevel(CreatureSpawnEvent.SpawnReason spawnReason, int worldCap,
+                                        double nearbySpawnPower, String registryMobId, boolean bypassWorldCap) {
         if (customMobRegistry != null && registryMobId != null) {
-            int overridePowerLevel = customMobRegistry.getOverridePowerLevel(registryMobId);
-            if (overridePowerLevel > 0) {
-                return overridePowerLevel;
-            }
+            CustomMobRegistry.MobLevelMode mode = customMobRegistry.getLevelMode(registryMobId);
+            return switch (mode) {
+                case FIXED -> resolveFixedContentLevel(registryMobId);
+                case WORLD_CAP -> worldCap;
+                case AREA -> resolveAreaContentLevel(registryMobId, worldCap);
+                case ADAPTIVE_CLAMPED -> clamp(
+                        customMobRegistry.getBaseLevel(registryMobId) + nearbySpawnPower * customMobRegistry.getPlayerScale(registryMobId),
+                        customMobRegistry.getMinLevel(registryMobId),
+                        customMobRegistry.getMaxLevel(registryMobId)
+                );
+                case NATURAL_ADAPTIVE -> clamp(
+                        resolveNaturalAdaptiveLevel(spawnReason, worldCap, nearbySpawnPower, bypassWorldCap),
+                        customMobRegistry.getMinLevel(registryMobId),
+                        customMobRegistry.getMaxLevel(registryMobId)
+                );
+            };
         }
 
-        return Math.max(1, (int) Math.round(rawPowerLevel));
+        return resolveNaturalAdaptiveLevel(spawnReason, worldCap, nearbySpawnPower, bypassWorldCap);
     }
 
-    private double resolveRawPowerLevel(CreatureSpawnEvent.SpawnReason spawnReason, int worldCap,
-                                        double nearbyPowerLevel, boolean bypassWorldCap) {
+    private double resolveNaturalAdaptiveLevel(CreatureSpawnEvent.SpawnReason spawnReason, int worldCap,
+                                               double nearbySpawnPower, boolean bypassWorldCap) {
         if (spawnReason == CreatureSpawnEvent.SpawnReason.SPAWNER) {
-            return bypassWorldCap ? Math.max(worldCap, nearbyPowerLevel) : worldCap;
+            return bypassWorldCap ? Math.max(worldCap, nearbySpawnPower) : worldCap;
         }
 
-        return bypassWorldCap ? nearbyPowerLevel : Math.min(worldCap, nearbyPowerLevel);
+        return bypassWorldCap ? nearbySpawnPower : Math.min(worldCap, nearbySpawnPower);
+    }
+
+    private double resolveFixedContentLevel(String registryMobId) {
+        int overridePowerLevel = customMobRegistry.getOverridePowerLevel(registryMobId);
+        return overridePowerLevel > 0 ? overridePowerLevel : customMobRegistry.getBaseLevel(registryMobId);
+    }
+
+    private double resolveAreaContentLevel(String registryMobId, int worldCap) {
+        double baseLevel = customMobRegistry.getBaseLevel(registryMobId);
+        return baseLevel > 1.0 ? baseLevel : worldCap;
     }
 
     private void applyRegistryDisplayName(LivingEntity entity, String registryMobId) {
@@ -316,22 +360,9 @@ public class MobSpawnManager implements Listener {
         }
     }
 
-    private double getNearbyMedianPower(LivingEntity entity) {
-        List<Double> powers = new ArrayList<>();
-        for (Player player : entity.getWorld().getPlayers()) {
-            if (!player.isValid() || player.isDead()) continue;
-            if (player.getLocation().distanceSquared(entity.getLocation()) > 64.0 * 64.0) continue;
-            powers.add(powerLevelManager.getCurrentPower(player));
-        }
-
-        if (powers.isEmpty()) return 1.0;
-
-        Collections.sort(powers);
-        int middle = powers.size() / 2;
-        if (powers.size() % 2 == 1) {
-            return powers.get(middle);
-        }
-        return (powers.get(middle - 1) + powers.get(middle)) / 2.0;
+    private double getNearbyMedianSpawnPower(LivingEntity entity) {
+        double radius = plugin.getConfig().getDouble("power.spawn_power.nearby_radius", 64.0);
+        return powerLevelManager.getNearbyMedianSpawnPower(entity.getLocation(), radius);
     }
 
     private int getWorldCap(World world) {
@@ -504,6 +535,64 @@ public class MobSpawnManager implements Listener {
 
     private String normalizeCustomMobId(String id) {
         return id.toLowerCase(Locale.ROOT).trim();
+    }
+
+    private double clamp(double value, double min, double max) {
+        double safeMax = max < min ? min : max;
+        return Math.max(min, Math.min(safeMax, value));
+    }
+
+    private boolean isSpawnerAreaCrowded(Location spawnerLocation, LivingEntity candidate,
+                                         String candidateMobId, CustomMobRegistry.SpawnerThrottle throttle) {
+        if (spawnerLocation == null || spawnerLocation.getWorld() == null || candidate == null || throttle == null
+                || !throttle.enabled()) {
+            return false;
+        }
+        if (throttle.maxNearby() <= 0) {
+            return true;
+        }
+
+        int nearbyMatchingMobs = 0;
+        for (Entity entity : spawnerLocation.getWorld().getNearbyEntities(
+                spawnerLocation,
+                throttle.horizontalRadius(),
+                throttle.verticalRadius(),
+                throttle.horizontalRadius()
+        )) {
+            if (!(entity instanceof LivingEntity livingEntity)
+                    || livingEntity.isDead()
+                    || livingEntity.getUniqueId().equals(candidate.getUniqueId())
+                    || !matchesSpawnerLimitTarget(candidate, candidateMobId, livingEntity, throttle.limitMode())) {
+                continue;
+            }
+
+            nearbyMatchingMobs++;
+            if (nearbyMatchingMobs >= throttle.maxNearby()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean matchesSpawnerLimitTarget(LivingEntity candidate, String candidateMobId,
+                                              LivingEntity existing, CustomMobRegistry.SpawnerLimitMode limitMode) {
+        if (limitMode == CustomMobRegistry.SpawnerLimitMode.TYPE || candidateMobId == null || candidateMobId.isBlank()) {
+            return existing.getType() == candidate.getType();
+        }
+
+        String existingMobId = getExistingCustomMobId(existing);
+        return existingMobId != null && existingMobId.equalsIgnoreCase(candidateMobId);
+    }
+
+    private String getExistingCustomMobId(LivingEntity entity) {
+        PDCManager pdc = PDCManager.getInstance();
+        if (pdc != null) {
+            String mobId = entity.getPersistentDataContainer().get(pdc.KEY_CUSTOM_MOB_ID, PersistentDataType.STRING);
+            if (mobId != null && !mobId.isBlank()) {
+                return mobId;
+            }
+        }
+        return customMobRegistry == null ? null : customMobRegistry.identifyMob(entity);
     }
 
     private void initDefaultVanillaStats() {

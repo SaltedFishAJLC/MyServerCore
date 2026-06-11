@@ -216,3 +216,47 @@
 ### 验证记录
 
 - `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过，已生成新的 Shadow Jar。
+
+## 2026-06-07 非战斗稀有掉落接入 Magic Find
+### 更新日志
+
+- 将 `GlobalStatManager.rollRareDrop()` 从战斗掉落扩展到非战斗稀有掉落触发判定。
+- 伐木 Bounty、种植 Overbloom、钓鱼 Treasure 与采掘 Treasure 现在都会在触发率低于 5% 时吃 Magic Find，并让赌徒职业获得同一套稀有掉落二次判定。
+- 保留原有等级门槛、tier 权重和条目权重；Magic Find 与赌徒只影响“是否触发掉落”，不改变后续表内选择。
+
+### 实现细节
+
+- `CollectionSkillManager` 新增统一的 `rollRareGatheringDrop`，Bounty、Overbloom 与 Excavation Treasure 的基础概率先按原逻辑计算，再交给 `GlobalStatManager.rollRareDrop()`。
+- `FishingManager` 显式接收 `GlobalStatManager`，并在 Treasure Chance 判定处使用同一套稀有掉落逻辑；Sea Creature 与采掘召唤物仍保持原来的普通随机召唤逻辑。
+- `GlobalStatManager.applyMagicFind` 的注释从“战斗稀有掉落”更新为通用“稀有掉落”，以匹配现在的调用范围。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
+
+## 2026-06-11 战力结构重构与武器规范收敛
+### 更新日志
+
+- 将战力语义拆分为即时 `TargetPower` 与自然刷怪使用的滑动 `SpawnPower`，旧的 `getCurrentPower()` 保留为兼容别名但语义改为 SpawnPower。
+- `PowerLevelManager` 从旧 EDPH 主导公式改为 DPS 主导公式，按近战、远程、法术三路输出排序合成 `offenseScore`，再与 EHP、吸血、恢复、盾牌价值组合成 `survivalScore`。
+- SpawnPower 改为非对称平滑：玩家变强时较快上升，脱装备后较慢下降，避免瞬间换装压低自然生态等级。
+- `WeaponTemplateManager` 增加配置驱动 `WeaponProfile`，攻击速度、冷却、攻击范围、默认手持规则、可靠性、uptime、AoE 系数和盾牌默认值都从 `config.yml` 读取。
+- 保留并复用已有主副手系统：副手 `BOTH_HANDS_ALLOWED` 属性 50% 生效、盾牌副手 100% 生效、双手武器在副手有物品时不可攻击或释放主动技能。
+- `ShieldManager` 增加 `ShieldBlockResult` / `ShieldBlockType`，保留既有“盾牌先于护甲减伤结算”的链路，并向战力公式提供每秒盾牌价值估算。
+- 吸血链路保留现有“排除暴击额外伤害”的有效伤害计算，并增加单次吸血上限，默认不超过最大生命 15%。
+- `CustomMobRegistry` 支持 `level_mode`：`NATURAL_ADAPTIVE`、`FIXED`、`WORLD_CAP`、`AREA`、`ADAPTIVE_CLAMPED`；旧的 `override_power_level` / `power_level` / `level` 自动兼容为固定内容等级。
+- `MobSpawnManager` 自然生成怪物改为读取附近玩家 `SpawnPower` 中位数；WDA、Boss、结构怪等已有 `override_power_level` 的规则继续保持固定内容等级。
+- 新增轻量调试入口：`/sc debug power`、`/sc debug weapon`、`/sc debug shield`、`/sc debug damage`、`/sc debug moblevel <id>`。
+
+### 实现细节
+
+- 新增 `src/main/resources/config.yml`，默认包含 `power` 权重、SpawnPower 平滑参数、续航限制和所有主要 `weapon_templates`。
+- `PowerBreakdown` 扩展为 DPS、输出评分、生存评分、续航拆解、TargetPower 和 SpawnPower 的完整结构，并保留旧字段别名方法，减少旧 UI/调用点震荡。
+- `/sc stats` 的战力槽位现在优先显示即时 `TargetPower`，并把 `SpawnPower` 标记为自然生态采样值。
+- 记分牌从“当前 / 理论”改为“理论 / 生态”，避免普通玩家把 SpawnPower 误解为真实面板战力。
+- `custom_mobs.yml` 模板注释补充 `level_mode`、`base_level`、`player_scale`、`min_level`、`max_level` 写法，现有 WDA 固定等级配置无需批量迁移。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
+- 构建仅提示既有 `HologramManager` 中 `EntityRemoveEvent` 已过时；本次改动未触碰该清理兜底路径。

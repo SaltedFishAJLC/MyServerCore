@@ -19,6 +19,7 @@ import com.servercore.manager.EconomyManager;
 import com.servercore.manager.EconomyListener;
 import com.servercore.manager.PDCManager;
 import com.servercore.manager.VaultImplementer;
+import com.servercore.manager.CombatStats;
 import com.servercore.manager.CombatManager;
 import com.servercore.manager.AccessoryManager;
 import com.servercore.manager.PlayerStatCache;
@@ -105,6 +106,7 @@ public final class ServerCorePlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        saveDefaultConfig();
         
         long startTime = System.currentTimeMillis();
 
@@ -146,7 +148,7 @@ public final class ServerCorePlugin extends JavaPlugin {
         this.attributeManager = new AttributeManager(this);
         this.globalStatManager = new GlobalStatManager(this);
         new CollectionSkillManager(this, globalStatManager);
-        this.fishingManager = new FishingManager(this);
+        this.fishingManager = new FishingManager(this, globalStatManager);
         this.miningManager = new MiningManager(this, globalStatManager);
         new RequirementManager(this);
         this.accListener = new AccessoryListener(this);
@@ -703,6 +705,82 @@ public final class ServerCorePlugin extends JavaPlugin {
                     } catch (NumberFormatException exception) {
                         player.sendMessage(MINI_MESSAGE.deserialize("<red>Level must be a number.</red>"));
                     }
+                    return true;
+                } else if (args.length >= 2 && args[0].equalsIgnoreCase("debug")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+
+                    String debugType = args[1].toLowerCase(java.util.Locale.ROOT);
+                    if (debugType.equals("power")) {
+                        PowerLevelManager.PowerBreakdown breakdown = powerLevelManager.calculatePowerBreakdown(player);
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gold>Power Debug</gold>"));
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gray>TargetPower:</gray> <white>" + String.format(java.util.Locale.US, "%.2f", breakdown.targetPower()) + "</white>"));
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gray>SpawnPower:</gray> <white>" + String.format(java.util.Locale.US, "%.2f", breakdown.spawnPower()) + "</white>"));
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gray>DPS melee/ranged/magic:</gray> <red>" + String.format(java.util.Locale.US, "%.1f", breakdown.meleeDps()) + "</red><dark_gray> / </dark_gray><green>" + String.format(java.util.Locale.US, "%.1f", breakdown.rangedDps()) + "</green><dark_gray> / </dark_gray><light_purple>" + String.format(java.util.Locale.US, "%.1f", breakdown.magicDps()) + "</light_purple>"));
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gray>EHP:</gray> <aqua>" + String.format(java.util.Locale.US, "%.1f", breakdown.effectiveHealth()) + "</aqua> <dark_gray>|</dark_gray> <gray>Sustain:</gray> <green>+" + String.format(java.util.Locale.US, "%.0f", breakdown.sustainFactor() * 100.0) + "%</green>"));
+                        return true;
+                    }
+
+                    if (debugType.equals("weapon")) {
+                        WeaponTemplateManager templateManager = WeaponTemplateManager.getInstance();
+                        ItemStack mainHand = player.getInventory().getItemInMainHand();
+                        WeaponTemplateManager.WeaponTemplate template = templateManager == null ? null : templateManager.getTemplate(mainHand);
+                        if (template == null && templateManager != null) {
+                            template = templateManager.getDefaultTemplate(mainHand.getType());
+                        }
+                        WeaponTemplateManager.WeaponProfile profile = templateManager == null ? null : templateManager.getProfile(template);
+                        WeaponTemplateManager.HandValidationResult validation = templateManager == null ? null : templateManager.validateHands(player);
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gold>Weapon Debug</gold>"));
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gray>Main template:</gray> <white>" + (template == null ? "NONE" : template.name()) + "</white>"));
+                        if (profile != null) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<gray>speed/range/cooldown:</gray> <white>" + String.format(java.util.Locale.US, "%.2f", profile.attackSpeed()) + "</white><dark_gray> / </dark_gray><white>" + String.format(java.util.Locale.US, "%.1f", profile.attackRange()) + "</white><dark_gray> / </dark_gray><white>" + profile.cooldownTicks() + "t</white>"));
+                            player.sendMessage(MINI_MESSAGE.deserialize("<gray>hand rule:</gray> <white>" + profile.defaultHandRule().name() + "</white> <dark_gray>|</dark_gray> <gray>reliability/uptime:</gray> <white>" + String.format(java.util.Locale.US, "%.2f", profile.reliabilityFactor()) + "</white><dark_gray> / </dark_gray><white>" + String.format(java.util.Locale.US, "%.2f", profile.uptimeFactor()) + "</white>"));
+                        }
+                        if (validation != null) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<gray>usable main/off/shield:</gray> <white>" + validation.canUseMainWeapon() + "</white><dark_gray> / </dark_gray><white>" + validation.canUseOffhandWeapon() + "</white><dark_gray> / </dark_gray><white>" + validation.canUseShield() + "</white>"));
+                            if (!validation.reason().isBlank()) {
+                                player.sendMessage(MINI_MESSAGE.deserialize("<yellow>" + validation.reason() + "</yellow>"));
+                            }
+                        }
+                        return true;
+                    }
+
+                    if (debugType.equals("shield")) {
+                        org.bukkit.attribute.AttributeInstance maxHealthAttribute = player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH);
+                        double maxHealth = maxHealthAttribute == null ? 20.0 : maxHealthAttribute.getValue();
+                        double shieldValue = shieldManager == null ? 0.0 : shieldManager.estimateShieldValuePerSecond(player, maxHealth);
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gold>Shield Debug</gold>"));
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gray>estimated shield value/s:</gray> <white>" + String.format(java.util.Locale.US, "%.2f", shieldValue) + "</white>"));
+                        return true;
+                    }
+
+                    if (debugType.equals("damage")) {
+                        CombatStats stats = CombatStats.getFullStats(player);
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gold>Damage Debug</gold>"));
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gray>damage/mult:</gray> <white>" + String.format(java.util.Locale.US, "%.1f", stats.baseDamage()) + "</white><dark_gray> / </dark_gray><white>" + String.format(java.util.Locale.US, "%.2f", stats.baseMultiplier()) + "</white>"));
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gray>crit/brutality/lifesteal:</gray> <yellow>" + String.format(java.util.Locale.US, "%.1f", stats.critChance() * 100.0) + "%</yellow><dark_gray> / </dark_gray><dark_red>" + String.format(java.util.Locale.US, "%.1f", stats.brutality()) + "</dark_red><dark_gray> / </dark_gray><red>" + String.format(java.util.Locale.US, "%.1f", stats.lifesteal() * 100.0) + "%</red>"));
+                        return true;
+                    }
+
+                    if (debugType.equals("moblevel")) {
+                        if (args.length < 3) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<red>Usage: /sc debug moblevel <mobRuleId></red>"));
+                            return true;
+                        }
+                        String mobId = args[2];
+                        if (!customMobRegistry.hasRule(mobId)) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<red>Unknown custom mob rule: " + mobId + "</red>"));
+                            return true;
+                        }
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gold>Mob Level Debug</gold>"));
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gray>mode:</gray> <white>" + customMobRegistry.getLevelMode(mobId).name() + "</white>"));
+                        player.sendMessage(MINI_MESSAGE.deserialize("<gray>base/min/max/scale:</gray> <white>" + String.format(java.util.Locale.US, "%.1f", customMobRegistry.getBaseLevel(mobId)) + "</white><dark_gray> / </dark_gray><white>" + String.format(java.util.Locale.US, "%.1f", customMobRegistry.getMinLevel(mobId)) + "</white><dark_gray> / </dark_gray><white>" + String.format(java.util.Locale.US, "%.1f", customMobRegistry.getMaxLevel(mobId)) + "</white><dark_gray> / </dark_gray><white>" + String.format(java.util.Locale.US, "%.2f", customMobRegistry.getPlayerScale(mobId)) + "</white>"));
+                        return true;
+                    }
+
+                    player.sendMessage(MINI_MESSAGE.deserialize("<yellow>可用调试: /sc debug power, weapon, shield, damage, moblevel <id></yellow>"));
                     return true;
                 } else if (args.length >= 3 && args[0].equalsIgnoreCase("item")) {
                     if (!player.hasPermission("servercore.admin")) {
