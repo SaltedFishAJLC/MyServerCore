@@ -56,6 +56,10 @@ WDA_Dungeon_Guard:
   mod: 1.8
   override_base_hp: 40
   # fixed_max_health: 500
+  spawner_limit: 6
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
   drops:
     - material: GOLD_NUGGET
       chance: 45%
@@ -99,6 +103,10 @@ WDA_AT_Illusioner:
   mod: 1.8
   override_base_hp: 35
   override_base_atk: 8
+  spawner_limit: 6
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_AT_Skeleton_Armored_0:
   match_type: SKELETON
@@ -109,6 +117,10 @@ WDA_AT_Skeleton_Armored_0:
   override_power_level: 25
   override_base_hp: 20
   override_base_atk: 8
+  spawner_limit: 6
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
   mod: 1
 
 WDA_AT_Skeleton_Armored_1:
@@ -120,6 +132,10 @@ WDA_AT_Skeleton_Armored_1:
   override_power_level: 25
   override_base_hp: 25
   override_base_atk: 8
+  spawner_limit: 6
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
   mod: 1
 
 WDA_Avi_Charged_Creeper_0:
@@ -130,8 +146,12 @@ WDA_Avi_Charged_Creeper_0:
   display_name: "蹦蹦炸弹"
   override_power_level: 220
   mod: 1
-  override_base_hp: 18
-  override_base_atk: 18
+  override_base_hp: 32
+  override_base_atk: 8
+  spawner_limit: 3
+  spawner_check_radius: 32
+  spawner_vertical_radius: 18
+  spawner_limit_mode: rule
 
 WDA_Avi_Guardian_3:
   match_type: GUARDIAN
@@ -141,8 +161,12 @@ WDA_Avi_Guardian_3:
   display_name: "幻梦守卫者"
   override_power_level: 220
   mod: 1
-  override_base_hp: 30
-  override_base_atk: 10
+  override_base_hp: 36
+  override_base_atk: 8
+  spawner_limit: 4
+  spawner_check_radius: 32
+  spawner_vertical_radius: 18
+  spawner_limit_mode: rule
 
 WDA_Avi_Skeleton_0:
   match_type: SKELETON
@@ -152,8 +176,12 @@ WDA_Avi_Skeleton_0:
   display_name: "审判者"
   override_power_level: 220
   mod: 1
-  override_base_hp: 36
-  override_base_atk: 12
+  override_base_hp: 40
+  override_base_atk: 10
+  spawner_limit: 5
+  spawner_check_radius: 32
+  spawner_vertical_radius: 18
+  spawner_limit_mode: rule
 
 WDA_Avi_Phantom_0:
   match_type: PHANTOM
@@ -163,8 +191,12 @@ WDA_Avi_Phantom_0:
   display_name: "恐惧之翼"
   override_power_level: 230
   mod: 1
-  override_base_hp: 24
-  override_base_atk: 14
+  override_base_hp: 32
+  override_base_atk: 8
+  spawner_limit: 4
+  spawner_check_radius: 32
+  spawner_vertical_radius: 18
+  spawner_limit_mode: rule
 
 WDA_Avi_Skeleton_Melee_1:
   match_type: SKELETON
@@ -176,6 +208,10 @@ WDA_Avi_Skeleton_Melee_1:
   mod: 1
   override_base_hp: 45
   override_base_atk: 14
+  spawner_limit: 5
+  spawner_check_radius: 32
+  spawner_vertical_radius: 18
+  spawner_limit_mode: rule
 
 WDA_Avi_Skeleton_Ranged_0:
   match_type: SKELETON
@@ -185,8 +221,12 @@ WDA_Avi_Skeleton_Ranged_0:
   display_name: "恶魔之瞳"
   override_power_level: 230
   mod: 1
-  override_base_hp: 24
-  override_base_atk: 12
+  override_base_hp: 30
+  override_base_atk: 8
+  spawner_limit: 4
+  spawner_check_radius: 32
+  spawner_vertical_radius: 18
+  spawner_limit_mode: rule
 
 WDA_BT_Ranged_Illager_0:
   match_type: PILLAGER
@@ -198,6 +238,10 @@ WDA_BT_Ranged_Illager_0:
   mod: 1
   override_base_hp: 30
   override_base_atk: 9
+  spawner_limit: 8
+  spawner_check_radius: 22
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_BT_Ranged_Skeleton_1:
   match_type: SKELETON
@@ -209,6 +253,10 @@ WDA_BT_Ranged_Skeleton_1:
   mod: 1
   override_base_hp: 26
   override_base_atk: 8
+  spawner_limit: 8
+  spawner_check_radius: 22
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_BT_Skeleton_Assassin_0:
   match_type: SKELETON
@@ -218,8 +266,12 @@ WDA_BT_Skeleton_Assassin_0:
   display_name: "精锐灾厄刺客"
   override_power_level: 100
   mod: 1
-  override_base_hp: 16
-  override_base_atk: 12
+  override_base_hp: 22
+  override_base_atk: 8
+  spawner_limit: 5
+  spawner_check_radius: 22
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_BT_Skeleton_Assassin_1:
   match_type: SKELETON
@@ -229,8 +281,12 @@ WDA_BT_Skeleton_Assassin_1:
   display_name: "灾厄杀人狂"
   override_power_level: 100 
   mod: 1
-  override_base_hp: 10
-  override_base_atk: 12
+  override_base_hp: 20
+  override_base_atk: 8
+  spawner_limit: 5
+  spawner_check_radius: 22
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_BT_Skeleton_Juggernaut_0:
   match_type: SKELETON
@@ -242,6 +298,10 @@ WDA_BT_Skeleton_Juggernaut_0:
   mod: 1
   override_base_hp: 46
   override_base_atk: 12
+  spawner_limit: 6
+  spawner_check_radius: 22
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_BT_Skeleton_Juggernaut_1:
   match_type: SKELETON
@@ -253,6 +313,10 @@ WDA_BT_Skeleton_Juggernaut_1:
   mod: 1
   override_base_hp: 32
   override_base_atk: 9
+  spawner_limit: 6
+  spawner_check_radius: 22
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_BT_Skeleton_Juggernaut_2:
   match_type: SKELETON
@@ -264,6 +328,10 @@ WDA_BT_Skeleton_Juggernaut_2:
   mod: 1
   override_base_hp: 40
   override_base_atk: 9
+  spawner_limit: 6
+  spawner_check_radius: 22
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_BV_Archer_0:
   match_type: SKELETON
@@ -275,6 +343,10 @@ WDA_BV_Archer_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 8
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_BV_Assassin_0:
   match_type: HUSK
@@ -286,6 +358,10 @@ WDA_BV_Assassin_0:
   mod: 1
   override_base_hp: 10
   override_base_atk: 10
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_BV_Hoglin_0:
   match_type: HOGLIN
@@ -297,6 +373,10 @@ WDA_BV_Hoglin_0:
   mod: 1
   override_base_hp: 40
   override_base_atk: 5
+  spawner_limit: 4
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_BV_Wither_Skeleton_0:
   match_type: WITHER_SKELETON
@@ -308,6 +388,10 @@ WDA_BV_Wither_Skeleton_0:
   mod: 1
   override_base_hp: 15
   override_base_atk: 8
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_BV_Hoglin_1:
   match_type: HOGLIN
@@ -319,6 +403,10 @@ WDA_BV_Hoglin_1:
   mod: 1
   override_base_hp: 40
   override_base_atk: 5
+  spawner_limit: 4
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_BV_Husk_1:
   match_type: HUSK
@@ -330,6 +418,10 @@ WDA_BV_Husk_1:
   mod: 1
   override_base_hp: 15
   override_base_atk: 1
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_Coliseum_Enemy_0:
   match_type: SKELETON
@@ -341,6 +433,10 @@ WDA_Coliseum_Enemy_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 5
+  spawner_limit: 6
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_Coliseum_Phantom_0:
   match_type: PHANTOM
@@ -352,6 +448,10 @@ WDA_Coliseum_Phantom_0:
   mod: 1.8
   override_base_hp: 40
   override_base_atk: 2
+  spawner_limit: 4
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_Coliseum_Skeleton_0:
   match_type: SKELETON
@@ -361,8 +461,12 @@ WDA_Coliseum_Skeleton_0:
   display_name: "帝国角斗士"
   override_power_level: 50
   mod: 1.8
-  override_base_hp: 30
-  override_base_atk: 12
+  override_base_hp: 36
+  override_base_atk: 9
+  spawner_limit: 4
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_FH_Zombie_0:
   match_type: ZOMBIE
@@ -374,6 +478,10 @@ WDA_FH_Zombie_0:
   mod: 1
   override_base_hp: 15
   override_base_atk: 5
+  spawner_limit: 4
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: rule
 
 WDA_Fou_Blaze_0:
   match_type: BLAZE
@@ -388,6 +496,7 @@ WDA_Fou_Blaze_0:
   spawner_limit: 6
   spawner_check_radius: 28
   spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_Fou_Magma_0:
   match_type: MAGMA_CUBE
@@ -397,11 +506,12 @@ WDA_Fou_Magma_0:
   display_name: "巨型岩浆怪"
   override_power_level: 81
   mod: 1
-  override_base_hp: 40
-  override_base_atk: 18
+  override_base_hp: 48
+  override_base_atk: 14
   spawner_limit: 4
   spawner_check_radius: 32
   spawner_vertical_radius: 16
+  spawner_limit_mode: rule
 
 WDA_Fou_Magma_1:
   match_type: MAGMA_CUBE
@@ -411,11 +521,12 @@ WDA_Fou_Magma_1:
   display_name: "大型岩浆怪"
   override_power_level: 60
   mod: 1
-  override_base_hp: 20
-  override_base_atk: 12
+  override_base_hp: 28
+  override_base_atk: 10
   spawner_limit: 6
   spawner_check_radius: 28
   spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_Fou_Piglin_0:
   match_type: PIGLIN_BRUTE
@@ -430,6 +541,7 @@ WDA_Fou_Piglin_0:
   spawner_limit: 6
   spawner_check_radius: 28
   spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_Fou_Wither_Skeleton_0:
   match_type: WITHER_SKELETON
@@ -444,6 +556,7 @@ WDA_Fou_Wither_Skeleton_0:
   spawner_limit: 6
   spawner_check_radius: 28
   spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_Fou_Wither_Skeleton_1:
   match_type: WITHER_SKELETON
@@ -453,11 +566,12 @@ WDA_Fou_Wither_Skeleton_1:
   display_name: "熔炉护卫队长"
   override_power_level: 100
   mod: 1.8
-  override_base_hp: 20
-  override_base_atk: 15
+  override_base_hp: 32
+  override_base_atk: 8
   spawner_limit: 4
   spawner_check_radius: 32
   spawner_vertical_radius: 16
+  spawner_limit_mode: rule
 
 WDA_Fou_Wither_Skeleton_2:
   match_type: WITHER_SKELETON
@@ -472,6 +586,7 @@ WDA_Fou_Wither_Skeleton_2:
   spawner_limit: 5
   spawner_check_radius: 32
   spawner_vertical_radius: 16
+  spawner_limit_mode: rule
 
 WDA_Fou_Wither_Skeleton_3:
   match_type: WITHER_SKELETON
@@ -486,6 +601,7 @@ WDA_Fou_Wither_Skeleton_3:
   spawner_limit: 6
   spawner_check_radius: 28
   spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_Fou_Hoglin_0:
   match_type: HOGLIN
@@ -500,6 +616,7 @@ WDA_Fou_Hoglin_0:
   spawner_limit: 4
   spawner_check_radius: 28
   spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_Fou_Phantom_0:
   match_type: PHANTOM
@@ -514,6 +631,7 @@ WDA_Fou_Phantom_0:
   spawner_limit: 4
   spawner_check_radius: 28
   spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_GM_Skeleton_0_Red:
   match_type: SKELETON
@@ -525,6 +643,10 @@ WDA_GM_Skeleton_0_Red:
   mod: 1.8
   override_base_hp: 20
   override_base_atk: 5
+  spawner_limit: 10
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_GM_Skeleton_0_Twins:
   match_type: SKELETON
@@ -536,6 +658,10 @@ WDA_GM_Skeleton_0_Twins:
   mod: 1.8
   override_base_hp: 20
   override_base_atk: 5
+  spawner_limit: 10
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_HC_1_Rider_0:
   match_type: WITHER_SKELETON
@@ -547,6 +673,10 @@ WDA_HC_1_Rider_0:
   mod: 1.8
   override_base_hp: 40
   override_base_atk: 10
+  spawner_limit: 5
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_1_Hoglin_0:
   match_type: HOGLIN
@@ -558,6 +688,10 @@ WDA_HC_1_Hoglin_0:
   mod: 1
   override_base_hp: 50
   override_base_atk: 3
+  spawner_limit: 4
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_1_Rider_1:
   match_type: WITHER_SKELETON
@@ -569,6 +703,10 @@ WDA_HC_1_Rider_1:
   mod: 1
   override_base_hp: 40
   override_base_atk: 14
+  spawner_limit: 5
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_1_Phantom_0:
   match_type: PHANTOM
@@ -580,6 +718,10 @@ WDA_HC_1_Phantom_0:
   mod: 1
   override_base_hp: 50
   override_base_atk: 3
+  spawner_limit: 4
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_1_Rider_2:
   match_type: WITHER_SKELETON
@@ -591,6 +733,10 @@ WDA_HC_1_Rider_2:
   mod: 1
   override_base_hp: 30
   override_base_atk: 14
+  spawner_limit: 5
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_1_Phantom_1:
   match_type: PHANTOM
@@ -602,6 +748,10 @@ WDA_HC_1_Phantom_1:
   mod: 1
   override_base_hp: 50
   override_base_atk: 3
+  spawner_limit: 4
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_1_Juggernaut_0:
   match_type: WITHER_SKELETON
@@ -613,6 +763,10 @@ WDA_HC_1_Juggernaut_0:
   mod: 1
   override_base_hp: 60
   override_base_atk: 8
+  spawner_limit: 5
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_1_Juggernaut_1:
   match_type: WITHER_SKELETON
@@ -624,6 +778,10 @@ WDA_HC_1_Juggernaut_1:
   mod: 1
   override_base_hp: 50
   override_base_atk: 7
+  spawner_limit: 5
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_1_Skeleton_Theater_0:
   match_type: WITHER_SKELETON
@@ -635,6 +793,10 @@ WDA_HC_1_Skeleton_Theater_0:
   mod: 1
   override_base_hp: 30
   override_base_atk: 7
+  spawner_limit: 6
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_1_Slime_0:
   match_type: SLIME
@@ -646,6 +808,10 @@ WDA_HC_1_Slime_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 10
+  spawner_limit: 6
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_1_Skeleton_Theater_1:
   match_type: WITHER_SKELETON
@@ -655,8 +821,12 @@ WDA_HC_1_Skeleton_Theater_1:
   display_name: "嵌合体队长"
   override_power_level: 80
   mod: 1.8
-  override_base_hp: 20
+  override_base_hp: 30
   override_base_atk: 7
+  spawner_limit: 3
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_1_Skeleton_Theater_2:
   match_type: WITHER_SKELETON
@@ -668,6 +838,10 @@ WDA_HC_1_Skeleton_Theater_2:
   mod: 1
   override_base_hp: 60
   override_base_atk: 10
+  spawner_limit: 6
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_2_Juggernaut_0:
   match_type: WITHER_SKELETON
@@ -679,6 +853,10 @@ WDA_HC_2_Juggernaut_0:
   mod: 1
   override_base_hp: 30
   override_base_atk: 10
+  spawner_limit: 5
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_2_Juggernaut_1:
   match_type: WITHER_SKELETON
@@ -690,6 +868,10 @@ WDA_HC_2_Juggernaut_1:
   mod: 1
   override_base_hp: 30
   override_base_atk: 10
+  spawner_limit: 5
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_2_Rider_0:
   match_type: WITHER_SKELETON
@@ -701,6 +883,10 @@ WDA_HC_2_Rider_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 7
+  spawner_limit: 5
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_2_Mounted_0:
   match_type: HOGLIN
@@ -712,6 +898,10 @@ WDA_HC_2_Mounted_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 3
+  spawner_limit: 4
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_2_Rider_1:
   match_type: WITHER_SKELETON
@@ -723,6 +913,10 @@ WDA_HC_2_Rider_1:
   mod: 1
   override_base_hp: 20
   override_base_atk: 6
+  spawner_limit: 5
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HC_2_Phantom_0:
   match_type: PHANTOM
@@ -734,6 +928,10 @@ WDA_HC_2_Phantom_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 2
+  spawner_limit: 4
+  spawner_check_radius: 28
+  spawner_vertical_radius: 14
+  spawner_limit_mode: rule
 
 WDA_HR_Husk_0:
   match_type: HUSK
@@ -745,6 +943,10 @@ WDA_HR_Husk_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 7
+  spawner_limit: 6
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_HR_Rider_0:
   match_type: WITHER_SKELETON
@@ -756,6 +958,10 @@ WDA_HR_Rider_0:
   mod: 1
   override_base_hp: 60
   override_base_atk: 9
+  spawner_limit: 6
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_HR_Mounted_Melee_0:
   match_type: HOGLIN
@@ -767,6 +973,10 @@ WDA_HR_Mounted_Melee_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 3
+  spawner_limit: 4
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_HR_Rider_1:
   match_type: WITHER_SKELETON
@@ -778,6 +988,10 @@ WDA_HR_Rider_1:
   mod: 1
   override_base_hp: 25
   override_base_atk: 6
+  spawner_limit: 6
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_HR_Mounted_Skeleton_0:
   match_type: PHANTOM
@@ -789,6 +1003,10 @@ WDA_HR_Mounted_Skeleton_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 2
+  spawner_limit: 4
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_IC_1_Multishot_0:
   match_type: PILLAGER
@@ -800,6 +1018,10 @@ WDA_IC_1_Multishot_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 5
+  spawner_limit: 9
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IC_1_Normal_0:
   match_type: PILLAGER
@@ -811,6 +1033,10 @@ WDA_IC_1_Normal_0:
   mod: 1
   override_base_hp: 24
   override_base_atk: 7
+  spawner_limit: 9
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IC_1_Vindicator_Normal_0:
   match_type: VINDICATOR
@@ -822,6 +1048,10 @@ WDA_IC_1_Vindicator_Normal_0:
   mod: 1
   override_base_hp: 24
   override_base_atk: 10
+  spawner_limit: 7
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IC_2_Evoker_0:
   match_type: EVOKER
@@ -831,8 +1061,12 @@ WDA_IC_2_Evoker_0:
   display_name: "灾厄术师"
   override_power_level: 50
   mod: 1.8
-  override_base_hp: 24
-  override_base_atk: 10
+  override_base_hp: 30
+  override_base_atk: 7
+  spawner_limit: 4
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IC_2_Pillager_0:
   match_type: PILLAGER
@@ -844,6 +1078,10 @@ WDA_IC_2_Pillager_0:
   mod: 1
   override_base_hp: 24
   override_base_atk: 7
+  spawner_limit: 9
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IC_2_Vindicator_0:
   match_type: VINDICATOR
@@ -855,6 +1093,10 @@ WDA_IC_2_Vindicator_0:
   mod: 1
   override_base_hp: 30
   override_base_atk: 12
+  spawner_limit: 7
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IF_Evoker_0:
   match_type: EVOKER
@@ -866,6 +1108,10 @@ WDA_IF_Evoker_0:
   mod: 1
   override_base_hp: 24
   override_base_atk: 10
+  spawner_limit: 4
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IF_Illusioner_0:
   match_type: ILLUSIONER
@@ -877,6 +1123,10 @@ WDA_IF_Illusioner_0:
   mod: 1
   override_base_hp: 24
   override_base_atk: 6
+  spawner_limit: 4
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IF_Pillager_0:
   match_type: PILLAGER
@@ -888,6 +1138,10 @@ WDA_IF_Pillager_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 5
+  spawner_limit: 9
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IF_Vindicator_0:
   match_type: VINDICATOR
@@ -899,6 +1153,10 @@ WDA_IF_Vindicator_0:
   mod: 1
   override_base_hp: 30
   override_base_atk: 12
+  spawner_limit: 7
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IG_Pillager_0:
   match_type: PILLAGER
@@ -910,6 +1168,10 @@ WDA_IG_Pillager_0:
   mod: 1
   override_base_hp: 24
   override_base_atk: 7
+  spawner_limit: 9
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IG_Vindicator_0:
   match_type: VINDICATOR
@@ -921,6 +1183,10 @@ WDA_IG_Vindicator_0:
   mod: 1
   override_base_hp: 30
   override_base_atk: 12
+  spawner_limit: 7
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IW_Zombie:
   match_type: ZOMBIE_VILLAGER
@@ -931,6 +1197,10 @@ WDA_IW_Zombie:
   mod: 1
   override_base_hp: 20
   override_base_atk: 12
+  spawner_limit: 8
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IW_Pillager_1:
   match_type: PILLAGER
@@ -941,6 +1211,10 @@ WDA_IW_Pillager_1:
   mod: 1
   override_base_hp: 24
   override_base_atk: 6
+  spawner_limit: 9
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 
 WDA_IW_Pillager_0:
@@ -953,6 +1227,10 @@ WDA_IW_Pillager_0:
   mod: 1
   override_base_hp: 24
   override_base_atk: 6
+  spawner_limit: 9
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IW_Vindicator_0:
   match_type: VINDICATOR
@@ -964,6 +1242,10 @@ WDA_IW_Vindicator_0:
   mod: 1
   override_base_hp: 24
   override_base_atk: 7
+  spawner_limit: 7
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IW_Witch_0:
   match_type: WITCH
@@ -975,6 +1257,10 @@ WDA_IW_Witch_0:
   mod: 1
   override_base_hp: 30
   override_base_atk: 5
+  spawner_limit: 4
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: type
 
 WDA_IT_Cave_Spider_0:
   match_type: CAVE_SPIDER
@@ -986,6 +1272,10 @@ WDA_IT_Cave_Spider_0:
   mod: 1
   override_base_hp: 3
   override_base_atk: 2
+  spawner_limit: 12
+  spawner_check_radius: 18
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type
 
 WDA_IT_Cave_Spider_1:
   match_type: CAVE_SPIDER
@@ -997,6 +1287,10 @@ WDA_IT_Cave_Spider_1:
   mod: 1
   override_base_hp: 3
   override_base_atk: 2
+  spawner_limit: 12
+  spawner_check_radius: 18
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type
 
 WDA_IT_Spider_0:
   match_type: SPIDER
@@ -1008,6 +1302,10 @@ WDA_IT_Spider_0:
   mod: 1
   override_base_hp: 70
   override_base_atk: 5
+  spawner_limit: 3
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_IT_Skeleton_0:
   match_type: SKELETON
@@ -1019,6 +1317,10 @@ WDA_IT_Skeleton_0:
   mod: 1
   override_base_hp: 26
   override_base_atk: 10
+  spawner_limit: 8
+  spawner_check_radius: 22
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_IT_Wither_Skeleton_0:
   match_type: WITHER_SKELETON
@@ -1028,8 +1330,12 @@ WDA_IT_Wither_Skeleton_0:
   display_name: "感染卫士"
   override_power_level: 60
   mod: 1
-  override_base_hp: 30
-  override_base_atk: 15
+  override_base_hp: 36
+  override_base_atk: 12
+  spawner_limit: 5
+  spawner_check_radius: 22
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_JTH_Husk_0:
   match_type: HUSK
@@ -1041,6 +1347,10 @@ WDA_JTH_Husk_0:
   mod: 1
   override_base_hp: 40
   override_base_atk: 8
+  spawner_limit: 7
+  spawner_check_radius: 22
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_JTH_Skeleton_0:
   match_type: SKELETON
@@ -1052,6 +1362,10 @@ WDA_JTH_Skeleton_0:
   mod: 1
   override_base_hp: 30
   override_base_atk: 6
+  spawner_limit: 7
+  spawner_check_radius: 22
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_MS_Skeleton_0:
   match_type: SKELETON
@@ -1063,6 +1377,10 @@ WDA_MS_Skeleton_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 4
+  spawner_limit: 12
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_MS_Skeleton_1:
   match_type: SKELETON
@@ -1074,6 +1392,10 @@ WDA_MS_Skeleton_1:
   mod: 1
   override_base_hp: 10
   override_base_atk: 5
+  spawner_limit: 12
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_MS_Skeleton_2:
   match_type: SKELETON
@@ -1085,6 +1407,10 @@ WDA_MS_Skeleton_2:
   mod: 1
   override_base_hp: 40
   override_base_atk: 10
+  spawner_limit: 6
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_MS_Skeleton_3:
   match_type: SKELETON
@@ -1096,6 +1422,10 @@ WDA_MS_Skeleton_3:
   mod: 1
   override_base_hp: 35
   override_base_atk: 12
+  spawner_limit: 6
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_Mon_Iron_Golem_0:
   match_type: IRON_GOLEM
@@ -1107,6 +1437,10 @@ WDA_Mon_Iron_Golem_0:
   mod: 1.8
   override_base_hp: 100
   override_base_atk: 20
+  spawner_limit: 2
+  spawner_check_radius: 32
+  spawner_vertical_radius: 16
+  spawner_limit_mode: rule
 
 WDA_Mon_Villager_0:
   match_type: VILLAGER
@@ -1125,6 +1459,10 @@ WDA_MH_Piglin_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 8
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_MH_Piglin_1:
   match_type: PIGLIN
@@ -1136,6 +1474,10 @@ WDA_MH_Piglin_1:
   mod: 1
   override_base_hp: 20
   override_base_atk: 5
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_MH_Piglin_2:
   match_type: PIGLIN
@@ -1147,6 +1489,10 @@ WDA_MH_Piglin_2:
   mod: 1
   override_base_hp: 20
   override_base_atk: 4
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_MM_Skeleton_0:
   match_type: SKELETON
@@ -1158,6 +1504,10 @@ WDA_MM_Skeleton_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 5
+  spawner_limit: 10
+  spawner_check_radius: 22
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_MM_Zombie_0:
   match_type: ZOMBIE
@@ -1169,6 +1519,10 @@ WDA_MM_Zombie_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 7
+  spawner_limit: 10
+  spawner_check_radius: 22
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_MM_Zombie_1:
   match_type: ZOMBIE
@@ -1178,8 +1532,12 @@ WDA_MM_Zombie_1:
   display_name: "狂暴感染包工头"
   override_power_level: 50
   mod: 1
-  override_base_hp: 20
-  override_base_atk: 15
+  override_base_hp: 32
+  override_base_atk: 10
+  spawner_limit: 5
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_MV_Piglin_Brute_0:
   match_type: PIGLIN_BRUTE
@@ -1191,6 +1549,10 @@ WDA_MV_Piglin_Brute_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 4
+  spawner_limit: 10
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_MV_Piglin_Brute_1:
   match_type: PIGLIN_BRUTE
@@ -1202,6 +1564,10 @@ WDA_MV_Piglin_Brute_1:
   mod: 1
   override_base_hp: 20
   override_base_atk: 8
+  spawner_limit: 10
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_MV_Piglin_Brute_2:
   match_type: PIGLIN_BRUTE
@@ -1213,6 +1579,10 @@ WDA_MV_Piglin_Brute_2:
   mod: 1
   override_base_hp: 6
   override_base_atk: 1
+  spawner_limit: 10
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_MV_Piglin_Brute_3:
   match_type: PIGLIN_BRUTE
@@ -1224,6 +1594,10 @@ WDA_MV_Piglin_Brute_3:
   mod: 1
   override_base_hp: 15
   override_base_atk: 7
+  spawner_limit: 10
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_MV_Cow_0:
   match_type: COW
@@ -1235,6 +1609,10 @@ WDA_MV_Cow_0:
   mod: 1
   override_base_hp: 10
   override_base_atk: 0
+  spawner_limit: 4
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type
 
 WDA_MV_Piglin_Crossbow_0:
   match_type: PIGLIN
@@ -1246,6 +1624,10 @@ WDA_MV_Piglin_Crossbow_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 5
+  spawner_limit: 10
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_MV_Piglin_Crossbow_1:
   match_type: PIGLIN
@@ -1257,6 +1639,10 @@ WDA_MV_Piglin_Crossbow_1:
   mod: 1
   override_base_hp: 20
   override_base_atk: 5
+  spawner_limit: 10
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_MV_Cow_1:
   match_type: COW
@@ -1268,6 +1654,10 @@ WDA_MV_Cow_1:
   mod: 1
   override_base_hp: 20
   override_base_atk: 2
+  spawner_limit: 4
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type
 
 WDA_PA_Skeleton_0:
   match_type: SKELETON
@@ -1279,6 +1669,10 @@ WDA_PA_Skeleton_0:
   mod: 1
   override_base_hp: 50
   override_base_atk: 8
+  spawner_limit: 7
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_PA_Skeleton_1:
   match_type: SKELETON
@@ -1290,6 +1684,10 @@ WDA_PA_Skeleton_1:
   mod: 1.8
   override_base_hp: 40
   override_base_atk: 7
+  spawner_limit: 4
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_PA_Skeleton_2:
   match_type: WITHER_SKELETON
@@ -1301,6 +1699,10 @@ WDA_PA_Skeleton_2:
   mod: 1
   override_base_hp: 40
   override_base_atk: 12
+  spawner_limit: 7
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_PA_Witch_0:
   match_type: WITCH
@@ -1312,6 +1714,10 @@ WDA_PA_Witch_0:
   mod: 1
   override_base_hp: 36
   override_base_atk: 5
+  spawner_limit: 5
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_PA_Zombie_Horde_0:
   match_type: HUSK
@@ -1323,6 +1729,10 @@ WDA_PA_Zombie_Horde_0:
   mod: 1
   override_base_hp: 4
   override_base_atk: 2
+  spawner_limit: 14
+  spawner_check_radius: 18
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type
 
 WDA_SM_Spawner_0:
   match_type: WITHER_SKELETON
@@ -1334,6 +1744,10 @@ WDA_SM_Spawner_0:
   mod: 1
   override_base_hp: 24
   override_base_atk: 12
+  spawner_limit: 6
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_SM_Spawner_1:
   match_type: SKELETON
@@ -1345,6 +1759,10 @@ WDA_SM_Spawner_1:
   mod: 1
   override_base_hp: 20
   override_base_atk: 7
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_SM_Spawner_2:
   match_type: HUSK
@@ -1356,6 +1774,10 @@ WDA_SM_Spawner_2:
   mod: 1
   override_base_hp: 30
   override_base_atk: 7
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_SP_Axe_Illusion_2:
   match_type: SKELETON
@@ -1367,6 +1789,10 @@ WDA_SP_Axe_Illusion_2:
   mod: 1
   override_base_hp: 24
   override_base_atk: 11
+  spawner_limit: 12
+  spawner_check_radius: 18
+  spawner_vertical_radius: 9
+  spawner_limit_mode: type
 
 WDA_SP_Crossbow_Illusion_1:
   match_type: PILLAGER
@@ -1378,6 +1804,10 @@ WDA_SP_Crossbow_Illusion_1:
   mod: 1
   override_base_hp: 24
   override_base_atk: 8
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_SP_Husk_Elite_0:
   match_type: HUSK
@@ -1387,8 +1817,12 @@ WDA_SP_Husk_Elite_0:
   display_name: "繁花宫殿卫士"
   override_power_level: 95
   mod: 1.8
-  override_base_hp: 28
-  override_base_atk: 9
+  override_base_hp: 36
+  override_base_atk: 7
+  spawner_limit: 4
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_SP_Husk_Garden_0:
   match_type: HUSK
@@ -1400,6 +1834,10 @@ WDA_SP_Husk_Garden_0:
   mod: 1
   override_base_hp: 22
   override_base_atk: 7
+  spawner_limit: 12
+  spawner_check_radius: 18
+  spawner_vertical_radius: 9
+  spawner_limit_mode: type
 
 WDA_SP_Husk_Garden_1:
   match_type: HUSK
@@ -1411,6 +1849,10 @@ WDA_SP_Husk_Garden_1:
   mod: 1
   override_base_hp: 24
   override_base_atk: 8
+  spawner_limit: 12
+  spawner_check_radius: 18
+  spawner_vertical_radius: 9
+  spawner_limit_mode: type
 
 WDA_SP_Husk_Garden_Exterior_0:
   match_type: HUSK
@@ -1422,6 +1864,10 @@ WDA_SP_Husk_Garden_Exterior_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 6
+  spawner_limit: 12
+  spawner_check_radius: 18
+  spawner_vertical_radius: 9
+  spawner_limit_mode: type
 
 WDA_SP_Cow_0:
   match_type: COW
@@ -1433,6 +1879,10 @@ WDA_SP_Cow_0:
   mod: 1
   override_base_hp: 25
   override_base_atk: 2
+  spawner_limit: 4
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type
 
 WDA_SP_Husk_Tower_0:
   match_type: HUSK
@@ -1444,6 +1894,10 @@ WDA_SP_Husk_Tower_0:
   mod: 1
   override_base_hp: 28
   override_base_atk: 9
+  spawner_limit: 12
+  spawner_check_radius: 18
+  spawner_vertical_radius: 9
+  spawner_limit_mode: type
 
 WDA_SP_Skeleton_Elite_0:
   match_type: WITHER_SKELETON
@@ -1453,8 +1907,12 @@ WDA_SP_Skeleton_Elite_0:
   display_name: "繁花近卫射手"
   override_power_level: 100
   mod: 1.8
-  override_base_hp: 30
-  override_base_atk: 10
+  override_base_hp: 36
+  override_base_atk: 7
+  spawner_limit: 4
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_SP_Skeleton_Garden_1:
   match_type: SKELETON
@@ -1466,6 +1924,10 @@ WDA_SP_Skeleton_Garden_1:
   mod: 1
   override_base_hp: 20
   override_base_atk: 7
+  spawner_limit: 12
+  spawner_check_radius: 18
+  spawner_vertical_radius: 9
+  spawner_limit_mode: type
 
 WDA_SP_Skeleton_Garden_Exterior_1:
   match_type: SKELETON
@@ -1477,6 +1939,10 @@ WDA_SP_Skeleton_Garden_Exterior_1:
   mod: 1
   override_base_hp: 20
   override_base_atk: 6
+  spawner_limit: 12
+  spawner_check_radius: 18
+  spawner_vertical_radius: 9
+  spawner_limit_mode: type
 
 WDA_SP_Cow_1:
   match_type: COW
@@ -1488,6 +1954,10 @@ WDA_SP_Cow_1:
   mod: 1
   override_base_hp: 30
   override_base_atk: 2
+  spawner_limit: 4
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type
 
 WDA_SP_Skeleton_Illusion_0:
   match_type: WITHER_SKELETON
@@ -1499,6 +1969,10 @@ WDA_SP_Skeleton_Illusion_0:
   mod: 1
   override_base_hp: 24
   override_base_atk: 8
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_SP_Skeleton_Library_0:
   match_type: SKELETON
@@ -1510,6 +1984,10 @@ WDA_SP_Skeleton_Library_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 6
+  spawner_limit: 12
+  spawner_check_radius: 18
+  spawner_vertical_radius: 9
+  spawner_limit_mode: type
 
 WDA_SP_Skeleton_Tower_1:
   match_type: WITHER_SKELETON
@@ -1521,6 +1999,10 @@ WDA_SP_Skeleton_Tower_1:
   mod: 1
   override_base_hp: 30
   override_base_atk: 10
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: type
 
 WDA_SP_Spider_0:
   match_type: CAVE_SPIDER
@@ -1532,6 +2014,10 @@ WDA_SP_Spider_0:
   mod: 1
   override_base_hp: 12
   override_base_atk: 4
+  spawner_limit: 14
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type
 
 WDA_SP_Spider_1:
   match_type: CAVE_SPIDER
@@ -1543,6 +2029,10 @@ WDA_SP_Spider_1:
   mod: 1
   override_base_hp: 12
   override_base_atk: 4
+  spawner_limit: 14
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type
 
 WDA_SP_Spider_2:
   match_type: CAVE_SPIDER
@@ -1554,6 +2044,10 @@ WDA_SP_Spider_2:
   mod: 1
   override_base_hp: 14
   override_base_atk: 5
+  spawner_limit: 14
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type
 
 WDA_SB_Skeleton_0:
   match_type: SKELETON
@@ -1565,6 +2059,10 @@ WDA_SB_Skeleton_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 7
+  spawner_limit: 5
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: rule
 
 WDA_SB_Skeleton_1:
   match_type: SKELETON
@@ -1576,6 +2074,10 @@ WDA_SB_Skeleton_1:
   mod: 1
   override_base_hp: 22
   override_base_atk: 8
+  spawner_limit: 5
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: rule
 
 WDA_SB_Skeleton_2:
   match_type: SKELETON
@@ -1587,6 +2089,10 @@ WDA_SB_Skeleton_2:
   mod: 1
   override_base_hp: 24
   override_base_atk: 9
+  spawner_limit: 5
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: rule
 
 WDA_SB_Magma_0:
   match_type: MAGMA_CUBE
@@ -1598,6 +2104,10 @@ WDA_SB_Magma_0:
   mod: 1
   override_base_hp: 16
   override_base_atk: 6
+  spawner_limit: 3
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: rule
 
 WDA_TT_Skeleton_Juggernaut_0:
   match_type: SKELETON
@@ -1609,6 +2119,10 @@ WDA_TT_Skeleton_Juggernaut_0:
   mod: 1
   override_base_hp: 36
   override_base_atk: 9
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_TT_Skeleton_Juggernaut_1:
   match_type: SKELETON
@@ -1620,6 +2134,10 @@ WDA_TT_Skeleton_Juggernaut_1:
   mod: 1
   override_base_hp: 30
   override_base_atk: 10
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_TT_Skeleton_Ranged_0:
   match_type: SKELETON
@@ -1631,6 +2149,10 @@ WDA_TT_Skeleton_Ranged_0:
   mod: 1
   override_base_hp: 24
   override_base_atk: 7
+  spawner_limit: 8
+  spawner_check_radius: 20
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_TT_Skeleton_Fly_0:
   match_type: SKELETON
@@ -1642,6 +2164,10 @@ WDA_TT_Skeleton_Fly_0:
   mod: 1
   override_base_hp: 28
   override_base_atk: 9
+  spawner_limit: 5
+  spawner_check_radius: 20
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_TT_Top_Phantom_0:
   match_type: PHANTOM
@@ -1653,6 +2179,10 @@ WDA_TT_Top_Phantom_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 8
+  spawner_limit: 5
+  spawner_check_radius: 20
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_TT_Top_Skeleton_Juggernaut_0:
   match_type: SKELETON
@@ -1664,6 +2194,10 @@ WDA_TT_Top_Skeleton_Juggernaut_0:
   mod: 1
   override_base_hp: 40
   override_base_atk: 10
+  spawner_limit: 5
+  spawner_check_radius: 20
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_TT_Top_Skeleton_Ranged_0:
   match_type: SKELETON
@@ -1675,6 +2209,10 @@ WDA_TT_Top_Skeleton_Ranged_0:
   mod: 1
   override_base_hp: 26
   override_base_atk: 8
+  spawner_limit: 5
+  spawner_check_radius: 20
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_TT_Witch_0:
   match_type: WITCH
@@ -1686,6 +2224,10 @@ WDA_TT_Witch_0:
   mod: 1
   override_base_hp: 26
   override_base_atk: 5
+  spawner_limit: 4
+  spawner_check_radius: 20
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_UPS_Captain_0:
   match_type: SKELETON
@@ -1695,8 +2237,12 @@ WDA_UPS_Captain_0:
   display_name: "幽灵船长"
   override_power_level: 75
   mod: 1.8
-  override_base_hp: 30
-  override_base_atk: 10
+  override_base_hp: 36
+  override_base_atk: 8
+  spawner_limit: 2
+  spawner_check_radius: 24
+  spawner_vertical_radius: 12
+  spawner_limit_mode: rule
 
 WDA_UPS_Dolphin_Rider_0:
   match_type: SKELETON
@@ -1708,6 +2254,10 @@ WDA_UPS_Dolphin_Rider_0:
   mod: 1
   override_base_hp: 24
   override_base_atk: 8
+  spawner_limit: 7
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_UPS_Dolphin_0:
   match_type: DOLPHIN
@@ -1719,6 +2269,10 @@ WDA_UPS_Dolphin_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 3
+  spawner_limit: 3
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type
 
 WDA_UPS_Skeleton_Ranged_0:
   match_type: SKELETON
@@ -1730,6 +2284,10 @@ WDA_UPS_Skeleton_Ranged_0:
   mod: 1
   override_base_hp: 20
   override_base_atk: 7
+  spawner_limit: 7
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_UPS_Skeleton_Juggernaut_0:
   match_type: SKELETON
@@ -1741,6 +2299,10 @@ WDA_UPS_Skeleton_Juggernaut_0:
   mod: 1
   override_base_hp: 26
   override_base_atk: 9
+  spawner_limit: 7
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_UPS_Skeleton_Juggernaut_1:
   match_type: SKELETON
@@ -1752,6 +2314,10 @@ WDA_UPS_Skeleton_Juggernaut_1:
   mod: 1
   override_base_hp: 30
   override_base_atk: 10
+  spawner_limit: 7
+  spawner_check_radius: 20
+  spawner_vertical_radius: 10
+  spawner_limit_mode: rule
 
 WDA_UPS_Parrot_0:
   match_type: PARROT
@@ -1763,6 +2329,10 @@ WDA_UPS_Parrot_0:
   mod: 1
   override_base_hp: 8
   override_base_atk: 1
+  spawner_limit: 3
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type
 
 WDA_UPS_Silverfish_0:
   match_type: SILVERFISH
@@ -1774,3 +2344,7 @@ WDA_UPS_Silverfish_0:
   mod: 1
   override_base_hp: 8
   override_base_atk: 4
+  spawner_limit: 12
+  spawner_check_radius: 16
+  spawner_vertical_radius: 8
+  spawner_limit_mode: type

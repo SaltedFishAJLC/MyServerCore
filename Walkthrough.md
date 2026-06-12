@@ -260,3 +260,25 @@
 
 - `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
 - 构建仅提示既有 `HologramManager` 中 `EntityRemoveEvent` 已过时；本次改动未触碰该清理兜底路径。
+
+## 2026-06-11 WDA 怪物表收尾平衡与刷怪笼限制
+### 更新日志
+
+- 基于当前生态怪公式重新体检 `custom_mobs.yml` 的 WDA 固定等级表，重点压低低 base_hp 导致的攻击膨胀、远程怪爆发和精英怪血量偏薄问题。
+- 收束明显离群项：Bandit Towers 刺客从高爆发纸身改为轻甲精英；Foundry 护卫队长和巨型岩浆怪从高攻怪改为更偏坦度；Shiraz Palace 精英骷髅/尸壳改为更稳的精英坦度曲线。
+- Aviary 的高等级远程/飞行怪整体降攻补血，保留末地级结构压迫感，但避免远程怪的单次攻击明显高于同结构近战梯队。
+- Coliseum、Illager Corsair、Infested Temple、Mushroom Mines、Undead Pirate Ship 等结构的少数离群精英同步调低攻击、补足血量，使同等级玩家面对同结构怪群时仍有压力但不被单只异常怪秒压。
+- 为除修道院村民外的 WDA 规则显式补齐刷怪笼限制字段：`spawner_limit`、`spawner_check_radius`、`spawner_vertical_radius`、`spawner_limit_mode`。
+
+### 实现细节
+
+- 强怪稀疏结构采用更低上限与较大检测半径，例如铸造厂、飞空结构、船长/队长类单位通常限制在 2-6 只附近存活。
+- 宫殿、塔楼、矿井、村落这类刷怪点密集或覆盖面积大的结构采用较小检测半径，并在普通同类型杂兵上使用 `spawner_limit_mode: type`，防止多个同类型变体各自刷满。
+- `spawner_limit_mode: rule` 继续用于首领、精英和职责差异明显的怪，避免普通怪数量把关键精英刷怪笼完全压死。
+- `WDA_Mon_Villager_0` 是非战斗展示生物，未加入怪物刷怪笼限制表；`WDA_Dungeon_Guard` 虽是历史示例规则，也补了 6/24/12 的保守限制。
+
+### 验证记录
+
+- 使用项目 Gradle 缓存中的 SnakeYAML 2.2 读取 `src/main/resources/custom_mobs.yml`，解析通过，顶层规则数为 155。
+- 脚本复查 WDA 规则：除修道院村民外，所有 WDA 规则均已具备显式 `spawner_limit` 与 `spawner_limit_mode`。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
