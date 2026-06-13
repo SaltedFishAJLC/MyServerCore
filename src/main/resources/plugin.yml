@@ -15,4 +15,4 @@ softdepend:
 commands:
   servercore:
     description: Main command for ServerCore
-    aliases: [score, sc]
+    aliases: [score, sc, sce]

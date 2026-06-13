@@ -1,6 +1,7 @@
 package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
+import com.servercore.enchant.EnchantStatResolver;
 import dev.aurelium.auraskills.api.AuraSkillsBukkit;
 import dev.aurelium.auraskills.api.event.skill.XpGainEvent;
 import dev.aurelium.auraskills.api.skill.Skill;
@@ -840,7 +841,9 @@ public class CollectionSkillManager implements Listener {
             return 0.0;
         }
         PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
-        return container.getOrDefault(key, PersistentDataType.DOUBLE, 0.0);
+        double value = container.getOrDefault(key, PersistentDataType.DOUBLE, 0.0);
+        EnchantStatResolver resolver = EnchantStatResolver.getInstance();
+        return value + (resolver == null ? 0.0 : resolver.resolveNumeric(item, key.getKey()));
     }
 
     private void dropExtraCopies(BlockState state, ItemStack tool, Player player, Location location, int copies) {

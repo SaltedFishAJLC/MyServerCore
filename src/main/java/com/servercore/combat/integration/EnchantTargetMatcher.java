@@ -1,57 +1,90 @@
 package com.servercore.combat.integration;
 
-import com.servercore.combat.creature.CreatureMainTag;
-import com.servercore.combat.creature.CreatureTagService;
+import com.servercore.enchant.EnchantDefinition;
+import com.servercore.enchant.EnchantRegistry;
+import com.servercore.enchant.ValueCurve;
 import com.servercore.manager.EnchantManager;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.EnumMap;
-import java.util.Locale;
 import java.util.Map;
 
 public final class EnchantTargetMatcher {
-
-    private static final double DAMAGE_PER_LEVEL = 0.05;
-    private static final Map<CreatureMainTag, String[]> ENCHANT_IDS = new EnumMap<>(CreatureMainTag.class);
-
-    static {
-        ENCHANT_IDS.put(CreatureMainTag.UNDEAD, new String[]{"undead_slayer"});
-        ENCHANT_IDS.put(CreatureMainTag.SKELETON, new String[]{"skeleton_slayer"});
-        ENCHANT_IDS.put(CreatureMainTag.ANIMAL, new String[]{"animal_slayer"});
-        ENCHANT_IDS.put(CreatureMainTag.ARTHROPOD, new String[]{"arthropod_slayer"});
-        ENCHANT_IDS.put(CreatureMainTag.HUMANOID, new String[]{"humanoid_slayer"});
-        ENCHANT_IDS.put(CreatureMainTag.GELATINOUS, new String[]{"gelatinous_slayer", "slime_slayer"});
-        ENCHANT_IDS.put(CreatureMainTag.CONSTRUCT, new String[]{"construct_breaker"});
-        ENCHANT_IDS.put(CreatureMainTag.GHOST, new String[]{"exorcism", "ghost_slayer"});
-        ENCHANT_IDS.put(CreatureMainTag.GIANT, new String[]{"giant_hunter"});
-        ENCHANT_IDS.put(CreatureMainTag.ABERRANT, new String[]{"aberrant_hunter"});
-    }
 
     private EnchantTargetMatcher() {
     }
 
     public static double resolveHighestMultiplier(ItemStack weapon, LivingEntity target) {
-        int level = resolveHighestLevel(weapon, target);
-        return level <= 0 ? 1.0 : 1.0 + level * DAMAGE_PER_LEVEL;
+        TargetBonus bonus = resolveTargetBonus(weapon, target);
+        return 1.0 + bonus.mainTagBonus() + bonus.traitTagBonus() + bonus.bossBonus();
     }
 
     public static int resolveHighestLevel(ItemStack weapon, LivingEntity target) {
         EnchantManager enchantManager = EnchantManager.getInstance();
-        CreatureTagService creatureTagService = CreatureTagService.getInstance();
-        if (enchantManager == null || creatureTagService == null || weapon == null || target == null) {
+        EnchantRegistry registry = EnchantRegistry.getInstance();
+        if (enchantManager == null || registry == null || weapon == null || target == null) {
             return 0;
         }
 
-        CreatureMainTag mainTag = creatureTagService.getMainTag(target);
         int best = 0;
-        for (String enchantId : ENCHANT_IDS.getOrDefault(mainTag, new String[0])) {
-            best = Math.max(best, enchantManager.getCustomEnchantLevel(weapon, normalize(enchantId)));
+        for (Map.Entry<String, Integer> entry : enchantManager.getAllActiveCustomEnchants(weapon).entrySet()) {
+            EnchantDefinition definition = registry.get(entry.getKey()).orElse(null);
+            if (definition != null && definition.target().matchesAny(target) && targetDamageCurve(definition) != null) {
+                best = Math.max(best, entry.getValue());
+            }
         }
         return best;
     }
 
-    private static String normalize(String value) {
-        return value == null ? "" : value.toLowerCase(Locale.ROOT).trim();
+    private static TargetBonus resolveTargetBonus(ItemStack weapon, LivingEntity target) {
+        EnchantManager enchantManager = EnchantManager.getInstance();
+        EnchantRegistry registry = EnchantRegistry.getInstance();
+        if (enchantManager == null || registry == null || weapon == null || target == null) {
+            return TargetBonus.empty();
+        }
+
+        double mainTagBonus = 0.0;
+        double traitTagBonus = 0.0;
+        double bossBonus = 0.0;
+        for (Map.Entry<String, Integer> entry : enchantManager.getAllActiveCustomEnchants(weapon).entrySet()) {
+            EnchantDefinition definition = registry.get(entry.getKey()).orElse(null);
+            if (definition == null || definition.target().isEmpty()) {
+                continue;
+            }
+
+            ValueCurve curve = targetDamageCurve(definition);
+            if (curve == null) {
+                continue;
+            }
+            double value = Math.max(0.0, curve.valueAt(entry.getValue()));
+            if (definition.target().matchesMainTag(target)) {
+                mainTagBonus = Math.max(mainTagBonus, value);
+            }
+            if (definition.target().matchesTraitTag(target)) {
+                traitTagBonus = Math.max(traitTagBonus, value);
+            }
+            if (definition.target().matchesBoss(target)) {
+                bossBonus = Math.max(bossBonus, value);
+            }
+        }
+        return new TargetBonus(mainTagBonus, traitTagBonus, bossBonus);
+    }
+
+    private static ValueCurve targetDamageCurve(EnchantDefinition definition) {
+        ValueCurve curve = definition.numericBonuses().get("damage_to_target");
+        if (curve != null) {
+            return curve;
+        }
+        curve = definition.numericBonuses().get("damage_to_main_tag");
+        if (curve != null) {
+            return curve;
+        }
+        return definition.numericBonuses().get("damage_to_trait_tag");
+    }
+
+    private record TargetBonus(double mainTagBonus, double traitTagBonus, double bossBonus) {
+        static TargetBonus empty() {
+            return new TargetBonus(0.0, 0.0, 0.0);
+        }
     }
 }

@@ -282,3 +282,32 @@
 - 使用项目 Gradle 缓存中的 SnakeYAML 2.2 读取 `src/main/resources/custom_mobs.yml`，解析通过，顶层规则数为 155。
 - 脚本复查 WDA 规则：除修道院村民外，所有 WDA 规则均已具备显式 `spawner_limit` 与 `spawner_limit_mode`。
 - `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
+
+## 2026-06-12 配置驱动自定义附魔系统
+### 更新日志
+
+- 新增 `enchants.yml` 与 `enchant_pools.yml`，自定义附魔定义、enabled 开关、数值曲线、目标标签、机制参数和附魔台池子都改为配置驱动。
+- `EnchantManager` 不再硬编码注册附魔，只保留 `id:level;id:level` 的 PDC 读写门面；旧物品 PDC 格式保持兼容。
+- 附魔等级拆分为 `soft_max_level` 与硬上限 `max_level`：附魔台最多升到软上限，指令、掉落和稀有战利品等特殊来源可以给到不超过硬上限的等级。
+- 新增 active 附魔读取：禁用附魔仍保留在旧物品 PDC 中，但不参与数值、Slayer 增伤或机制触发。
+- `ItemFormatManager` 的附魔 lore 改为从注册表读取显示名、稀有度颜色、描述和禁用状态；未知附魔显示 raw id，禁用附魔显示灰色 `[已禁用]`。
+- `CombatStats` 通过 `EnchantStatResolver` 动态读取普通/罕见附魔数值，移除了旧的 `vampirism` 固定吸血换算。
+- `MiningManager`、`CollectionSkillManager`、`FishingManager` 的工具统计也会叠加 active 附魔 numeric，例如 `tool_mining_speed`、`mining_fortune`、`fishing_speed`、`sea_creature_chance`、`treasure_chance`。
+- `EnchantTargetMatcher` 改为读取 YML 中的 `target + damage_to_target`，Slayer 类附魔不再固定每级 5%。
+- 新增第一批机制效果：`cleave` 溅射、`vampirism` 稀有吸血、`perfect_guard` 完美格挡，以及 `ultimate_apex_slayer`、`ultimate_berserker_oath`、`ultimate_phoenix_core` 的第一版终极效果。
+- 附魔台、铁砧、砂轮加入自定义附魔入口：附魔台从 pool 抽取 enabled 附魔，铁砧合并写入 PDC 并阻止 disabled 升级，砂轮可清空自定义附魔并返还部分经验/粉尘。
+- 附魔台现在先验证再清空原版附魔结果；抽到已有附魔时只升级不降级，同等级再抽到会 +1，不可提升、冲突或达到软上限时取消本次附魔并提示玩家。
+- 新增测试命令：`/sc reload enchants`、`/sc enchant list`、`/sc enchant give [player] <id> <level>`、`/sc enchant remove [player] <id>`、`/sc enchant clear [player]`、`/sc enchant debug`，并补充 `/sce` 别名。
+
+### 实现细节
+
+- `com.servercore.enchant` 包承载 `EnchantRegistry`、`EnchantDefinition`、`ValueCurve`、`EnchantStatResolver`、`EnchantEffectService` 和附魔台/铁砧/砂轮监听器，避免继续膨胀旧 `manager` 包。
+- 数值曲线支持 `CONSTANT`、`LINEAR`、`PER_LEVEL`；`PER_LEVEL` 超出等级时沿用最后一级数值，方便只改 YAML 做平衡。
+- 终极附魔默认一件装备最多 1 个，且 disabled 终极默认不计入上限，避免废弃附魔卡死旧装备。
+- secondary damage 使用 `EnchantDamageContext` 标记，防止劈砍伤害再次触发劈砍、吸血或主战斗计算。
+- `ShieldManager` 继续作为唯一盾牌格挡入口，`perfect_guard` 只在现有阈值/冷却链路上追加配置驱动加成。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
+- 构建仅提示 Bukkit 过时 API，其中本次铁砧监听器使用的 repair cost API 已过时；不影响当前附魔功能编译与打包。

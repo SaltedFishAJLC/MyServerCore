@@ -1,0 +1,55 @@
+version: 1
+
+vanilla_enchant_table:
+  enabled: true
+  cost:
+    exp_level_base: 5
+    exp_level_per_power: 3
+  rewards:
+    common:
+      weight: 65
+      rarities: [COMMON]
+    uncommon:
+      weight: 25
+      rarities: [UNCOMMON]
+    rare:
+      weight: 2
+      rarities: [RARE]
+  blocked_rarities: [ULTIMATE]
+
+special_enchant_table:
+  enabled: true
+  allowed_rarities: [COMMON, UNCOMMON]
+  allow_choose_level: true
+  cost:
+    COMMON:
+      dust_per_level_square: 4
+      exp_per_level: 5
+    UNCOMMON:
+      dust_per_level_square: 12
+      exp_per_level: 8
+
+npc_books:
+  enabled: true
+  pools:
+    rare_rotation:
+      rarities: [RARE]
+      refresh_hours: 24
+    ultimate_rotation:
+      rarities: [ULTIMATE]
+      refresh_hours: 72
+
+grindstone:
+  remove_single:
+    COMMON:
+      dust_per_level: 8
+    UNCOMMON:
+      dust_per_level: 24
+    RARE:
+      dust_per_level: 80
+    ULTIMATE:
+      dust_per_level: 500
+      require_special_material: true
+  clear_all:
+    refund_dust_ratio: 0.35
+    refund_exp_ratio: 0.25

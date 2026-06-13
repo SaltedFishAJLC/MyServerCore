@@ -1,0 +1,368 @@
+version: 1
+
+settings:
+  disabled_lore_mode: SHOW_GRAY
+  unknown_enchant_lore_mode: SHOW_RAW
+  ultimate_limit_per_item: 1
+  rare_effects_require_enabled: true
+  numeric_bonus_require_enabled: true
+  count_disabled_ultimate_in_limit: false
+
+enchants:
+  keen:
+    enabled: true
+    display: "锋芒"
+    rarity: COMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [MELEE_WEAPON]
+    conflict_group: damage_generic
+    description:
+      - "增加基础伤害。"
+      - "每级 +{base_damage} 基础伤害。"
+    numeric:
+      base_damage:
+        type: LINEAR
+        per_level: 2.0
+
+  might:
+    enabled: true
+    display: "强攻"
+    rarity: COMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [WEAPON]
+    conflict_group: damage_generic
+    description:
+      - "提高综合增伤乘区。"
+      - "每级 +{base_multiplier_percent}% 增伤。"
+    numeric:
+      base_multiplier:
+        type: LINEAR
+        per_level: 0.015
+
+  critical:
+    enabled: true
+    display: "精准"
+    rarity: COMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [WEAPON, RANGED_WEAPON]
+    description:
+      - "提高暴击几率。"
+      - "每级 +{crit_chance_percent}% 暴击率。"
+    numeric:
+      crit_chance:
+        type: LINEAR
+        per_level: 0.012
+
+  crit_damage:
+    enabled: true
+    display: "毁伤"
+    rarity: COMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [WEAPON, RANGED_WEAPON]
+    description:
+      - "提高暴击伤害。"
+      - "每级 +{crit_damage_percent}% 暴击伤害。"
+    numeric:
+      crit_damage:
+        type: LINEAR
+        per_level: 0.04
+
+  fortify:
+    enabled: true
+    display: "坚固"
+    rarity: COMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [ARMOR, SHIELD]
+    description:
+      - "提高基础护甲。"
+      - "每级 +{base_armor} 护甲。"
+    numeric:
+      base_armor:
+        type: LINEAR
+        per_level: 8.0
+
+  efficiency_core:
+    enabled: true
+    display: "效率核心"
+    rarity: COMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [TOOL]
+    description:
+      - "提高挖掘速度。"
+      - "每级 +{tool_mining_speed} 挖掘速度。"
+    numeric:
+      tool_mining_speed:
+        type: LINEAR
+        per_level: 40.0
+
+  fortune_core:
+    enabled: true
+    display: "时运核心"
+    rarity: COMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [TOOL]
+    description:
+      - "提高通用工具时运。"
+      - "每级 +{tool_fortune} 工具时运。"
+    numeric:
+      tool_fortune:
+        type: LINEAR
+        per_level: 8.0
+
+  undead_slayer:
+    enabled: true
+    display: "亡灵杀手"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [WEAPON]
+    target:
+      main_tags: [UNDEAD]
+    description:
+      - "对亡灵目标造成更高伤害。"
+      - "每级 +{damage_to_target_percent}% 伤害。"
+    numeric:
+      damage_to_target:
+        type: LINEAR
+        per_level: 0.05
+
+  skeleton_slayer:
+    enabled: true
+    display: "骷髅杀手"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [WEAPON]
+    target:
+      main_tags: [SKELETON]
+    description:
+      - "对骷髅目标造成更高伤害。"
+    numeric:
+      damage_to_target:
+        type: LINEAR
+        per_level: 0.05
+
+  humanoid_slayer:
+    enabled: true
+    display: "人形杀手"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [WEAPON]
+    target:
+      main_tags: [HUMANOID]
+    description:
+      - "对人形目标造成更高伤害。"
+    numeric:
+      damage_to_target:
+        type: LINEAR
+        per_level: 0.05
+
+  construct_breaker:
+    enabled: true
+    display: "构装破坏"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [WEAPON]
+    target:
+      main_tags: [CONSTRUCT]
+    description:
+      - "对构装目标造成更高伤害。"
+    numeric:
+      damage_to_target:
+        type: LINEAR
+        per_level: 0.05
+
+  giant_hunter:
+    enabled: true
+    display: "巨兽猎手"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [WEAPON]
+    target:
+      main_tags: [GIANT]
+    description:
+      - "对巨型目标造成更高伤害。"
+    numeric:
+      damage_to_target:
+        type: LINEAR
+        per_level: 0.05
+
+  draw_power:
+    enabled: true
+    display: "蓄势"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [RANGED_WEAPON]
+    description:
+      - "提高满蓄力远程伤害。"
+    numeric:
+      full_charge_damage:
+        type: LINEAR
+        per_level: 0.03
+
+  mining_focus:
+    enabled: true
+    display: "采矿专精"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [PICKAXE]
+    description:
+      - "提高挖矿时运。"
+    numeric:
+      mining_fortune:
+        type: LINEAR
+        per_level: 15.0
+
+  cleave:
+    enabled: true
+    display: "劈砍"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 2
+    slots: [MELEE_WEAPON]
+    conflict_group: melee_mechanic
+    description:
+      - "近战命中时，对周围敌人造成溅射伤害。"
+      - "当前溅射 {damage_ratio_percent}% 伤害。"
+    effect:
+      type: CLEAVE
+      trigger: ON_MELEE_HIT
+      params:
+        radius:
+          type: PER_LEVEL
+          values: [3.0, 3.25, 3.5]
+        max_targets:
+          type: PER_LEVEL
+          values: [2, 3, 3]
+        damage_ratio:
+          type: PER_LEVEL
+          values: [0.10, 0.15, 0.20]
+        secondary_damage: true
+
+  vampirism:
+    enabled: true
+    display: "血饮"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 2
+    slots: [MELEE_WEAPON]
+    description:
+      - "近战造成伤害后恢复生命。"
+      - "当前恢复 {heal_ratio_percent}% 实际伤害。"
+    effect:
+      type: VAMPIRISM
+      trigger: ON_DAMAGE_DEALT
+      params:
+        heal_ratio:
+          type: PER_LEVEL
+          values: [0.01, 0.015, 0.02]
+        boss_multiplier:
+          type: CONSTANT
+          value: 0.5
+        cooldown_seconds:
+          type: CONSTANT
+          value: 1.0
+
+  perfect_guard:
+    enabled: true
+    display: "完美格挡"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 2
+    slots: [SHIELD]
+    description:
+      - "举盾瞬间受到攻击时，提高格挡阈值。"
+      - "当前 +{threshold_bonus} 格挡阈值。"
+    effect:
+      type: PERFECT_GUARD
+      trigger: ON_SHIELD_BLOCK
+      params:
+        timing_window_seconds:
+          type: CONSTANT
+          value: 0.35
+        threshold_bonus:
+          type: PER_LEVEL
+          values: [15.0, 25.0, 40.0]
+        cooldown_seconds:
+          type: PER_LEVEL
+          values: [8.0, 6.0, 4.0]
+
+  ultimate_apex_slayer:
+    enabled: true
+    display: "猎王"
+    rarity: ULTIMATE
+    max_level: 1
+    soft_max_level: 1
+    slots: [WEAPON]
+    conflict_group: ultimate
+    description:
+      - "连续攻击同一个首领目标时逐渐提高伤害。"
+    effect:
+      type: APEX_SLAYER
+      trigger: ON_DAMAGE_CALCULATE
+      params:
+        damage_bonus_per_stack:
+          type: CONSTANT
+          value: 0.02
+        max_stacks:
+          type: CONSTANT
+          value: 10
+        expire_seconds:
+          type: CONSTANT
+          value: 5.0
+
+  ultimate_berserker_oath:
+    enabled: true
+    display: "狂战誓约"
+    rarity: ULTIMATE
+    max_level: 1
+    soft_max_level: 1
+    slots: [MELEE_WEAPON]
+    conflict_group: ultimate
+    description:
+      - "空出盾牌时提高近战伤害，但受到更多伤害。"
+    effect:
+      type: BERSERKER_OATH
+      trigger: PASSIVE
+      params:
+        damage_bonus:
+          type: CONSTANT
+          value: 0.25
+        incoming_damage_penalty:
+          type: CONSTANT
+          value: 0.12
+        require_no_shield: true
+
+  ultimate_phoenix_core:
+    enabled: true
+    display: "不灭余烬"
+    rarity: ULTIMATE
+    max_level: 1
+    soft_max_level: 1
+    slots: [CHESTPLATE]
+    conflict_group: ultimate
+    description:
+      - "受到致死伤害时保留一点生命并进入冷却。"
+    effect:
+      type: PHOENIX_CORE
+      trigger: ON_FATAL_DAMAGE
+      params:
+        cooldown_seconds:
+          type: CONSTANT
+          value: 180.0
+        remain_health:
+          type: CONSTANT
+          value: 1.0
+        clear_negative_effects: true

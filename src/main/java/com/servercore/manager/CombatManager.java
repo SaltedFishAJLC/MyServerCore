@@ -3,6 +3,8 @@ package com.servercore.manager;
 import com.servercore.ServerCorePlugin;
 import com.servercore.combat.damage.DamageService;
 import com.servercore.combat.integration.EnchantTargetMatcher;
+import com.servercore.enchant.EnchantDamageContext;
+import com.servercore.enchant.EnchantEffectService;
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.stat.Stats;
 import org.bukkit.entity.Player;
@@ -38,7 +40,7 @@ public class CombatManager implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerAttack(EntityDamageByEntityEvent event) {
-        if (DamageService.isInternalDamageActive()) {
+        if (DamageService.isInternalDamageActive() || EnchantDamageContext.isSecondaryDamage()) {
             return;
         }
 
@@ -172,6 +174,15 @@ public class CombatManager implements Listener {
             finalDamage *= targetMultiplier;
             lifestealEffectiveDamage *= targetMultiplier;
 
+            EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
+            if (enchantEffects != null) {
+                double beforeEffects = finalDamage;
+                finalDamage = enchantEffects.applyOutgoingDamageModifiers(player, target, finalDamage, isRanged, usesMagicDamage);
+                if (beforeEffects > 0.0) {
+                    lifestealEffectiveDamage *= finalDamage / beforeEffects;
+                }
+            }
+
             if (target instanceof Player targetPlayer) {
                 ShieldManager shieldManager = ShieldManager.getInstance();
                 if (shieldManager != null) {
@@ -211,6 +222,10 @@ public class CombatManager implements Listener {
             if (passiveManager != null) {
                 passiveManager.applyLifesteal(player, lifestealEffectiveDamage, lifestealRate, isRanged, usesMagicDamage, spellbladeMelee);
             }
+            EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
+            if (enchantEffects != null) {
+                enchantEffects.afterPlayerAttack(event, player, target, finalDamage, finalDamage, isRanged, usesMagicDamage);
+            }
         }
     }
 
@@ -244,7 +259,7 @@ public class CombatManager implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerDamaged(EntityDamageEvent event) {
-        if (DamageService.isInternalDamageActive()) {
+        if (DamageService.isInternalDamageActive() || EnchantDamageContext.isSecondaryDamage()) {
             return;
         }
 
@@ -286,6 +301,14 @@ public class CombatManager implements Listener {
             double magicReduction = attributeManager.getMagicDamageReduction(player);
             if (magicReduction > 0.0) {
                 finalDamage *= Math.max(0.0, 1.0 - magicReduction);
+            }
+        }
+
+        EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
+        if (enchantEffects != null) {
+            finalDamage = enchantEffects.applyIncomingDamageModifiers(player, finalDamage);
+            if (enchantEffects.tryPreventFatalDamage(player, event, finalDamage)) {
+                return;
             }
         }
 

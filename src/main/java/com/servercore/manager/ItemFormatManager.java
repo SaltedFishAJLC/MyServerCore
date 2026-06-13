@@ -1,6 +1,10 @@
 package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
+import com.servercore.enchant.EnchantDefinition;
+import com.servercore.enchant.EnchantDescriptionRenderer;
+import com.servercore.enchant.EnchantRegistry;
+import com.servercore.enchant.EnchantSettings;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -485,22 +489,37 @@ public class ItemFormatManager implements Listener {
         Map<String, Integer> enchants = parseEnchantMap(container.get(pdc.KEY_ITEM_CUSTOM_ENCHANTS, PersistentDataType.STRING));
         if (enchants.isEmpty()) return;
 
-        if (enchants.size() > 4) {
-            StringBuilder compact = new StringBuilder();
-            for (Map.Entry<String, Integer> entry : enchants.entrySet()) {
-                if (!compact.isEmpty()) compact.append(", ");
-                compact.append(titleCase(entry.getKey())).append(" ").append(toRoman(entry.getValue()));
-            }
-            lore.add(Component.text(compact.toString(), NamedTextColor.BLUE).decoration(TextDecoration.ITALIC, false));
-            return;
-        }
-
+        EnchantRegistry registry = EnchantRegistry.getInstance();
         for (Map.Entry<String, Integer> entry : enchants.entrySet()) {
-            lore.add(Component.text(titleCase(entry.getKey()) + " " + toRoman(entry.getValue()), NamedTextColor.BLUE)
+            EnchantDefinition definition = registry == null ? null : registry.get(entry.getKey()).orElse(null);
+            int level = definition == null ? entry.getValue() : Math.min(entry.getValue(), definition.maxLevel());
+            if (definition == null) {
+                EnchantSettings.LoreMode mode = registry == null ? EnchantSettings.LoreMode.SHOW_RAW : registry.settings().unknownEnchantLoreMode();
+                if (mode == EnchantSettings.LoreMode.HIDE) {
+                    continue;
+                }
+                lore.add(Component.text("[未知附魔] " + entry.getKey() + ":" + entry.getValue(), NamedTextColor.DARK_GRAY)
+                        .decoration(TextDecoration.ITALIC, false));
+                continue;
+            }
+
+            if (!definition.enabled()) {
+                if (registry != null && registry.settings().disabledLoreMode() == EnchantSettings.LoreMode.HIDE) {
+                    continue;
+                }
+                lore.add(Component.text("[已禁用] " + definition.display() + " " + toRoman(level), NamedTextColor.DARK_GRAY)
+                        .decoration(TextDecoration.ITALIC, false));
+                lore.add(Component.text("此附魔当前不会生效。", NamedTextColor.DARK_GRAY)
+                        .decoration(TextDecoration.ITALIC, false));
+                continue;
+            }
+
+            lore.add(Component.text(definition.display() + " " + toRoman(level), definition.rarity().color())
                     .decoration(TextDecoration.ITALIC, false));
-            String description = EnchantManager.describeEnchant(entry.getKey());
-            if (description != null && !description.isBlank()) {
-                lore.add(Component.text(description, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+            for (String description : EnchantDescriptionRenderer.render(definition, level)) {
+                if (!description.isBlank()) {
+                    lore.add(Component.text(description, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+                }
             }
         }
     }

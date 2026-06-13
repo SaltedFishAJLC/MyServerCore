@@ -14,6 +14,14 @@ import com.servercore.combat.resistance.TagRuleRegistry;
 import com.servercore.combat.status.FrostService;
 import com.servercore.combat.status.StatusService;
 import com.servercore.combat.status.StunController;
+import com.servercore.enchant.EnchantAnvilListener;
+import com.servercore.enchant.EnchantApplyResult;
+import com.servercore.enchant.EnchantDefinition;
+import com.servercore.enchant.EnchantEffectService;
+import com.servercore.enchant.EnchantGrindstoneListener;
+import com.servercore.enchant.EnchantRegistry;
+import com.servercore.enchant.EnchantStatResolver;
+import com.servercore.enchant.EnchantTableListener;
 import com.servercore.manager.DatabaseManager;
 import com.servercore.manager.EconomyManager;
 import com.servercore.manager.EconomyListener;
@@ -132,6 +140,8 @@ public final class ServerCorePlugin extends JavaPlugin {
         
         // 5.5 初始化附属系统
         new PDCManager(this);
+        new EnchantRegistry(this);
+        new EnchantStatResolver();
         CreatureTagService creatureTagService = new CreatureTagService(this);
         TagRuleRegistry tagRuleRegistry = new TagRuleRegistry(this);
         ResistanceResolver resistanceResolver = new ResistanceResolver(creatureTagService, tagRuleRegistry);
@@ -156,6 +166,10 @@ public final class ServerCorePlugin extends JavaPlugin {
         this.reforgeManager = new ReforgeManager(this);
         this.gemstoneManager = new GemstoneManager(this);
         this.enchantManager = new EnchantManager(this);
+        new EnchantEffectService(this);
+        new EnchantTableListener(this);
+        new EnchantAnvilListener(this);
+        new EnchantGrindstoneListener(this);
         this.recycleManager = new RecycleManager(this, economyManager);
         this.customItemRegistry = new CustomItemRegistry(this);
         this.vanillaItemOverrideManager = new VanillaItemOverrideManager(this);
@@ -686,6 +700,22 @@ public final class ServerCorePlugin extends JavaPlugin {
                     player.getInventory().setItemInMainHand(item);
                     player.sendMessage(MINI_MESSAGE.deserialize(applied ? "<green>Gemstone applied.</green>" : "<red>No compatible empty socket.</red>"));
                     return true;
+                } else if (args.length >= 2
+                        && args[0].equalsIgnoreCase("reload")
+                        && args[1].equalsIgnoreCase("enchants")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+
+                    EnchantRegistry registry = EnchantRegistry.getInstance();
+                    if (registry != null) {
+                        registry.reload();
+                    }
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Custom enchants reloaded.</green>"));
+                    return true;
+                } else if (args.length >= 1 && args[0].equalsIgnoreCase("enchant")) {
+                    return handleEnchantCommand(player, args);
                 } else if (args.length >= 4 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("enchant")) {
                     if (!player.hasPermission("servercore.admin")) {
                         player.sendMessage(MINI_MESSAGE.deserialize("<red>浣犳病鏈夋潈闄愶紒</red>"));
@@ -699,9 +729,13 @@ public final class ServerCorePlugin extends JavaPlugin {
                     }
 
                     try {
-                        enchantManager.addCustomEnchant(item, args[2], Integer.parseInt(args[3]));
-                        player.getInventory().setItemInMainHand(item);
-                        player.sendMessage(MINI_MESSAGE.deserialize("<green>Custom enchant updated.</green>"));
+                        EnchantApplyResult result = enchantManager.addCustomEnchantChecked(item, args[2], Integer.parseInt(args[3]));
+                        if (result.success()) {
+                            player.getInventory().setItemInMainHand(item);
+                            player.sendMessage(MINI_MESSAGE.deserialize("<green>Custom enchant updated.</green>"));
+                        } else {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<red>" + result.message() + "</red>"));
+                        }
                     } catch (NumberFormatException exception) {
                         player.sendMessage(MINI_MESSAGE.deserialize("<red>Level must be a number.</red>"));
                     }
@@ -1068,6 +1102,177 @@ public final class ServerCorePlugin extends JavaPlugin {
     private void scheduleNext(boolean shortDelay) {
         banFlowerDeliveryTaskId = -1;
         startBanFlowerDelivery(shortDelay);
+    }
+
+    private boolean handleEnchantCommand(Player player, String[] args) {
+        if (!player.hasPermission("servercore.admin")) {
+            player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+            return true;
+        }
+
+        EnchantRegistry registry = EnchantRegistry.getInstance();
+        EnchantManager enchantManager = EnchantManager.getInstance();
+        if (registry == null || enchantManager == null) {
+            player.sendMessage(MINI_MESSAGE.deserialize("<red>附魔系统尚未加载。</red>"));
+            return true;
+        }
+
+        if (args.length == 1 || args[1].equalsIgnoreCase("help")) {
+            player.sendMessage(net.kyori.adventure.text.Component.text("/sc enchant list"));
+            player.sendMessage(net.kyori.adventure.text.Component.text("/sc enchant give [player] <enchant_id> <level>"));
+            player.sendMessage(net.kyori.adventure.text.Component.text("/sc enchant remove [player] <enchant_id>"));
+            player.sendMessage(net.kyori.adventure.text.Component.text("/sc enchant clear [player]"));
+            player.sendMessage(net.kyori.adventure.text.Component.text("/sc enchant debug"));
+            return true;
+        }
+
+        String sub = args[1].toLowerCase(java.util.Locale.ROOT);
+        if (sub.equals("list")) {
+            player.sendMessage(MINI_MESSAGE.deserialize("<gold>Custom Enchants</gold> <gray>(" + registry.getAllDefinitions().size() + ")</gray>"));
+            for (EnchantDefinition definition : registry.getAllDefinitions()) {
+                player.sendMessage(net.kyori.adventure.text.Component.text("- ", net.kyori.adventure.text.format.NamedTextColor.GRAY)
+                        .append(net.kyori.adventure.text.Component.text(definition.id(), net.kyori.adventure.text.format.NamedTextColor.WHITE))
+                        .append(net.kyori.adventure.text.Component.text(" | ", net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY))
+                        .append(net.kyori.adventure.text.Component.text(definition.display(), definition.rarity().color()))
+                        .append(net.kyori.adventure.text.Component.text(" | ", net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY))
+                        .append(net.kyori.adventure.text.Component.text(definition.enabled() ? "enabled" : "disabled",
+                                definition.enabled() ? net.kyori.adventure.text.format.NamedTextColor.GREEN : net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY)));
+            }
+            return true;
+        }
+
+        if (sub.equals("give")) {
+            if (args.length < 4) {
+                player.sendMessage(net.kyori.adventure.text.Component.text("Usage: /sc enchant give [player] <enchant_id> <level>"));
+                return true;
+            }
+
+            Player target = player;
+            String enchantId;
+            String levelRaw;
+            if (args.length >= 5) {
+                target = Bukkit.getPlayerExact(args[2]);
+                if (target == null) {
+                    player.sendMessage(MINI_MESSAGE.deserialize("<red>目标玩家不在线。</red>"));
+                    return true;
+                }
+                enchantId = args[3];
+                levelRaw = args[4];
+            } else {
+                enchantId = args[2];
+                levelRaw = args[3];
+            }
+
+            int level;
+            try {
+                level = Integer.parseInt(levelRaw);
+            } catch (NumberFormatException exception) {
+                player.sendMessage(MINI_MESSAGE.deserialize("<red>Level must be a number.</red>"));
+                return true;
+            }
+
+            ItemStack item = target.getInventory().getItemInMainHand();
+            if (item.getType().isAir()) {
+                player.sendMessage(MINI_MESSAGE.deserialize("<red>目标玩家主手没有物品。</red>"));
+                return true;
+            }
+
+            EnchantApplyResult result = enchantManager.addCustomEnchantChecked(item, enchantId, level);
+            if (!result.success()) {
+                player.sendMessage(net.kyori.adventure.text.Component.text(result.message(), net.kyori.adventure.text.format.NamedTextColor.RED));
+                return true;
+            }
+            target.getInventory().setItemInMainHand(item);
+            refreshStats(target);
+            player.sendMessage(MINI_MESSAGE.deserialize("<green>Custom enchant applied.</green>"));
+            return true;
+        }
+
+        if (sub.equals("remove")) {
+            if (args.length < 3) {
+                player.sendMessage(net.kyori.adventure.text.Component.text("Usage: /sc enchant remove [player] <enchant_id>"));
+                return true;
+            }
+
+            Player target = player;
+            String enchantId;
+            if (args.length >= 4) {
+                target = Bukkit.getPlayerExact(args[2]);
+                if (target == null) {
+                    player.sendMessage(MINI_MESSAGE.deserialize("<red>目标玩家不在线。</red>"));
+                    return true;
+                }
+                enchantId = args[3];
+            } else {
+                enchantId = args[2];
+            }
+
+            ItemStack item = target.getInventory().getItemInMainHand();
+            enchantManager.removeCustomEnchant(item, enchantId);
+            target.getInventory().setItemInMainHand(item);
+            refreshStats(target);
+            player.sendMessage(MINI_MESSAGE.deserialize("<green>Custom enchant removed.</green>"));
+            return true;
+        }
+
+        if (sub.equals("clear")) {
+            Player target = player;
+            if (args.length >= 3) {
+                target = Bukkit.getPlayerExact(args[2]);
+                if (target == null) {
+                    player.sendMessage(MINI_MESSAGE.deserialize("<red>目标玩家不在线。</red>"));
+                    return true;
+                }
+            }
+            ItemStack item = target.getInventory().getItemInMainHand();
+            enchantManager.clearCustomEnchants(item);
+            target.getInventory().setItemInMainHand(item);
+            refreshStats(target);
+            player.sendMessage(MINI_MESSAGE.deserialize("<green>Custom enchants cleared.</green>"));
+            return true;
+        }
+
+        if (sub.equals("debug")) {
+            ItemStack item = player.getInventory().getItemInMainHand();
+            java.util.Map<String, Integer> all = enchantManager.getAllCustomEnchants(item);
+            java.util.Map<String, Integer> active = enchantManager.getAllActiveCustomEnchants(item);
+            player.sendMessage(MINI_MESSAGE.deserialize("<gold>Enchant Debug</gold>"));
+            player.sendMessage(net.kyori.adventure.text.Component.text("item: " + (item == null ? "AIR" : item.getType().name())));
+            player.sendMessage(net.kyori.adventure.text.Component.text("PDC: " + enchantManager.writeEnchants(all)));
+            player.sendMessage(net.kyori.adventure.text.Component.text("active enchants:"));
+            for (java.util.Map.Entry<String, Integer> entry : active.entrySet()) {
+                EnchantDefinition definition = registry.get(entry.getKey()).orElse(null);
+                if (definition == null) continue;
+                String numeric = definition.numericBonuses().entrySet().stream()
+                        .map(n -> n.getKey() + "=" + String.format(java.util.Locale.US, "%.3f", n.getValue().valueAt(entry.getValue())))
+                        .reduce((a, b) -> a + ", " + b)
+                        .orElse("");
+                player.sendMessage(net.kyori.adventure.text.Component.text("- " + definition.id() + " " + entry.getValue()
+                        + " enabled=true rarity=" + definition.rarity().name()
+                        + (numeric.isBlank() ? "" : " numeric[" + numeric + "]")
+                        + (definition.effect().hasEffect() ? " effect=" + definition.effect().type().name() : "")));
+            }
+            player.sendMessage(net.kyori.adventure.text.Component.text("disabled/unknown enchants:"));
+            for (java.util.Map.Entry<String, Integer> entry : all.entrySet()) {
+                if (active.containsKey(entry.getKey())) continue;
+                EnchantDefinition definition = registry.get(entry.getKey()).orElse(null);
+                player.sendMessage(net.kyori.adventure.text.Component.text("- " + entry.getKey() + " " + entry.getValue()
+                        + " enabled=" + (definition != null && definition.enabled())));
+            }
+            return true;
+        }
+
+        player.sendMessage(net.kyori.adventure.text.Component.text("Usage: /sc enchant <list|give|remove|clear|debug>"));
+        return true;
+    }
+
+    private void refreshStats(Player player) {
+        PlayerStatCache statCache = PlayerStatCache.getInstance();
+        if (statCache != null) {
+            statCache.updateCache(player);
+        } else if (attributeManager != null) {
+            attributeManager.refreshPlayer(player);
+        }
     }
     
     public static ServerCorePlugin getInstance() {

@@ -1,6 +1,7 @@
 package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
+import com.servercore.enchant.EnchantStatResolver;
 import dev.aurelium.auraskills.api.skill.Skills;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
@@ -375,7 +376,9 @@ public class FishingManager implements Listener {
         if (tool == null || tool.getType().isAir() || !tool.hasItemMeta()) {
             return 0.0;
         }
-        return tool.getItemMeta().getPersistentDataContainer().getOrDefault(key, org.bukkit.persistence.PersistentDataType.DOUBLE, 0.0);
+        double value = tool.getItemMeta().getPersistentDataContainer().getOrDefault(key, org.bukkit.persistence.PersistentDataType.DOUBLE, 0.0);
+        EnchantStatResolver resolver = EnchantStatResolver.getInstance();
+        return value + (resolver == null ? 0.0 : resolver.resolveNumeric(tool, key.getKey()));
     }
 
     private void setAttribute(LivingEntity entity, Attribute attribute, double value) {

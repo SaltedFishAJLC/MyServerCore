@@ -1,5 +1,7 @@
 package com.servercore.manager;
 
+import com.servercore.enchant.EnchantStatBundle;
+import com.servercore.enchant.EnchantStatResolver;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -51,6 +53,14 @@ public record CombatStats(
                 totalBrutality += pdc.getStat(armor, pdc.KEY_BRUTALITY);
                 totalLifesteal += pdc.getStat(armor, pdc.KEY_LIFESTEAL);
                 totalArmorPen += pdc.getStat(armor, pdc.KEY_ARMOR_PEN);
+                EnchantStatBundle enchantStats = resolveEnchantStats(armor, player, null);
+                totalBaseDamage += enchantStats.baseDamage();
+                totalBaseMultiplier += enchantStats.baseMultiplier();
+                totalCritChance += enchantStats.critChance();
+                totalCritDamage += enchantStats.critDamage();
+                totalBrutality += enchantStats.brutality();
+                totalLifesteal += enchantStats.lifesteal();
+                totalArmorPen += enchantStats.armorPen();
             }
         }
         
@@ -66,6 +76,14 @@ public record CombatStats(
                     totalBrutality += pdc.getStat(acc, pdc.KEY_BRUTALITY);
                     totalLifesteal += pdc.getStat(acc, pdc.KEY_LIFESTEAL);
                     totalArmorPen += pdc.getStat(acc, pdc.KEY_ARMOR_PEN);
+                    EnchantStatBundle enchantStats = resolveEnchantStats(acc, player, null);
+                    totalBaseDamage += enchantStats.baseDamage();
+                    totalBaseMultiplier += enchantStats.baseMultiplier();
+                    totalCritChance += enchantStats.critChance();
+                    totalCritDamage += enchantStats.critDamage();
+                    totalBrutality += enchantStats.brutality();
+                    totalLifesteal += enchantStats.lifesteal();
+                    totalArmorPen += enchantStats.armorPen();
                 }
             }
             
@@ -79,6 +97,14 @@ public record CombatStats(
                     totalBrutality += pdc.getStat(tal, pdc.KEY_BRUTALITY);
                     totalLifesteal += pdc.getStat(tal, pdc.KEY_LIFESTEAL);
                     totalArmorPen += pdc.getStat(tal, pdc.KEY_ARMOR_PEN);
+                    EnchantStatBundle enchantStats = resolveEnchantStats(tal, player, null);
+                    totalBaseDamage += enchantStats.baseDamage();
+                    totalBaseMultiplier += enchantStats.baseMultiplier();
+                    totalCritChance += enchantStats.critChance();
+                    totalCritDamage += enchantStats.critDamage();
+                    totalBrutality += enchantStats.brutality();
+                    totalLifesteal += enchantStats.lifesteal();
+                    totalArmorPen += enchantStats.armorPen();
                 }
             }
         }
@@ -143,8 +169,15 @@ public record CombatStats(
         totalCritDamage += pdc.getStat(mainHand, pdc.KEY_CRIT_DAMAGE) * mainMultiplier;
         totalBrutality += pdc.getStat(mainHand, pdc.KEY_BRUTALITY) * mainMultiplier;
         totalLifesteal += pdc.getStat(mainHand, pdc.KEY_LIFESTEAL) * mainMultiplier;
-        totalLifesteal += getVampirismLifesteal(mainHand) * mainMultiplier;
         totalArmorPen += pdc.getStat(mainHand, pdc.KEY_ARMOR_PEN) * mainMultiplier;
+        EnchantStatBundle mainEnchantStats = resolveEnchantStats(mainHand, player, EquipmentSlot.HAND);
+        totalBaseDamage += mainEnchantStats.baseDamage() * mainMultiplier;
+        totalBaseMultiplier += mainEnchantStats.baseMultiplier() * mainMultiplier;
+        totalCritChance += mainEnchantStats.critChance() * mainMultiplier;
+        totalCritDamage += mainEnchantStats.critDamage() * mainMultiplier;
+        totalBrutality += mainEnchantStats.brutality() * mainMultiplier;
+        totalLifesteal += mainEnchantStats.lifesteal() * mainMultiplier;
+        totalArmorPen += mainEnchantStats.armorPen() * mainMultiplier;
 
         totalBaseDamage += pdc.getStat(offHand, pdc.KEY_BASE_DAMAGE) * offMultiplier;
         totalBaseMultiplier += pdc.getStat(offHand, pdc.KEY_BASE_MULTIPLIER) * offMultiplier;
@@ -152,8 +185,15 @@ public record CombatStats(
         totalCritDamage += pdc.getStat(offHand, pdc.KEY_CRIT_DAMAGE) * offMultiplier;
         totalBrutality += pdc.getStat(offHand, pdc.KEY_BRUTALITY) * offMultiplier;
         totalLifesteal += pdc.getStat(offHand, pdc.KEY_LIFESTEAL) * offMultiplier;
-        totalLifesteal += getVampirismLifesteal(offHand) * offMultiplier;
         totalArmorPen += pdc.getStat(offHand, pdc.KEY_ARMOR_PEN) * offMultiplier;
+        EnchantStatBundle offEnchantStats = resolveEnchantStats(offHand, player, EquipmentSlot.OFF_HAND);
+        totalBaseDamage += offEnchantStats.baseDamage() * offMultiplier;
+        totalBaseMultiplier += offEnchantStats.baseMultiplier() * offMultiplier;
+        totalCritChance += offEnchantStats.critChance() * offMultiplier;
+        totalCritDamage += offEnchantStats.critDamage() * offMultiplier;
+        totalBrutality += offEnchantStats.brutality() * offMultiplier;
+        totalLifesteal += offEnchantStats.lifesteal() * offMultiplier;
+        totalArmorPen += offEnchantStats.armorPen() * offMultiplier;
 
         ClassManager classManager = ClassManager.getInstance();
         if (classManager != null && classManager.suppressesCriticalHits(player)) {
@@ -163,11 +203,8 @@ public record CombatStats(
         return new CombatStats(totalBaseDamage, totalBaseMultiplier, totalCritChance, totalCritDamage, totalBrutality, totalLifesteal, totalArmorPen);
     }
 
-    private static double getVampirismLifesteal(ItemStack item) {
-        EnchantManager enchantManager = EnchantManager.getInstance();
-        if (enchantManager == null || item == null || item.getType().isAir()) {
-            return 0.0;
-        }
-        return enchantManager.getCustomEnchantLevel(item, "vampirism") * 0.005;
+    private static EnchantStatBundle resolveEnchantStats(ItemStack item, Player player, EquipmentSlot slot) {
+        EnchantStatResolver resolver = EnchantStatResolver.getInstance();
+        return resolver == null ? EnchantStatBundle.empty() : resolver.resolveCombatStats(item, player, slot);
     }
 }

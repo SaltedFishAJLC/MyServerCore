@@ -1,23 +1,36 @@
 package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
+import com.servercore.enchant.EnchantEffectService;
+import com.servercore.enchant.EnchantStatBundle;
+import com.servercore.enchant.EnchantStatResolver;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Custom shield block resolution. Shield absorption is applied before normal
  * damage reduction systems.
  */
-public class ShieldManager {
+public class ShieldManager implements Listener {
 
     private static final double DEFAULT_BLOCK_THRESHOLD = 10.0;
     private static final double DEFAULT_EFFECTIVE_BLOCK = 0.6;
@@ -25,9 +38,11 @@ public class ShieldManager {
     private static final double SHIELD_BREAK_MULTIPLIER = 2.5;
 
     private static ShieldManager instance;
+    private final Map<UUID, Long> shieldRaisedAt = new HashMap<>();
 
     public ShieldManager(ServerCorePlugin plugin) {
         instance = this;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     public static ShieldManager getInstance() {
@@ -56,6 +71,20 @@ public class ShieldManager {
         double threshold = readStatOrDefault(pdc, shield, pdc.KEY_SHIELD_BLOCK_THRESHOLD, DEFAULT_BLOCK_THRESHOLD);
         double effectiveBlock = clamp(readStatOrDefault(pdc, shield, pdc.KEY_SHIELD_EFFECTIVE_BLOCK, DEFAULT_EFFECTIVE_BLOCK), 0.0, 1.0);
         double cooldownSeconds = Math.max(0.0, readStatOrDefault(pdc, shield, pdc.KEY_SHIELD_COOLDOWN_SECONDS, DEFAULT_COOLDOWN_SECONDS));
+        EnchantStatResolver resolver = EnchantStatResolver.getInstance();
+        EnchantStatBundle enchantStats = resolver == null ? EnchantStatBundle.empty() : resolver.resolveCombatStats(shield, defender, org.bukkit.inventory.EquipmentSlot.OFF_HAND);
+        threshold += enchantStats.shieldBlockThreshold();
+        effectiveBlock = clamp(effectiveBlock + enchantStats.shieldEffectiveBlock(), 0.0, 1.0);
+        cooldownSeconds = Math.max(0.0, cooldownSeconds + enchantStats.shieldCooldownSeconds());
+
+        EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
+        if (enchantEffects != null) {
+            long now = System.currentTimeMillis();
+            long raisedAt = shieldRaisedAt.getOrDefault(defender.getUniqueId(), now);
+            EnchantEffectService.ShieldAdjustment adjustment = enchantEffects.applyPerfectGuard(defender, shield, threshold, cooldownSeconds, raisedAt, now);
+            threshold = adjustment.threshold();
+            cooldownSeconds = adjustment.cooldownSeconds();
+        }
 
         if (threshold <= 0.0) {
             return ShieldBlockResult.none(incomingDamage);
@@ -119,6 +148,32 @@ public class ShieldManager {
 
         WeaponTemplateManager templateManager = WeaponTemplateManager.getInstance();
         return templateManager != null && templateManager.getTemplate(item) == WeaponTemplateManager.WeaponTemplate.SHIELD;
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onInteract(PlayerInteractEvent event) {
+        if (!event.getAction().isRightClick()) {
+            return;
+        }
+        ItemStack item = event.getItem();
+        if (isShield(item) || isShield(event.getPlayer().getInventory().getItemInOffHand())) {
+            shieldRaisedAt.put(event.getPlayer().getUniqueId(), System.currentTimeMillis());
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onSwap(PlayerSwapHandItemsEvent event) {
+        shieldRaisedAt.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onHeldSlot(PlayerItemHeldEvent event) {
+        shieldRaisedAt.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        shieldRaisedAt.remove(event.getPlayer().getUniqueId());
     }
 
     private double readStatOrDefault(PDCManager pdc, ItemStack item, org.bukkit.NamespacedKey key, double fallback) {
