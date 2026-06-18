@@ -41,7 +41,15 @@ public final class EnchantSlotMatcher {
         return switch (slot) {
             case WEAPON -> isWeapon(material, template);
             case MELEE_WEAPON -> template != null ? template.isMelee() : isMeleeMaterial(material);
+            case TWO_HANDED_MELEE -> template != null
+                    ? template.isMelee() && template.defaultHandRule() == WeaponTemplateManager.HandRule.TWO_HANDED
+                    : material == Material.MACE || material == Material.TRIDENT || material.name().endsWith("_AXE");
             case RANGED_WEAPON -> template != null ? template.isRanged() : material == Material.BOW || material == Material.CROSSBOW;
+            case SHORTBOW -> template == WeaponTemplateManager.WeaponTemplate.SHORTBOW;
+            case LONGBOW -> template == WeaponTemplateManager.WeaponTemplate.LONGBOW
+                    || (template == null && material == Material.BOW);
+            case CROSSBOW -> template == WeaponTemplateManager.WeaponTemplate.CROSSBOW
+                    || (template == null && material == Material.CROSSBOW);
             case MAGIC_WEAPON -> false;
             case ARMOR -> isArmor(material);
             case HELMET -> material.name().endsWith("_HELMET") || material == Material.TURTLE_HELMET;

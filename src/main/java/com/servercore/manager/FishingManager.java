@@ -9,8 +9,6 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
@@ -26,15 +24,17 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -60,6 +60,7 @@ public class FishingManager implements Listener {
     private final ServerCorePlugin plugin;
     private final GlobalStatManager globalStats;
     private final File gatheringLootFile;
+    private final Map<UUID, PendingCatchResult> pendingCatchResults = new HashMap<>();
     private volatile List<SeaCreatureEntry> seaCreatures = List.of();
     private volatile List<TreasureTier> treasureTiers = List.of();
 
@@ -117,19 +118,27 @@ public class FishingManager implements Listener {
         }
 
         int fishingLevel = getFishingLevel(player);
-        double seaCreatureChance = getSeaCreatureChance(player, fishingLevel);
+        FishingStatSnapshot fishingStats = getFishingStatSnapshot(player);
+        double seaCreatureChance = calculateSeaCreatureChance(fishingLevel, fishingStats.total().seaCreatureChance());
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
         if (random.nextDouble() < seaCreatureChance) {
-            event.setExpToDrop(0);
-            removeCaughtItem(event.getCaught());
-            spawnSeaCreature(player, hook.getLocation(), fishingLevel);
-            return;
+            SeaCreatureEntry seaCreature = rollSeaCreature(hook.getLocation(), fishingLevel, random);
+            if (seaCreature != null && spawnSeaCreature(player, hook.getLocation(), fishingLevel, seaCreature)) {
+                event.setExpToDrop(0);
+                queueCaughtItemRemoval(event.getCaught());
+                return;
+            }
         }
 
-        TreasureEntry treasure = rollTreasure(player, fishingLevel, random);
+        TreasureEntry treasure = rollTreasure(
+                player,
+                fishingLevel,
+                calculateTreasureChance(fishingLevel, fishingStats.total().treasureChance()),
+                random
+        );
         if (treasure != null && event.getCaught() instanceof Item item) {
-            item.setItemStack(createTreasureItem(treasure));
+            pendingCatchResults.put(item.getUniqueId(), PendingCatchResult.replaceWith(createTreasureItem(treasure)));
             event.setExpToDrop(Math.max(event.getExpToDrop(), 3));
             addFishingXp(player, treasure.xp());
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6f, 1.35f);
@@ -137,9 +146,35 @@ public class FishingManager implements Listener {
         }
     }
 
+    /**
+     * AuraSkills reads the original caught item at MONITOR priority to grant the
+     * normal fishing source XP. ServerCore finalizes its custom result afterwards,
+     * making each configured entry XP an intentional extra award.
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void finalizeCustomCatch(PlayerFishEvent event) {
+        if (event.getState() != PlayerFishEvent.State.CAUGHT_FISH || !(event.getCaught() instanceof Item item)) {
+            return;
+        }
+
+        PendingCatchResult result = pendingCatchResults.remove(item.getUniqueId());
+        if (result == null) {
+            return;
+        }
+
+        if (result.removeCaughtItem()) {
+            item.remove();
+        } else if (result.replacement() != null) {
+            item.setItemStack(result.replacement());
+        }
+    }
+
     private void applyFishingSpeed(Player player, FishHook hook) {
         int level = getFishingLevel(player);
-        FishingWaitWindow waitWindow = calculateWaitWindow(getEffectiveFishingSpeed(level, getFishingSpeed(player)));
+        FishingWaitWindow waitWindow = calculateWaitWindow(getEffectiveFishingSpeed(
+                level,
+                getFishingStatSnapshot(player).total().fishingSpeed()
+        ));
         hook.setMinWaitTime(waitWindow.minTicks());
         hook.setMaxWaitTime(waitWindow.maxTicks());
     }
@@ -164,32 +199,30 @@ public class FishingManager implements Listener {
         return (int) Math.round(baseTicks * speedScale / (speedScale + fishingSpeed));
     }
 
-    private void spawnSeaCreature(Player player, Location hookLocation, int fishingLevel) {
-        SeaCreatureEntry entry = rollSeaCreature(hookLocation, fishingLevel);
-        if (entry == null) {
-            return;
-        }
-
+    private boolean spawnSeaCreature(Player player, Location hookLocation, int fishingLevel, SeaCreatureEntry entry) {
         Location spawnLocation = hookLocation.clone().add(0.5, 0.25, 0.5);
-        LivingEntity entity = entry.mythicMob().isBlank() ? null : spawnMythicMob(entry.mythicMob(), spawnLocation);
-        if (entity == null) {
-            entity = (LivingEntity) hookLocation.getWorld().spawnEntity(spawnLocation, entry.type());
+        MobSpawnManager mobSpawnManager = MobSpawnManager.getInstance();
+        if (mobSpawnManager == null) {
+            plugin.getLogger().warning("Fishing sea creature skipped because MobSpawnManager is unavailable.");
+            return false;
         }
-        entity.customName(Component.text(entry.name()));
-        entity.setCustomNameVisible(true);
-        entity.getScoreboardTags().add("servercore_sea_creature");
 
         double levelScale = Math.max(1.0, fishingLevel);
-        setAttribute(entity, Attribute.GENERIC_MAX_HEALTH, entry.baseHealth() + levelScale * entry.mod() * 4.0);
-        setAttribute(entity, Attribute.GENERIC_ATTACK_DAMAGE, 3.0 + levelScale * entry.mod() * 0.25);
-        entity.setHealth(entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
-
-        PDCManager pdc = PDCManager.getInstance();
-        if (pdc != null) {
-            entity.getPersistentDataContainer().set(pdc.KEY_CUSTOM_MOB_ID, PersistentDataType.STRING, "sea_creature_" + entry.id());
-            entity.getPersistentDataContainer().set(pdc.KEY_MOB_POWER_LEVEL, PersistentDataType.INTEGER, Math.max(1, fishingLevel + entry.minLevel()));
-            entity.getPersistentDataContainer().set(pdc.KEY_MOB_SCALING_MOD, PersistentDataType.DOUBLE, entry.mod());
-            entity.getPersistentDataContainer().set(pdc.KEY_MOB_TAGS, PersistentDataType.STRING, "sea,water,fishing");
+        MobSpawnManager.FishingSeaCreatureSpec spec = new MobSpawnManager.FishingSeaCreatureSpec(
+                "sea_creature_" + entry.id(),
+                entry.name(),
+                Math.max(1, fishingLevel + entry.minLevel()),
+                entry.baseHealth() + levelScale * entry.mod() * 4.0,
+                3.0 + levelScale * entry.mod() * 0.25,
+                entry.mod(),
+                "sea,water,fishing"
+        );
+        LivingEntity entity = mobSpawnManager.spawnFishingSeaCreature(
+                () -> spawnSeaCreatureEntity(entry, spawnLocation),
+                spec
+        );
+        if (entity == null) {
+            return false;
         }
 
         addFishingXp(player, entry.xp());
@@ -197,9 +230,20 @@ public class FishingManager implements Listener {
         world.spawnParticle(Particle.SPLASH, spawnLocation, 45, 0.7, 0.25, 0.7, 0.08);
         world.playSound(spawnLocation, Sound.ENTITY_DROWNED_AMBIENT_WATER, 0.9f, 0.75f);
         player.sendActionBar(Component.text("A sea creature answered the hook."));
+        return true;
     }
 
-    private SeaCreatureEntry rollSeaCreature(Location location, int fishingLevel) {
+    private LivingEntity spawnSeaCreatureEntity(SeaCreatureEntry entry, Location spawnLocation) {
+        LivingEntity entity = entry.mythicMob().isBlank() ? null : spawnMythicMob(entry.mythicMob(), spawnLocation);
+        if (entity != null) {
+            return entity;
+        }
+
+        Entity spawned = spawnLocation.getWorld().spawnEntity(spawnLocation, entry.type());
+        return spawned instanceof LivingEntity livingEntity ? livingEntity : null;
+    }
+
+    private SeaCreatureEntry rollSeaCreature(Location location, int fishingLevel, ThreadLocalRandom random) {
         Biome biome = location.getBlock().getBiome();
         List<SeaCreatureEntry> eligible = seaCreatures.stream()
                 .filter(entry -> fishingLevel >= entry.minLevel())
@@ -215,7 +259,7 @@ public class FishingManager implements Listener {
         }
 
         int totalWeight = eligible.stream().mapToInt(SeaCreatureEntry::weight).sum();
-        int roll = ThreadLocalRandom.current().nextInt(Math.max(1, totalWeight));
+        int roll = random.nextInt(Math.max(1, totalWeight));
         for (SeaCreatureEntry entry : eligible) {
             roll -= entry.weight();
             if (roll < 0) {
@@ -225,8 +269,7 @@ public class FishingManager implements Listener {
         return eligible.getFirst();
     }
 
-    private TreasureEntry rollTreasure(Player player, int fishingLevel, ThreadLocalRandom random) {
-        double treasureChance = getTreasureChance(player, fishingLevel);
+    private TreasureEntry rollTreasure(Player player, int fishingLevel, double treasureChance, ThreadLocalRandom random) {
         if (!rollRareFishingDrop(player, treasureChance, random)) {
             return null;
         }
@@ -343,9 +386,9 @@ public class FishingManager implements Listener {
         return block.getType() == Material.WATER || block.getType() == Material.BUBBLE_COLUMN;
     }
 
-    private void removeCaughtItem(Entity caught) {
-        if (caught != null) {
-            caught.remove();
+    private void queueCaughtItemRemoval(Entity caught) {
+        if (caught instanceof Item item) {
+            pendingCatchResults.put(item.getUniqueId(), PendingCatchResult.remove());
         }
     }
 
@@ -355,37 +398,79 @@ public class FishingManager implements Listener {
     }
 
     public double getFishingSpeed(Player player) {
-        PDCManager pdc = PDCManager.getInstance();
-        return pdc == null ? 0.0 : getToolStat(player, pdc.KEY_FISHING_SPEED);
+        return getFishingStatSnapshot(player).total().fishingSpeed();
     }
 
     public double getSeaCreatureChance(Player player, int fishingLevel) {
-        PDCManager pdc = PDCManager.getInstance();
-        double bonus = pdc == null ? 0.0 : getToolStat(player, pdc.KEY_SEA_CREATURE_CHANCE) / 100.0;
-        return Math.min(0.95, SEA_CREATURE_BASE_CHANCE + fishingLevel * SEA_CREATURE_CHANCE_PER_LEVEL + Math.max(0.0, bonus));
+        return calculateSeaCreatureChance(
+                fishingLevel,
+                getFishingStatSnapshot(player).total().seaCreatureChance()
+        );
     }
 
     public double getTreasureChance(Player player, int fishingLevel) {
+        return calculateTreasureChance(
+                fishingLevel,
+                getFishingStatSnapshot(player).total().treasureChance()
+        );
+    }
+
+    private double calculateSeaCreatureChance(int fishingLevel, double equipmentBonusPercent) {
+        double bonus = Math.max(0.0, equipmentBonusPercent) / 100.0;
+        return Math.min(0.95, SEA_CREATURE_BASE_CHANCE + fishingLevel * SEA_CREATURE_CHANCE_PER_LEVEL + bonus);
+    }
+
+    private double calculateTreasureChance(int fishingLevel, double equipmentBonusPercent) {
+        double bonus = Math.max(0.0, equipmentBonusPercent) / 100.0;
+        return Math.min(0.95, TREASURE_BASE_CHANCE + fishingLevel * TREASURE_CHANCE_PER_LEVEL + bonus);
+    }
+
+    public FishingStatSnapshot getFishingStatSnapshot(Player player) {
         PDCManager pdc = PDCManager.getInstance();
-        double bonus = pdc == null ? 0.0 : getToolStat(player, pdc.KEY_TREASURE_CHANCE) / 100.0;
-        return Math.min(0.95, TREASURE_BASE_CHANCE + fishingLevel * TREASURE_CHANCE_PER_LEVEL + Math.max(0.0, bonus));
+        if (player == null || pdc == null) {
+            return FishingStatSnapshot.empty();
+        }
+
+        FishingStatContribution mainHand = getItemFishingStats(player.getInventory().getItemInMainHand(), pdc);
+        FishingStatContribution armor = sumFishingStats(player.getInventory().getArmorContents(), pdc);
+
+        AccessoryManager accessoryManager = AccessoryManager.getInstance();
+        FishingStatContribution accessories = FishingStatContribution.empty();
+        FishingStatContribution talismanBag = FishingStatContribution.empty();
+        if (accessoryManager != null) {
+            accessories = sumFishingStats(accessoryManager.loadAccessories(player), pdc);
+            talismanBag = sumFishingStats(accessoryManager.loadTalismanBag(player, 54), pdc);
+        }
+
+        return new FishingStatSnapshot(mainHand, armor, accessories, talismanBag);
     }
 
-    private double getToolStat(Player player, org.bukkit.NamespacedKey key) {
-        ItemStack tool = player.getInventory().getItemInMainHand();
-        if (tool == null || tool.getType().isAir() || !tool.hasItemMeta()) {
-            return 0.0;
+    private FishingStatContribution sumFishingStats(ItemStack[] items, PDCManager pdc) {
+        FishingStatContribution total = FishingStatContribution.empty();
+        if (items == null) {
+            return total;
         }
-        double value = tool.getItemMeta().getPersistentDataContainer().getOrDefault(key, org.bukkit.persistence.PersistentDataType.DOUBLE, 0.0);
+
+        for (ItemStack item : items) {
+            total = total.plus(getItemFishingStats(item, pdc));
+        }
+        return total;
+    }
+
+    private FishingStatContribution getItemFishingStats(ItemStack item, PDCManager pdc) {
+        if (item == null || item.getType().isAir() || !item.hasItemMeta()) {
+            return FishingStatContribution.empty();
+        }
+
         EnchantStatResolver resolver = EnchantStatResolver.getInstance();
-        return value + (resolver == null ? 0.0 : resolver.resolveNumeric(tool, key.getKey()));
-    }
-
-    private void setAttribute(LivingEntity entity, Attribute attribute, double value) {
-        AttributeInstance instance = entity.getAttribute(attribute);
-        if (instance != null) {
-            instance.setBaseValue(Math.max(0.0, value));
-        }
+        return new FishingStatContribution(
+                pdc.getStat(item, pdc.KEY_FISHING_SPEED)
+                        + (resolver == null ? 0.0 : resolver.resolveNumeric(item, pdc.KEY_FISHING_SPEED.getKey())),
+                pdc.getStat(item, pdc.KEY_SEA_CREATURE_CHANCE)
+                        + (resolver == null ? 0.0 : resolver.resolveNumeric(item, pdc.KEY_SEA_CREATURE_CHANCE.getKey())),
+                pdc.getStat(item, pdc.KEY_TREASURE_CHANCE)
+                        + (resolver == null ? 0.0 : resolver.resolveNumeric(item, pdc.KEY_TREASURE_CHANCE.getKey()))
+        );
     }
 
     private List<SeaCreatureEntry> readSeaCreatures(ConfigurationSection section) {
@@ -472,7 +557,8 @@ public class FishingManager implements Listener {
 
     private EntityType parseEntityType(String raw, EntityType fallback) {
         try {
-            return EntityType.valueOf(raw == null ? fallback.name() : raw.trim().toUpperCase(Locale.ROOT));
+            EntityType parsed = EntityType.valueOf(raw == null ? fallback.name() : raw.trim().toUpperCase(Locale.ROOT));
+            return parsed.isAlive() ? parsed : fallback;
         } catch (IllegalArgumentException exception) {
             return fallback;
         }
@@ -523,6 +609,53 @@ public class FishingManager implements Listener {
     }
 
     public record FishingWaitWindow(int minTicks, int maxTicks) {
+    }
+
+    public record FishingStatContribution(
+            double fishingSpeed,
+            double seaCreatureChance,
+            double treasureChance
+    ) {
+        public static FishingStatContribution empty() {
+            return new FishingStatContribution(0.0, 0.0, 0.0);
+        }
+
+        public FishingStatContribution plus(FishingStatContribution other) {
+            if (other == null) {
+                return this;
+            }
+            return new FishingStatContribution(
+                    fishingSpeed + other.fishingSpeed,
+                    seaCreatureChance + other.seaCreatureChance,
+                    treasureChance + other.treasureChance
+            );
+        }
+    }
+
+    public record FishingStatSnapshot(
+            FishingStatContribution mainHand,
+            FishingStatContribution armor,
+            FishingStatContribution accessories,
+            FishingStatContribution talismanBag
+    ) {
+        public static FishingStatSnapshot empty() {
+            FishingStatContribution empty = FishingStatContribution.empty();
+            return new FishingStatSnapshot(empty, empty, empty, empty);
+        }
+
+        public FishingStatContribution total() {
+            return mainHand.plus(armor).plus(accessories).plus(talismanBag);
+        }
+    }
+
+    private record PendingCatchResult(boolean removeCaughtItem, ItemStack replacement) {
+        static PendingCatchResult remove() {
+            return new PendingCatchResult(true, null);
+        }
+
+        static PendingCatchResult replaceWith(ItemStack replacement) {
+            return new PendingCatchResult(false, replacement);
+        }
     }
 
     private record SeaCreatureEntry(

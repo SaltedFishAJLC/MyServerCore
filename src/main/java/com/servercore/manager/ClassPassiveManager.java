@@ -58,6 +58,7 @@ public class ClassPassiveManager implements Listener {
     private final Map<UUID, Double> rangerSpeedBonus = new HashMap<>();
     private final Map<UUID, Long> rangerLastDamageAt = new HashMap<>();
     private final Map<UUID, Long> assassinAmbushUntil = new HashMap<>();
+    private final Map<UUID, Long> lifestealCooldownUntil = new HashMap<>();
     private BukkitTask tickTask;
     private int tickCounter;
 
@@ -132,6 +133,11 @@ public class ClassPassiveManager implements Listener {
         if (!forceAllowed && (isRanged || isMagic)) {
             return;
         }
+        long now = System.currentTimeMillis();
+        long until = lifestealCooldownUntil.getOrDefault(player.getUniqueId(), 0L);
+        if (until > now) {
+            return;
+        }
 
         double heal = Math.min(effectiveDamage * lifestealRate, maxLifestealPerHit(player));
         if (heal <= 0.0) {
@@ -143,6 +149,7 @@ public class ClassPassiveManager implements Listener {
         if (player.getHealth() >= maxHealth) {
             return;
         }
+        lifestealCooldownUntil.put(player.getUniqueId(), now + 750L);
         player.setHealth(Math.min(maxHealth, player.getHealth() + heal));
     }
 
@@ -295,6 +302,7 @@ public class ClassPassiveManager implements Listener {
         rangerSpeedBonus.remove(id);
         rangerLastDamageAt.remove(id);
         assassinAmbushUntil.remove(id);
+        lifestealCooldownUntil.remove(id);
     }
 
     private boolean consumeAssassinAmbush(Player player) {

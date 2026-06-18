@@ -45,6 +45,9 @@
 #     - material: GOLD_NUGGET
 #       chance: 45%
 #       amount: 2-5
+#     - enchant_book: cleave        # drops a custom enchant book usable in an anvil
+#       level: 1-3                  # optional; supports a fixed level or range
+#       chance: 0.5%
 
 WDA_Dungeon_Guard:
   match_type: ZOMBIE
@@ -76,6 +79,9 @@ Mythic_Flame_Boss:
     - item_id: foundry_flame_sword
       chance: 0.02
       amount: 1
+    - enchant_book: ultimate_apex_slayer
+      level: 1
+      chance: 0.5%
 
 Warden_500:
   match_type: WARDEN
@@ -84,6 +90,10 @@ Warden_500:
   bypass_world_level_cap: true
   fixed_max_health: 500
   clear_vanilla_drops: false
+  drops:
+    - enchant_book: ultimate_phoenix_core
+      level: 1
+      chance: 1%
 
 Rogue_Enderman:
   match_type: ENDERMAN
@@ -572,6 +582,10 @@ WDA_Fou_Wither_Skeleton_1:
   spawner_check_radius: 32
   spawner_vertical_radius: 16
   spawner_limit_mode: rule
+  drops:
+    - enchant_book: cleave
+      level: 1-3
+      chance: 0.6%
 
 WDA_Fou_Wither_Skeleton_2:
   match_type: WITHER_SKELETON
@@ -2243,6 +2257,10 @@ WDA_UPS_Captain_0:
   spawner_check_radius: 24
   spawner_vertical_radius: 12
   spawner_limit_mode: rule
+  drops:
+    - enchant_book: vampirism
+      level: 1-3
+      chance: 0.75%
 
 WDA_UPS_Dolphin_Rider_0:
   match_type: SKELETON

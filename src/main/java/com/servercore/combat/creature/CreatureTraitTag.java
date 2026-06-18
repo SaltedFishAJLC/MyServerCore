@@ -7,6 +7,7 @@ public enum CreatureTraitTag {
     FROST,
     VOID,
     FLYING,
+    HEAVY,
     BOSS;
 
     public static final Comparator<CreatureTraitTag> DISPLAY_ORDER = Comparator.comparingInt(CreatureTraitTag::displayPriority);
@@ -17,7 +18,8 @@ public enum CreatureTraitTag {
             case FROST -> 1;
             case VOID -> 2;
             case FLYING -> 3;
-            case BOSS -> 4;
+            case HEAVY -> 4;
+            case BOSS -> 5;
         };
     }
 }

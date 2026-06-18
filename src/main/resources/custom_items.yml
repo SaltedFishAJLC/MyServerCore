@@ -305,12 +305,26 @@ items:
     story_lore:
       - "可与纯度、晶石掉落收益产生联动。"
 
+  magic_dust:
+    material: GLOWSTONE_DUST
+    name: "魔尘"
+    rarity: UNCOMMON
+    story_lore:
+      - "附魔拆除、定向附魔和魔法调律常用的基础粉尘。"
+
   crystal_echo:
     material: ECHO_SHARD
     name: "晶洞回声"
     rarity: LEGENDARY
     story_lore:
       - "魔法水晶破裂后残留的声音。"
+
+  ultimate_enchant_catalyst:
+    material: ECHO_SHARD
+    name: "终极剥离催化剂"
+    rarity: LEGENDARY
+    story_lore:
+      - "拆除终极附魔时用于稳定附魔残响的稀有材料。"
 
   geode_heart:
     material: DIAMOND

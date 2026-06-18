@@ -29,7 +29,9 @@ prices:
     iron_nodule: 30
     metal_spark: 150
     gem_dust: 210
+    magic_dust: 35
     crystal_echo: 620
+    ultimate_enchant_catalyst: 900
     geode_heart: 1600
     star_forged_core: 2600
 

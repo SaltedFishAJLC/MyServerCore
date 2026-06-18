@@ -75,6 +75,9 @@ public class EnchantManager {
         }
 
         Map<String, Integer> enchants = getAllCustomEnchants(item);
+        if (normalizedId.equals("one_for_all")) {
+            enchants.clear();
+        }
         enchants.put(normalizedId, cappedLevel);
         writeEnchants(item, enchants);
         refreshFormat(item);
@@ -105,10 +108,13 @@ public class EnchantManager {
         }
 
         Map<String, Integer> current = getAllCustomEnchants(item);
-        if (conflictsWithExisting(definition, current)) {
+        if (!normalizedId.equals("one_for_all") && current.containsKey("one_for_all")) {
+            return EnchantApplyResult.fail("一件带有以一镇万的武器不能再追加其他附魔。");
+        }
+        if (!normalizedId.equals("one_for_all") && conflictsWithExisting(definition, current)) {
             return EnchantApplyResult.fail("该附魔与已有附魔冲突。");
         }
-        if (definition.isUltimate() && exceedsUltimateLimit(definition, current, registry)) {
+        if (!normalizedId.equals("one_for_all") && definition.isUltimate() && exceedsUltimateLimit(definition, current, registry)) {
             return EnchantApplyResult.fail("一件装备只能拥有 " + registry.settings().ultimateLimitPerItem() + " 个终极附魔。");
         }
         return EnchantApplyResult.ok();
@@ -283,9 +289,6 @@ public class EnchantManager {
     }
 
     private boolean conflictsWithExisting(EnchantDefinition definition, Map<String, Integer> current) {
-        if (!definition.hasConflictGroup()) {
-            return false;
-        }
         EnchantRegistry registry = EnchantRegistry.getInstance();
         if (registry == null) {
             return false;
@@ -295,10 +298,13 @@ public class EnchantManager {
                 continue;
             }
             EnchantDefinition other = registry.get(id).orElse(null);
-            if (other == null || !other.enabled() || !other.hasConflictGroup()) {
+            if (other == null || !other.enabled()) {
                 continue;
             }
-            if (definition.conflictGroup().equals(other.conflictGroup())) {
+            if ((definition.hasConflictGroup() && other.hasConflictGroup()
+                    && definition.conflictGroup().equals(other.conflictGroup()))
+                    || definition.explicitlyConflictsWith(other.id())
+                    || other.explicitlyConflictsWith(definition.id())) {
                 return true;
             }
         }

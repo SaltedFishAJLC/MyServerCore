@@ -15,6 +15,7 @@ import com.servercore.combat.status.FrostService;
 import com.servercore.combat.status.StatusService;
 import com.servercore.combat.status.StunController;
 import com.servercore.enchant.EnchantAnvilListener;
+import com.servercore.enchant.EnchantAcquisitionManager;
 import com.servercore.enchant.EnchantApplyResult;
 import com.servercore.enchant.EnchantDefinition;
 import com.servercore.enchant.EnchantEffectService;
@@ -22,6 +23,7 @@ import com.servercore.enchant.EnchantGrindstoneListener;
 import com.servercore.enchant.EnchantRegistry;
 import com.servercore.enchant.EnchantStatResolver;
 import com.servercore.enchant.EnchantTableListener;
+import com.servercore.enchant.RangedEmpowermentManager;
 import com.servercore.manager.DatabaseManager;
 import com.servercore.manager.EconomyManager;
 import com.servercore.manager.EconomyListener;
@@ -95,6 +97,7 @@ public final class ServerCorePlugin extends JavaPlugin {
     private ReforgeManager reforgeManager;
     private GemstoneManager gemstoneManager;
     private EnchantManager enchantManager;
+    private EnchantAcquisitionManager enchantAcquisitionManager;
     private RecycleManager recycleManager;
     private GlobalStatManager globalStatManager;
     private MiningManager miningManager;
@@ -170,8 +173,10 @@ public final class ServerCorePlugin extends JavaPlugin {
         new EnchantTableListener(this);
         new EnchantAnvilListener(this);
         new EnchantGrindstoneListener(this);
+        new RangedEmpowermentManager(this);
         this.recycleManager = new RecycleManager(this, economyManager);
         this.customItemRegistry = new CustomItemRegistry(this);
+        this.enchantAcquisitionManager = new EnchantAcquisitionManager(this);
         this.vanillaItemOverrideManager = new VanillaItemOverrideManager(this);
         new ItemStandardizer(this);
         new WeaponAbilityManager(this);
@@ -1105,6 +1110,45 @@ public final class ServerCorePlugin extends JavaPlugin {
     }
 
     private boolean handleEnchantCommand(Player player, String[] args) {
+        if (args.length == 1 || args[1].equalsIgnoreCase("help")) {
+            player.sendMessage(net.kyori.adventure.text.Component.text("/sc enchant special <enchant_id> <level>"));
+            player.sendMessage(net.kyori.adventure.text.Component.text("/sc enchant books"));
+            if (player.hasPermission("servercore.admin")) {
+                player.sendMessage(net.kyori.adventure.text.Component.text("/sc enchant list"));
+                player.sendMessage(net.kyori.adventure.text.Component.text("/sc enchant give [player] <enchant_id> <level>"));
+                player.sendMessage(net.kyori.adventure.text.Component.text("/sc enchant remove [player] <enchant_id>"));
+                player.sendMessage(net.kyori.adventure.text.Component.text("/sc enchant clear [player]"));
+                player.sendMessage(net.kyori.adventure.text.Component.text("/sc enchant debug"));
+            }
+            return true;
+        }
+
+        String publicSub = args[1].toLowerCase(java.util.Locale.ROOT);
+        if (publicSub.equals("books") || publicSub.equals("bookshop") || publicSub.equals("npcbooks")) {
+            if (enchantAcquisitionManager == null) {
+                player.sendMessage(net.kyori.adventure.text.Component.text("Enchant acquisition manager is not loaded."));
+                return true;
+            }
+            enchantAcquisitionManager.openNpcBookShop(player);
+            return true;
+        }
+
+        if (publicSub.equals("special") || publicSub.equals("table")) {
+            if (args.length < 4) {
+                player.sendMessage(net.kyori.adventure.text.Component.text("Usage: /sc enchant special <enchant_id> <level>"));
+                return true;
+            }
+            if (enchantAcquisitionManager == null) {
+                player.sendMessage(net.kyori.adventure.text.Component.text("Enchant acquisition manager is not loaded."));
+                return true;
+            }
+            try {
+                enchantAcquisitionManager.applySpecialEnchant(player, args[2], Integer.parseInt(args[3]));
+            } catch (NumberFormatException exception) {
+                player.sendMessage(net.kyori.adventure.text.Component.text("Level must be a number."));
+            }
+            return true;
+        }
         if (!player.hasPermission("servercore.admin")) {
             player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
             return true;
@@ -1262,7 +1306,7 @@ public final class ServerCorePlugin extends JavaPlugin {
             return true;
         }
 
-        player.sendMessage(net.kyori.adventure.text.Component.text("Usage: /sc enchant <list|give|remove|clear|debug>"));
+        player.sendMessage(net.kyori.adventure.text.Component.text("Usage: /sc enchant <special|books|list|give|remove|clear|debug>"));
         return true;
     }
 

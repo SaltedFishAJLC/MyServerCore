@@ -115,19 +115,46 @@ public class NonCombatStatsMenu {
     private ItemStack createFishingIcon(ToolSnapshot tool) {
         AuraSkillsBridge bridge = AuraSkillsBridge.getInstance();
         int level = bridge == null ? 0 : bridge.getSkillLevel(player, Skills.FISHING);
-        double seaCreatureChance = Math.min(95.0, 5.0 + level * 0.2 + tool.seaCreatureChance());
-        double treasureChance = Math.min(95.0, 3.5 + level * 0.15 + tool.treasureChance());
+        FishingManager fishingManager = FishingManager.getInstance();
+        FishingManager.FishingStatSnapshot fishingStats = fishingManager == null
+                ? new FishingManager.FishingStatSnapshot(
+                        new FishingManager.FishingStatContribution(
+                                tool.fishingSpeed(),
+                                tool.seaCreatureChance(),
+                                tool.treasureChance()
+                        ),
+                        FishingManager.FishingStatContribution.empty(),
+                        FishingManager.FishingStatContribution.empty(),
+                        FishingManager.FishingStatContribution.empty()
+                )
+                : fishingManager.getFishingStatSnapshot(player);
+        FishingManager.FishingStatContribution total = fishingStats.total();
+        double seaCreatureChance = Math.min(95.0, 5.0 + level * 0.2 + total.seaCreatureChance());
+        double treasureChance = Math.min(95.0, 3.5 + level * 0.15 + total.treasureChance());
         double levelFishingSpeed = FishingManager.getLevelFishingSpeed(level);
-        double effectiveFishingSpeed = FishingManager.getEffectiveFishingSpeed(level, tool.fishingSpeed());
+        double effectiveFishingSpeed = FishingManager.getEffectiveFishingSpeed(level, total.fishingSpeed());
         FishingManager.FishingWaitWindow waitWindow = FishingManager.calculateWaitWindow(effectiveFishingSpeed);
 
         List<Component> lore = new ArrayList<>();
         lore.add(line("<gray>钓鱼等级: <aqua>" + level + "</aqua></gray>"));
-        lore.add(line("<gray>钓鱼速度: <blue>" + number(tool.fishingSpeed()) + "</blue> <dark_gray>+ 等级 " + number(levelFishingSpeed) + "</dark_gray></gray>"));
+        lore.add(line("<gray>装备钓鱼速度: <blue>" + number(total.fishingSpeed()) + "</blue> <dark_gray>+ 等级 " + number(levelFishingSpeed) + "</dark_gray></gray>"));
         lore.add(line("<gray>海怪概率: <aqua>" + number(seaCreatureChance) + "%</aqua></gray>"));
         lore.add(line("<gray>宝藏概率: <gold>" + number(treasureChance) + "%</gold></gray>"));
         lore.add(line("<gray>咬钩窗口: <white>" + waitWindow.minTicks() + "-" + waitWindow.maxTicks() + " ticks</white></gray>"));
+        lore.add(Component.empty());
+        lore.add(line("<dark_gray>来源格式: 速度 / 海怪% / 宝藏%</dark_gray>"));
+        lore.add(fishingSourceLine("主手", fishingStats.mainHand()));
+        lore.add(fishingSourceLine("护甲", fishingStats.armor()));
+        lore.add(fishingSourceLine("饰品槽", fishingStats.accessories()));
+        lore.add(fishingSourceLine("护符袋", fishingStats.talismanBag()));
         return createNamedItem(Material.FISHING_ROD, mm("<blue><bold>钓鱼</bold></blue>"), lore);
+    }
+
+    private Component fishingSourceLine(String label, FishingManager.FishingStatContribution contribution) {
+        return line("<gray>" + label + ": <white>"
+                + number(contribution.fishingSpeed()) + " / "
+                + number(contribution.seaCreatureChance()) + "% / "
+                + number(contribution.treasureChance()) + "%</white></gray>");
     }
 
     private ItemStack createToolIcon(ToolSnapshot tool) {

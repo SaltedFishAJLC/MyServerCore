@@ -34,10 +34,20 @@ npc_books:
   pools:
     rare_rotation:
       rarities: [RARE]
+      entries: 3
       refresh_hours: 24
+      level_min: 1
+      level_max: 5
+      dust_per_level: 180
+      exp_per_level: 24
     ultimate_rotation:
       rarities: [ULTIMATE]
+      entries: 1
       refresh_hours: 72
+      level_min: 1
+      level_max: 5
+      dust_per_level: 1200
+      exp_per_level: 80
 
 grindstone:
   remove_single:
@@ -50,6 +60,8 @@ grindstone:
     ULTIMATE:
       dust_per_level: 500
       require_special_material: true
+      special_material_item_id: ultimate_enchant_catalyst
+      special_material_amount: 1
   clear_all:
     refund_dust_ratio: 0.35
     refund_exp_ratio: 0.25

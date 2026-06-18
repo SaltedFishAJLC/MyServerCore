@@ -2,6 +2,7 @@ package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
 import com.servercore.combat.creature.CreatureTagService;
+import com.servercore.enchant.EnchantEffectService;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * 怪物动态生成与标签引擎 骨架
@@ -51,6 +53,7 @@ public class MobSpawnManager implements Listener {
     private final CustomMobRegistry customMobRegistry;
     private final Map<EntityType, VanillaMobStats> baseVanillaStats = new EnumMap<>(EntityType.class);
     private final Map<String, Double> customMobModifiers = new ConcurrentHashMap<>();
+    private final ThreadLocal<Integer> managedFishingSpawnDepth = ThreadLocal.withInitial(() -> 0);
     private final BukkitTask hostileTargetTask;
 
     public MobSpawnManager(ServerCorePlugin plugin, PowerLevelManager powerLevelManager,
@@ -120,6 +123,7 @@ public class MobSpawnManager implements Listener {
     public void onCreatureSpawn(CreatureSpawnEvent event) {
         LivingEntity entity = event.getEntity();
         if (!(entity instanceof Enemy)) return;
+        if (managedFishingSpawnDepth.get() > 0) return;
 
         PDCManager pdc = PDCManager.getInstance();
         if (pdc == null) return;
@@ -132,6 +136,79 @@ public class MobSpawnManager implements Listener {
 
     public void applyCustomMobScaling(LivingEntity entity, String registryMobId) {
         applyScaling(entity, CreatureSpawnEvent.SpawnReason.CUSTOM, registryMobId, true);
+    }
+
+    /**
+     * Spawns and fully initializes a fishing sea creature without first applying
+     * the generic natural-mob scaling path. ServerCore owns the resulting combat
+     * stats; MythicMobs may still provide the entity type, AI, and skills.
+     */
+    public LivingEntity spawnFishingSeaCreature(Supplier<LivingEntity> spawner, FishingSeaCreatureSpec spec) {
+        if (spawner == null || spec == null) {
+            return null;
+        }
+
+        LivingEntity entity;
+        int previousDepth = managedFishingSpawnDepth.get();
+        managedFishingSpawnDepth.set(previousDepth + 1);
+        try {
+            entity = spawner.get();
+        } catch (RuntimeException exception) {
+            plugin.getLogger().warning("Could not spawn fishing sea creature '" + spec.customMobId()
+                    + "': " + exception.getMessage());
+            return null;
+        } finally {
+            if (previousDepth <= 0) {
+                managedFishingSpawnDepth.remove();
+            } else {
+                managedFishingSpawnDepth.set(previousDepth);
+            }
+        }
+
+        if (entity == null || entity.isDead()) {
+            return null;
+        }
+
+        applyFishingSeaCreatureStats(entity, spec);
+        return entity;
+    }
+
+    private void applyFishingSeaCreatureStats(LivingEntity entity, FishingSeaCreatureSpec spec) {
+        PDCManager pdc = PDCManager.getInstance();
+        if (pdc == null) {
+            return;
+        }
+
+        int powerLevel = Math.max(1, spec.powerLevel());
+        double modifier = Math.max(0.1, spec.modifier());
+        double maxHealth = Math.max(1.0, spec.maxHealth());
+        double attackDamage = Math.max(0.0, spec.attackDamage());
+        double def = powerLevel * modifier;
+        double damageReduction = Math.min(0.50, def / (def + 500.0));
+        double magicResist = modifier >= ELITE_MOD ? Math.min(0.30, def / 2000.0) : 0.0;
+
+        double physicalMaxHealth = setMaxHealthAttribute(entity, maxHealth);
+        syncVirtualHealth(entity, maxHealth, physicalMaxHealth);
+        setAttribute(entity, Attribute.GENERIC_ATTACK_DAMAGE, attackDamage);
+        setAttribute(entity, Attribute.GENERIC_ARMOR, 0.0);
+        setAttribute(entity, Attribute.GENERIC_ARMOR_TOUGHNESS, 0.0);
+
+        if (spec.displayName() != null && !spec.displayName().isBlank()) {
+            entity.customName(Component.text(spec.displayName()));
+        }
+        entity.setCustomNameVisible(false);
+        entity.addScoreboardTag("servercore_sea_creature");
+
+        PersistentDataContainer container = entity.getPersistentDataContainer();
+        container.set(pdc.KEY_CUSTOM_MOB_ID, PersistentDataType.STRING, spec.customMobId());
+        container.set(pdc.KEY_MOB_POWER_LEVEL, PersistentDataType.INTEGER, powerLevel);
+        container.set(pdc.KEY_MOB_TAGS, PersistentDataType.STRING, spec.tags());
+        container.set(pdc.KEY_MOB_DAMAGE_REDUCTION, PersistentDataType.DOUBLE, damageReduction);
+        container.set(pdc.KEY_MOB_ATTACK_DAMAGE, PersistentDataType.DOUBLE, attackDamage);
+        container.set(pdc.KEY_MOB_MAGIC_RESIST, PersistentDataType.DOUBLE, magicResist);
+        container.set(pdc.KEY_MOB_SCALING_MOD, PersistentDataType.DOUBLE, modifier);
+
+        hologramManager.attachHologram(entity, powerLevel);
     }
 
     private void applyScaling(LivingEntity entity, CreatureSpawnEvent.SpawnReason spawnReason, String forcedMobId, boolean force) {
@@ -298,7 +375,9 @@ public class MobSpawnManager implements Listener {
 
         Player killer = entity.getKiller();
         if (killer != null && economyManager != null) {
-            long reward = Math.max(1L, powerLevel * 5L);
+            EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
+            double bountyMultiplier = enchantEffects == null ? 1.0 : enchantEffects.resolveScavengerBountyMultiplier(killer);
+            long reward = Math.max(1L, Math.round(powerLevel * 5.0 * bountyMultiplier));
             economyManager.addBalance(killer.getUniqueId(), reward);
             killer.sendActionBar(ServerCorePlugin.getMiniMessage().deserialize("<gold>+" + reward + " coins</gold> <dark_gray>|</dark_gray> <gray>Lv." + powerLevel + " 生态击杀</gray>"));
         }
@@ -648,5 +727,21 @@ public class MobSpawnManager implements Listener {
             double magicResist,
             double modifier
     ) {
+    }
+
+    public record FishingSeaCreatureSpec(
+            String customMobId,
+            String displayName,
+            int powerLevel,
+            double maxHealth,
+            double attackDamage,
+            double modifier,
+            String tags
+    ) {
+        public FishingSeaCreatureSpec {
+            customMobId = customMobId == null || customMobId.isBlank() ? "sea_creature" : customMobId;
+            displayName = displayName == null ? "" : displayName;
+            tags = tags == null || tags.isBlank() ? "sea,water,fishing" : tags;
+        }
     }
 }

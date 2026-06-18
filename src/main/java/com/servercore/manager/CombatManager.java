@@ -5,6 +5,7 @@ import com.servercore.combat.damage.DamageService;
 import com.servercore.combat.integration.EnchantTargetMatcher;
 import com.servercore.enchant.EnchantDamageContext;
 import com.servercore.enchant.EnchantEffectService;
+import com.servercore.enchant.RangedEmpowermentManager;
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.stat.Stats;
 import org.bukkit.entity.Player;
@@ -81,6 +82,7 @@ public class CombatManager implements Listener {
         boolean spellbladeMelee = classManager != null && classManager.usesSpellbladeMeleeDamage(player, isRanged, isMagic);
         boolean usesMagicDamage = isMagic || spellbladeMelee;
         double lifestealEffectiveDamage = 0.0;
+        boolean isCrit = false;
         
         // 1. 获取纯净的基础面板伤害
         double baseDamage;
@@ -142,7 +144,7 @@ public class CombatManager implements Listener {
             
         } else {
             // 【物理流派（近战/远程）】: 面板 * 暴击 * 乘区 * (破甲/残暴)
-            boolean isCrit = passiveManager == null
+            isCrit = passiveManager == null
                     ? Math.random() < stats.critChance()
                     : passiveManager.rollCritical(player, stats.critChance());
             double critMult = isCrit ? stats.critDamage() : 1.0;
@@ -177,7 +179,11 @@ public class CombatManager implements Listener {
             EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
             if (enchantEffects != null) {
                 double beforeEffects = finalDamage;
-                finalDamage = enchantEffects.applyOutgoingDamageModifiers(player, target, finalDamage, isRanged, usesMagicDamage);
+                RangedEmpowermentManager empowermentManager = RangedEmpowermentManager.getInstance();
+                if (empowermentManager != null) {
+                    finalDamage = empowermentManager.applyProjectileDamage(player, event.getDamager(), target, finalDamage);
+                }
+                finalDamage = enchantEffects.applyOutgoingDamageModifiers(player, target, finalDamage, isRanged, usesMagicDamage, isCrit);
                 if (beforeEffects > 0.0) {
                     lifestealEffectiveDamage *= finalDamage / beforeEffects;
                 }
@@ -217,14 +223,14 @@ public class CombatManager implements Listener {
             }
             double lifestealRate = stats.lifesteal();
             if (classManager != null) {
-                lifestealRate = (lifestealRate + classManager.getBaseLifesteal(player)) * classManager.getLifestealMultiplier(player);
+                lifestealRate *= classManager.getLifestealMultiplier(player);
             }
             if (passiveManager != null) {
                 passiveManager.applyLifesteal(player, lifestealEffectiveDamage, lifestealRate, isRanged, usesMagicDamage, spellbladeMelee);
             }
             EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
             if (enchantEffects != null) {
-                enchantEffects.afterPlayerAttack(event, player, target, finalDamage, finalDamage, isRanged, usesMagicDamage);
+                enchantEffects.afterPlayerAttack(event, player, target, finalDamage, isRanged, usesMagicDamage, isCrit);
             }
         }
     }

@@ -9,116 +9,125 @@ settings:
   count_disabled_ultimate_in_limit: false
 
 enchants:
+  # 新增附魔时必须补充“效果”注释，便于配置审查和掉落/商店投放时快速判断定位。
+  # 效果：近战武器基础伤害加成，属于通用伤害组。
   keen:
     enabled: true
     display: "锋芒"
     rarity: COMMON
-    max_level: 5
-    soft_max_level: 3
+    max_level: 7
+    soft_max_level: 4
     slots: [MELEE_WEAPON]
     conflict_group: damage_generic
     description:
       - "增加基础伤害。"
-      - "每级 +{base_damage} 基础伤害。"
+      - "当前总计 +{base_damage} 基础伤害。"
     numeric:
       base_damage:
         type: LINEAR
-        per_level: 2.0
+        per_level: 4.0
 
+  # 效果：武器通用增伤乘区加成，属于通用伤害组。
   might:
     enabled: true
     display: "强攻"
     rarity: COMMON
-    max_level: 5
-    soft_max_level: 3
+    max_level: 7
+    soft_max_level: 4
     slots: [WEAPON]
     conflict_group: damage_generic
     description:
       - "提高综合增伤乘区。"
-      - "每级 +{base_multiplier_percent}% 增伤。"
+      - "当前总计 +{base_multiplier_percent}% 增伤。"
     numeric:
       base_multiplier:
         type: LINEAR
-        per_level: 0.015
+        per_level: 0.03
 
+  # 效果：武器与远程武器暴击率加成。
   critical:
     enabled: true
     display: "精准"
     rarity: COMMON
-    max_level: 5
-    soft_max_level: 3
+    max_level: 7
+    soft_max_level: 4
     slots: [WEAPON, RANGED_WEAPON]
     description:
       - "提高暴击几率。"
-      - "每级 +{crit_chance_percent}% 暴击率。"
+      - "当前总计 +{crit_chance_percent}% 暴击率。"
     numeric:
       crit_chance:
         type: LINEAR
         per_level: 0.012
 
+  # 效果：武器与远程武器暴击伤害加成。
   crit_damage:
     enabled: true
     display: "毁伤"
     rarity: COMMON
-    max_level: 5
-    soft_max_level: 3
+    max_level: 7
+    soft_max_level: 4
     slots: [WEAPON, RANGED_WEAPON]
     description:
       - "提高暴击伤害。"
-      - "每级 +{crit_damage_percent}% 暴击伤害。"
+      - "当前总计 +{crit_damage_percent}% 暴击伤害。"
     numeric:
       crit_damage:
         type: LINEAR
         per_level: 0.04
 
+  # 效果：防具和盾牌基础护甲加成。
   fortify:
     enabled: true
     display: "坚固"
     rarity: COMMON
-    max_level: 5
-    soft_max_level: 3
+    max_level: 7
+    soft_max_level: 4
     slots: [ARMOR, SHIELD]
     description:
       - "提高基础护甲。"
-      - "每级 +{base_armor} 护甲。"
+      - "当前总计 +{base_armor} 护甲。"
     numeric:
       base_armor:
         type: LINEAR
         per_level: 8.0
 
+  # 效果：工具挖掘速度加成。
   efficiency_core:
     enabled: true
     display: "效率核心"
     rarity: COMMON
-    max_level: 5
-    soft_max_level: 3
+    max_level: 10
+    soft_max_level: 5
     slots: [TOOL]
     description:
       - "提高挖掘速度。"
-      - "每级 +{tool_mining_speed} 挖掘速度。"
+      - "当前总计 +{tool_mining_speed} 挖掘速度。"
     numeric:
       tool_mining_speed:
         type: LINEAR
         per_level: 40.0
 
+  # 效果：工具通用采集时运加成。
   fortune_core:
     enabled: true
     display: "时运核心"
     rarity: COMMON
-    max_level: 5
-    soft_max_level: 3
+    max_level: 10
+    soft_max_level: 5
     slots: [TOOL]
     description:
       - "提高通用工具时运。"
-      - "每级 +{tool_fortune} 工具时运。"
+      - "当前总计 +{tool_fortune} 工具时运。"
     numeric:
       tool_fortune:
         type: LINEAR
         per_level: 8.0
 
+  # 效果：对 UNDEAD 主标签目标造成额外伤害。
   undead_slayer:
     enabled: true
-    display: "亡灵杀手"
+    display: "亡灵克星"
     rarity: UNCOMMON
     max_level: 5
     soft_max_level: 3
@@ -127,15 +136,16 @@ enchants:
       main_tags: [UNDEAD]
     description:
       - "对亡灵目标造成更高伤害。"
-      - "每级 +{damage_to_target_percent}% 伤害。"
+      - "当前总计 +{damage_to_target_percent}% 伤害。"
     numeric:
       damage_to_target:
         type: LINEAR
-        per_level: 0.05
+        per_level: 0.07
 
+  # 效果：对 SKELETON 主标签目标造成额外伤害。
   skeleton_slayer:
     enabled: true
-    display: "骷髅杀手"
+    display: "碎骨"
     rarity: UNCOMMON
     max_level: 5
     soft_max_level: 3
@@ -144,27 +154,31 @@ enchants:
       main_tags: [SKELETON]
     description:
       - "对骷髅目标造成更高伤害。"
+      - "当前总计 +{damage_to_target_percent}% 伤害。"
     numeric:
       damage_to_target:
         type: LINEAR
-        per_level: 0.05
+        per_level: 0.07
 
+  # 效果：对 HUMANOID 主标签目标造成额外伤害。
   humanoid_slayer:
     enabled: true
-    display: "人形杀手"
+    display: "行刑者"
     rarity: UNCOMMON
-    max_level: 5
+    max_level: 10
     soft_max_level: 3
     slots: [WEAPON]
     target:
       main_tags: [HUMANOID]
     description:
       - "对人形目标造成更高伤害。"
+      - "当前总计 +{damage_to_target_percent}% 伤害。"
     numeric:
       damage_to_target:
         type: LINEAR
-        per_level: 0.05
+        per_level: 0.07
 
+  # 效果：对 CONSTRUCT 主标签目标造成额外伤害。
   construct_breaker:
     enabled: true
     display: "构装破坏"
@@ -176,11 +190,13 @@ enchants:
       main_tags: [CONSTRUCT]
     description:
       - "对构装目标造成更高伤害。"
+      - "当前总计 +{damage_to_target_percent}% 伤害。"
     numeric:
       damage_to_target:
         type: LINEAR
-        per_level: 0.05
+        per_level: 0.07
 
+  # 效果：对 GIANT 主标签目标造成额外伤害。
   giant_hunter:
     enabled: true
     display: "巨兽猎手"
@@ -192,11 +208,13 @@ enchants:
       main_tags: [GIANT]
     description:
       - "对巨型目标造成更高伤害。"
+      - "当前总计 +{damage_to_target_percent}% 伤害。"
     numeric:
       damage_to_target:
         type: LINEAR
-        per_level: 0.05
+        per_level: 0.07
 
+  # 效果：满蓄力远程攻击伤害加成。
   draw_power:
     enabled: true
     display: "蓄势"
@@ -206,11 +224,13 @@ enchants:
     slots: [RANGED_WEAPON]
     description:
       - "提高满蓄力远程伤害。"
+      - "当前总计 +{full_charge_damage_percent}% 满蓄力伤害。"
     numeric:
       full_charge_damage:
         type: LINEAR
         per_level: 0.03
 
+  # 效果：镐类工具挖矿时运加成。
   mining_focus:
     enabled: true
     display: "采矿专精"
@@ -220,17 +240,19 @@ enchants:
     slots: [PICKAXE]
     description:
       - "提高挖矿时运。"
+      - "当前总计 +{mining_fortune} 挖矿时运。"
     numeric:
       mining_fortune:
         type: LINEAR
         per_level: 15.0
 
+  # 效果：近战命中时对周围敌人造成溅射伤害。
   cleave:
     enabled: true
     display: "劈砍"
     rarity: RARE
-    max_level: 3
-    soft_max_level: 2
+    max_level: 5
+    soft_max_level: 3
     slots: [MELEE_WEAPON]
     conflict_group: melee_mechanic
     description:
@@ -242,39 +264,33 @@ enchants:
       params:
         radius:
           type: PER_LEVEL
-          values: [3.0, 3.25, 3.5]
+          values: [3.0, 3.5, 4, 4.5, 5]
         max_targets:
           type: PER_LEVEL
-          values: [2, 3, 3]
+          values: [2, 3, 3, 4, 5]
         damage_ratio:
           type: PER_LEVEL
-          values: [0.10, 0.15, 0.20]
+          values: [0.10, 0.15, 0.20, 0.25, 0.30]
         secondary_damage: true
 
+  # 效果：近战吸血率加成，归入 lifesteal 数值统计。
   vampirism:
     enabled: true
-    display: "血饮"
+    display: "嗜血"
     rarity: RARE
-    max_level: 3
+    max_level: 5
     soft_max_level: 2
     slots: [MELEE_WEAPON]
+    conflict_group: sustain_conversion
     description:
-      - "近战造成伤害后恢复生命。"
-      - "当前恢复 {heal_ratio_percent}% 实际伤害。"
-    effect:
-      type: VAMPIRISM
-      trigger: ON_DAMAGE_DEALT
-      params:
-        heal_ratio:
-          type: PER_LEVEL
-          values: [0.01, 0.015, 0.02]
-        boss_multiplier:
-          type: CONSTANT
-          value: 0.5
-        cooldown_seconds:
-          type: CONSTANT
-          value: 1.0
+      - "提高近战吸血率，并入吸血属性。"
+      - "当前总计 +{lifesteal_percent}% 吸血。"
+    numeric:
+      lifesteal:
+        type: PER_LEVEL
+        values: [0.01, 0.015, 0.02]
 
+  # 效果：盾牌在短窗口内成功格挡时提高格挡阈值，并按等级降低冷却。
   perfect_guard:
     enabled: true
     display: "完美格挡"
@@ -299,8 +315,9 @@ enchants:
           type: PER_LEVEL
           values: [8.0, 6.0, 4.0]
 
+  # 效果：连续攻击同一首领目标时叠加伤害加成。
   ultimate_apex_slayer:
-    enabled: true
+    enabled: false
     display: "猎王"
     rarity: ULTIMATE
     max_level: 1
@@ -309,6 +326,7 @@ enchants:
     conflict_group: ultimate
     description:
       - "连续攻击同一个首领目标时逐渐提高伤害。"
+      - "每层 +{damage_bonus_per_stack_percent}% 伤害，最多 {max_stacks} 层。"
     effect:
       type: APEX_SLAYER
       trigger: ON_DAMAGE_CALCULATE
@@ -323,16 +341,18 @@ enchants:
           type: CONSTANT
           value: 5.0
 
+  # 效果：不持盾时提高近战伤害，但提高自身承受伤害。
   ultimate_berserker_oath:
     enabled: true
     display: "狂战誓约"
     rarity: ULTIMATE
-    max_level: 1
-    soft_max_level: 1
+    max_level: 3
+    soft_max_level: 3
     slots: [MELEE_WEAPON]
     conflict_group: ultimate
     description:
       - "空出盾牌时提高近战伤害，但受到更多伤害。"
+      - "当前 +{damage_bonus_percent}% 近战伤害，承伤 +{incoming_damage_penalty_percent}%。"
     effect:
       type: BERSERKER_OATH
       trigger: PASSIVE
@@ -345,6 +365,7 @@ enchants:
           value: 0.12
         require_no_shield: true
 
+  # 效果：胸甲受到致死伤害时保留 1 点生命并清除负面效果，随后进入冷却。
   ultimate_phoenix_core:
     enabled: true
     display: "不灭余烬"
@@ -355,6 +376,7 @@ enchants:
     conflict_group: ultimate
     description:
       - "受到致死伤害时保留一点生命并进入冷却。"
+      - "冷却 {cooldown_seconds} 秒，触发后保留 {remain_health} 生命。"
     effect:
       type: PHOENIX_CORE
       trigger: ON_FATAL_DAMAGE
@@ -366,3 +388,755 @@ enchants:
           type: CONSTANT
           value: 1.0
         clear_negative_effects: true
+
+  # 效果：原版式近战击退，命中后按等级推开目标。
+  knockback:
+    enabled: true
+    display: "击退"
+    rarity: COMMON
+    max_level: 2
+    soft_max_level: 2
+    slots: [MELEE_WEAPON]
+    description:
+      - "近战命中时击退目标。"
+      - "当前等级提供 {knockback_strength} 级击退强度。"
+    numeric:
+      knockback_strength:
+        type: LINEAR
+        per_level: 1.0
+
+  # 效果：近战残暴值加成，属于通用伤害组，和锋芒/强攻互斥。
+  ruthless:
+    enabled: true
+    display: "冷酷"
+    rarity: COMMON
+    max_level: 7
+    soft_max_level: 3
+    slots: [MELEE_WEAPON]
+    conflict_group: damage_generic
+    description:
+      - "提高近战残暴值。"
+      - "当前总计 +{brutality} 残暴。"
+    numeric:
+      brutality:
+        type: LINEAR
+        per_level: 5.0
+
+  # 效果：远程武器通用伤害乘区，当前作为远程命中乘区生效。
+  power:
+    enabled: true
+    display: "力量"
+    rarity: COMMON
+    max_level: 7
+    soft_max_level: 4
+    slots: [RANGED_WEAPON]
+    description:
+      - "提高远程攻击造成的伤害。"
+      - "当前总计 +{ranged_damage_percent}% 远程伤害。"
+    numeric:
+      ranged_damage:
+        type: LINEAR
+        per_level: 0.08
+
+  # 效果：原版式远程冲击，箭矢命中后按等级推开目标。
+  punch:
+    enabled: true
+    display: "冲击"
+    rarity: COMMON
+    max_level: 2
+    soft_max_level: 2
+    slots: [RANGED_WEAPON]
+    description:
+      - "远程命中时击退目标。"
+      - "当前等级提供 {punch_strength} 级冲击强度。"
+    numeric:
+      punch_strength:
+        type: LINEAR
+        per_level: 1.0
+
+  # 效果：近战或远程命中后点燃目标，并追加基于本次伤害的火焰减益伤害。
+  fire_aspect:
+    enabled: true
+    display: "火舌"
+    rarity: UNCOMMON
+    max_level: 3
+    soft_max_level: 3
+    slots: [MELEE_WEAPON, RANGED_WEAPON]
+    description:
+      - "命中后点燃目标并追加火焰减益伤害。"
+      - "当前点燃 {ignite_seconds} 秒，追加 {ignite_damage_percent}% 本次伤害。"
+    numeric:
+      ignite_seconds:
+        type: LINEAR
+        per_level: 2.0
+      ignite_damage:
+        type: LINEAR
+        per_level: 0.03
+
+  # 效果：击杀怪物时提高金币赏金系数。
+  scavenger:
+    enabled: true
+    display: "野蛮"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [WEAPON]
+    description:
+      - "击杀怪物时提高金币赏金。"
+      - "当前赏金系数 +{bounty_multiplier}。"
+    numeric:
+      bounty_multiplier:
+        type: LINEAR
+        per_level: 0.3
+
+  # 效果：对 FLYING 特质目标造成额外伤害。
+  antigravity:
+    enabled: true
+    display: "反重力"
+    rarity: UNCOMMON
+    max_level: 7
+    soft_max_level: 3
+    slots: [RANGED_WEAPON, MAGIC_WEAPON]
+    target:
+      trait_tags: [FLYING]
+    description:
+      - "对飞行目标造成更高伤害。"
+      - "当前总计 +{damage_to_trait_tag_percent}% 对飞行目标伤害。"
+    numeric:
+      damage_to_trait_tag:
+        type: LINEAR
+        per_level: 0.07
+
+  # 效果：远程射击概率不消耗箭矢。
+  infinite_quiver:
+    enabled: true
+    display: "无尽"
+    rarity: UNCOMMON
+    max_level: 10
+    soft_max_level: 5
+    slots: [RANGED_WEAPON]
+    description:
+      - "射箭时有概率不消耗箭矢。"
+      - "当前总计 {free_arrow_chance_percent}% 不消耗箭矢。"
+    numeric:
+      free_arrow_chance:
+        type: LINEAR
+        per_level: 0.05
+
+  # 效果：弩装填时间缩短；第一版先作为配置和说明入口，装填公式后续接入弩模板。
+  spring_mechanism:
+    enabled: true
+    display: "机簧改造"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [CROSSBOW]
+    description:
+      - "缩短弩装填时间。"
+      - "当前总计减少 {reload_reduction_percent}% 装填时间。"
+    numeric:
+      reload_reduction:
+        type: PER_LEVEL
+        values: [0.08, 0.16, 0.24, 0.32, 0.40]
+
+  # 效果：长弓满蓄力命中时提高伤害。
+  full_draw:
+    enabled: true
+    display: "满弦"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [LONGBOW]
+    description:
+      - "满蓄力射击获得额外伤害。"
+      - "当前满蓄力伤害 +{full_draw_damage_percent}%。"
+    numeric:
+      full_draw_damage:
+        type: PER_LEVEL
+        values: [0.04, 0.07, 0.10, 0.13, 0.16]
+
+  # 效果：近战或法术命中时按造成伤害恢复魔力，和嗜血/饮血互斥。
+  mana_steal:
+    enabled: true
+    display: "魔力汲取"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [MELEE_WEAPON, MAGIC_WEAPON]
+    conflict_group: sustain_conversion
+    description:
+      - "近战或法术命中时恢复魔力。"
+      - "当前将 {mana_steal_percent}% 造成伤害转化为魔力，触发冷却 0.75 秒。"
+    numeric:
+      mana_steal:
+        type: LINEAR
+        per_level: 0.004
+
+  # 效果：击杀敌对生物后按缺失生命恢复生命，和嗜血/魔力汲取互斥。
+  drain:
+    enabled: true
+    display: "饮血"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [MELEE_WEAPON]
+    conflict_group: sustain_conversion
+    description:
+      - "击杀敌对生物后立即恢复生命。"
+      - "当前恢复 {drain_missing_health_percent}% 已损失生命，血魔翻倍，触发冷却 0.75 秒。"
+    numeric:
+      drain_missing_health:
+        type: LINEAR
+        per_level: 0.025
+
+  # 效果：根据目标当前生命百分比获得额外伤害乘区。
+  anatomy:
+    enabled: true
+    display: "解剖"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [MELEE_WEAPON, RANGED_WEAPON]
+    description:
+      - "目标当前生命越高，命中伤害越高。"
+      - "目标每 1% 当前生命提供 {health_percent_damage_percent}% 伤害。"
+    numeric:
+      health_percent_damage:
+        type: PER_LEVEL
+        values: [0.001, 0.002, 0.004, 0.005, 0.007]
+
+  # 效果：第一次攻击同一目标时提高伤害，20 秒未命中该目标后刷新。
+  first_strike:
+    enabled: true
+    display: "先发制人"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [WEAPON]
+    conflict_group: opening_strike
+    description:
+      - "第一次攻击目标时造成更高伤害。"
+      - "当前首次命中 +{first_hit_damage_percent}% 伤害，同目标 20 秒刷新。"
+    numeric:
+      first_hit_damage:
+        type: LINEAR
+        per_level: 0.15
+
+  # 效果：近战连续攻击同一目标时，每第三次命中提高伤害。
+  triple_strike:
+    enabled: true
+    display: "三连击"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [MELEE_WEAPON]
+    conflict_group: opening_strike
+    description:
+      - "连续攻击同一目标时，每第三次命中造成更高伤害。"
+      - "当前第三击 +{third_hit_damage_percent}% 伤害。"
+    numeric:
+      third_hit_damage:
+        type: LINEAR
+        per_level: 0.08
+
+  # 效果：近战暴击时对附近敌人释放连锁闪电。
+  chain_lightning:
+    enabled: true
+    display: "连锁闪电"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 1
+    slots: [MELEE_WEAPON]
+    conflicts: [cleave, thunderbolt, explosive_bolt]
+    description:
+      - "近战暴击时造成连锁伤害。"
+      - "当前每跳造成 {chain_damage_percent}% 本次伤害，半径 2.5，最多 10 个目标。"
+    numeric:
+      chain_damage:
+        type: PER_LEVEL
+        values: [0.04, 0.08, 0.12]
+
+  # 效果：近战暴击时提高本次单体伤害并短暂眩晕目标。
+  thunderbolt:
+    enabled: true
+    display: "雷击"
+    rarity: RARE
+    max_level: 4
+    soft_max_level: 2
+    slots: [MELEE_WEAPON]
+    conflicts: [chain_lightning]
+    description:
+      - "近战暴击时提高本次伤害并眩晕目标 0.5 秒。"
+      - "当前 +{crit_bonus_damage_percent}% 本次伤害，触发冷却 4 秒。"
+    numeric:
+      crit_bonus_damage:
+        type: PER_LEVEL
+        values: [0.10, 0.20, 0.30, 0.40]
+
+  # 效果：弩箭命中时获得护甲穿透，对构装或 HEAVY 目标提高 50%。
+  armor_piercer:
+    enabled: true
+    display: "破甲弩矢"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [CROSSBOW]
+    conflicts: [explosive_bolt]
+    description:
+      - "弩箭命中时提高本次穿透伤害。"
+      - "当前 +{armor_pierce_percent}% 护甲穿透，对构装/重型目标提高 50%。"
+    numeric:
+      armor_pierce:
+        type: PER_LEVEL
+        values: [0.04, 0.08, 0.12, 0.16, 0.20]
+
+  # 效果：弩箭命中后造成范围 secondary damage，不触发暴击、吸血、掉落。
+  explosive_bolt:
+    enabled: true
+    display: "爆裂弩矢"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [CROSSBOW]
+    conflicts: [chain_lightning, duplex, rend, armor_piercer, skewer, burst_magazine, multishot]
+    description:
+      - "弩箭命中后对周围敌人造成 secondary damage。"
+      - "当前造成 {explosion_damage_percent}% 本次伤害，范围 2.5。"
+    numeric:
+      explosion_damage:
+        type: PER_LEVEL
+        values: [0.12, 0.16, 0.20, 0.24, 0.30]
+
+  # 效果：弩可发射多重箭；第一版先作为互斥和投放配置。
+  multishot:
+    enabled: true
+    display: "多重射击"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 3
+    slots: [CROSSBOW]
+    conflicts: [burst_magazine, explosive_bolt]
+    description:
+      - "弩射击发射额外箭矢。"
+      - "第一版作为附魔配置与互斥入口，弹道扩展后接入额外箭矢。"
+
+  # 效果：弩箭贯穿额外目标时保留部分后续伤害。
+  skewer:
+    enabled: true
+    display: "贯穿射击"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [CROSSBOW]
+    conflicts: [explosive_bolt]
+    description:
+      - "弩箭贯穿额外目标时保留后续伤害。"
+      - "当前每次额外贯穿保留 {pierce_damage_keep_percent}% 伤害，最多 3 个额外目标。"
+    numeric:
+      pierce_damage_keep:
+        type: PER_LEVEL
+        values: [0.55, 0.62, 0.70, 0.78, 0.88]
+
+  # 效果：弩和长弓命中后标记目标，后续远程攻击叠加增伤；第一版先配置。
+  hunters_mark:
+    enabled: true
+    display: "猎手印记"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [CROSSBOW, LONGBOW]
+    description:
+      - "命中目标后标记 4 秒，后续远程攻击叠层增伤。"
+      - "当前每层 +{mark_damage_percent}% 远程伤害，最多 5 层。"
+    numeric:
+      mark_damage:
+        type: PER_LEVEL
+        values: [0.02, 0.03, 0.04, 0.05, 0.06]
+
+  # 效果：弩命中施法或蓄力目标时额外伤害并打断；第一版先配置。
+  interrupting_shot:
+    enabled: true
+    display: "截击"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [CROSSBOW]
+    description:
+      - "命中施法或蓄力目标时造成额外伤害并打断动作。"
+      - "当前 +{interrupt_damage_percent}% 伤害，冷却 4 秒。"
+    numeric:
+      interrupt_damage:
+        type: PER_LEVEL
+        values: [0.10, 0.15, 0.20, 0.25, 0.30]
+
+  # 效果：长弓满蓄力保持后提高暴击伤害，持续更久额外提高暴击率；第一版先配置。
+  focus:
+    enabled: true
+    display: "射手专注"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [LONGBOW]
+    description:
+      - "满蓄力保持后提高暴击伤害，保持更久额外提高暴击率。"
+      - "当前 +{focus_crit_damage_percent}% 暴击伤害，1.5 秒后获得一半数值的暴击率。"
+    numeric:
+      focus_crit_damage:
+        type: PER_LEVEL
+        values: [0.06, 0.09, 0.12, 0.15, 0.20]
+
+  # 效果：满蓄力命中飞行单位时提高伤害；超远距离分支后续接入弹道距离。
+  cloudpiercer:
+    enabled: true
+    display: "穿云"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [LONGBOW]
+    target:
+      trait_tags: [FLYING]
+    description:
+      - "满蓄力命中飞行单位或远距离目标时提高伤害。"
+      - "当前 +{cloud_damage_percent}% 伤害；第一版已接入飞行目标分支。"
+    numeric:
+      cloud_damage:
+        type: PER_LEVEL
+        values: [0.08, 0.12, 0.16, 0.20, 0.25]
+
+  # 效果：连续命中同一目标时提高远程伤害；第一版先配置。
+  zeroing:
+    enabled: true
+    display: "精准校准"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 3
+    slots: [LONGBOW]
+    description:
+      - "连续命中同一目标时提高远程伤害，未命中或换目标清空。"
+      - "当前每层 +{zeroing_damage_percent}% 远程伤害，最多 5 层。"
+    numeric:
+      zeroing_damage:
+        type: PER_LEVEL
+        values: [0.02, 0.03, 0.04, 0.05, 0.06]
+
+  # 效果：满蓄力暴击时使目标受到的伤害提高；第一版先配置。
+  weakpoint_shot:
+    enabled: true
+    display: "弱点射击"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 2
+    slots: [LONGBOW]
+    description:
+      - "满蓄力暴击时使目标短时间受到更高伤害。"
+      - "当前易伤 +{weakpoint_vulnerability_percent}%，持续 3 秒。"
+    numeric:
+      weakpoint_vulnerability:
+        type: PER_LEVEL
+        values: [0.06, 0.09, 0.12, 0.15, 0.20]
+
+  # 效果：满蓄力箭飞行速度提高；第一版先配置。
+  wind_shear:
+    enabled: true
+    display: "风切"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 3
+    slots: [LONGBOW]
+    description:
+      - "满蓄力箭飞行速度提高。"
+      - "当前 +{arrow_speed_percent}% 箭速。"
+    numeric:
+      arrow_speed:
+        type: PER_LEVEL
+        values: [0.25, 0.35, 0.50]
+
+  # 效果：清除武器除自身外所有附魔，并让武器基础伤害按面板值增加 150%。
+  one_for_all:
+    enabled: true
+    display: "以一镇万"
+    rarity: ULTIMATE
+    max_level: 1
+    soft_max_level: 1
+    slots: [WEAPON]
+    description:
+      - "应用时清除这件武器除自身外的所有附魔。"
+      - "当前使武器面板伤害 +150%。"
+
+  # 效果：远程暴击率和暴击伤害加成，并将 100% 以上暴击率转化为暴击伤害。
+  overload:
+    enabled: true
+    display: "超载"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [RANGED_WEAPON]
+    description:
+      - "提高远程武器暴击属性。"
+      - "当前 +{crit_chance_percent}% 暴击率，+{crit_damage_percent}% 暴击伤害。"
+      - "超过 100% 的暴击率每 1% 转化为当前等级对应的额外暴击伤害。"
+    numeric:
+      crit_chance:
+        type: LINEAR
+        per_level: 0.03
+      crit_damage:
+        type: LINEAR
+        per_level: 0.05
+
+  # 效果：静止或蹲伏蓄势后增强下一次满蓄力长弓射击；第一版先配置。
+  horizon_sniper:
+    enabled: true
+    display: "天穹狙击"
+    rarity: ULTIMATE
+    max_level: 4
+    soft_max_level: 4
+    slots: [LONGBOW]
+    description:
+      - "静止或保持蹲下 2 秒后，下一次满蓄力箭提高伤害。"
+      - "当前蓄势射击 +{sniper_damage_percent}% 伤害。"
+    numeric:
+      sniper_damage:
+        type: PER_LEVEL
+        values: [0.15, 0.30, 0.45, 0.60]
+
+  # 效果：击杀窗口内叠加增伤乘区，最多 6 层。
+  combo:
+    enabled: true
+    display: "以战养战"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [WEAPON]
+    description:
+      - "在击杀窗口内，每击杀一个目标叠加增伤。"
+      - "当前每层 +{combo_damage_percent}% 伤害，最多 6 层。"
+    numeric:
+      combo_damage:
+        type: PER_LEVEL
+        values: [0.02, 0.03, 0.05, 0.06, 0.08]
+
+  # 效果：远程命中后追加一支追踪箭；第一版先配置。
+  duplex:
+    enabled: true
+    display: "复式打击"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [RANGED_WEAPON]
+    conflicts: [explosive_bolt]
+    description:
+      - "箭矢命中后追加一支锁定该目标的追踪箭。"
+      - "当前追踪箭造成 {duplex_damage_percent}% 追加伤害。"
+    numeric:
+      duplex_damage:
+        type: PER_LEVEL
+        values: [0.06, 0.09, 0.12, 0.15, 0.18]
+
+  # 效果：命中连续叠加临时残暴或攻速，未命中和停手会衰减；第一版先配置。
+  fatal_tempo:
+    enabled: true
+    display: "致命节奏"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [MELEE_WEAPON, RANGED_WEAPON]
+    description:
+      - "近战命中叠加临时残暴，远程命中叠加临时攻速。"
+      - "当前近战每层 +{tempo_brutality} 残暴，远程每层 +{tempo_attack_speed} 攻速。"
+    numeric:
+      tempo_brutality:
+        type: PER_LEVEL
+        values: [4, 8, 12, 16, 20]
+      tempo_attack_speed:
+        type: PER_LEVEL
+        values: [3, 5, 7, 9, 12]
+
+  # 效果：Shift+左键主动清除本武器命中过目标的箭矢标记并造成伤害。
+  rend:
+    enabled: true
+    display: "撕裂"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [RANGED_WEAPON]
+    conflicts: [explosive_bolt]
+    description:
+      - "取代赋能射击，Shift+左键清除本武器留下的箭矢标记。"
+      - "当前每支箭造成 {rend_damage_percent}% 命中伤害，每个目标最多 7 次，冷却 5 秒。"
+    numeric:
+      rend_damage:
+        type: PER_LEVEL
+        values: [0.05, 0.10, 0.15, 0.20, 0.25]
+
+  # 效果：记录过去 30 秒击杀目标最高等级，转换为武器面板伤害，上限 500。
+  soul_eater:
+    enabled: true
+    display: "灵魂收割"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [MELEE_WEAPON]
+    description:
+      - "击杀后记录 30 秒内最高怪物等级，转化为武器面板伤害。"
+      - "当前系数为 {soul_damage_percent}% * 怪物等级，上限 500 面板伤害。"
+    numeric:
+      soul_damage:
+        type: PER_LEVEL
+        values: [0.10, 0.15, 0.20, 0.25, 0.30]
+
+  # 效果：周围敌人越多，获得越高伤害乘区。
+  swarm:
+    enabled: true
+    display: "困兽之斗"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [WEAPON]
+    description:
+      - "自身周围 10 格内每有一个敌人提高伤害，最多 10 层。"
+      - "当前每层 +{swarm_damage_percent}% 伤害。"
+    numeric:
+      swarm_damage:
+        type: PER_LEVEL
+        values: [0.03, 0.04, 0.05, 0.06, 0.07]
+
+  # 效果：双手近战命中低生命非 Boss 时处决，并眩晕周围敌人。
+  execute:
+    enabled: true
+    display: "血腥屠戮"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [TWO_HANDED_MELEE]
+    description:
+      - "命中低生命非 Boss 敌人时消耗当前生命直接处决。"
+      - "当前阈值 {execute_threshold_percent}%，消耗 {execute_health_cost_percent}% 当前生命，冷却 3 秒。"
+    numeric:
+      execute_threshold:
+        type: PER_LEVEL
+        values: [0.06, 0.08, 0.10, 0.12, 0.15]
+      execute_health_cost:
+        type: PER_LEVEL
+        values: [0.18, 0.16, 0.14, 0.12, 0.10]
+
+  # 效果：降低武器能力或赋能射击等耗魔技能的魔力消耗。
+  ultimate_wise:
+    enabled: true
+    display: "究极之智"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [WEAPON, MAGIC_WEAPON]
+    description:
+      - "降低这件武器能力的魔力消耗。"
+      - "当前魔力消耗减少 {mana_cost_reduction_percent}%。"
+    numeric:
+      mana_cost_reduction:
+        type: PER_LEVEL
+        values: [0.10, 0.20, 0.30, 0.40, 0.50]
+
+  # 效果：连续命中后额外发射弱追踪弩矢；第一版先配置。
+  burst_magazine:
+    enabled: true
+    display: "连弩机匣"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [CROSSBOW]
+    conflicts: [explosive_bolt, multishot]
+    description:
+      - "连续命中 2 次后，下一次射击额外发射弱弩矢。"
+      - "当前额外 {burst_count} 支，每支造成 {burst_damage_percent}% 伤害。"
+    numeric:
+      burst_count:
+        type: PER_LEVEL
+        values: [1, 1, 2, 2, 3]
+      burst_damage:
+        type: PER_LEVEL
+        values: [0.18, 0.24, 0.20, 0.26, 0.22]
+
+  # 效果：蹲下架设后提高弩伤害；第一版先配置。
+  siege_crossbow:
+    enabled: true
+    display: "重弩架设"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [CROSSBOW]
+    description:
+      - "蹲下且 1.5 秒内未移动后进入架设状态，提高弩伤害。"
+      - "当前架设伤害 +{siege_damage_percent}%。"
+    numeric:
+      siege_damage:
+        type: PER_LEVEL
+        values: [0.08, 0.16, 0.24, 0.32, 0.40]
+
+  # 效果：远距离满蓄力命中时额外伤害；第一版先配置。
+  sunpiercer:
+    enabled: true
+    display: "贯日"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [LONGBOW]
+    description:
+      - "满蓄力命中且飞行距离超过 20 格时造成额外伤害。"
+      - "当前额外 +{sun_damage_percent}% 伤害，冷却 5 秒。"
+    numeric:
+      sun_damage:
+        type: PER_LEVEL
+        values: [0.20, 0.30, 0.40, 0.50, 0.65]
+
+  # 效果：对高生命目标的满蓄力箭造成额外伤害；第一版先配置。
+  judgement_string:
+    enabled: true
+    display: "审判之弦"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [LONGBOW]
+    description:
+      - "对高生命目标的满蓄力箭造成额外伤害，未命中后冷却。"
+      - "当前生命阈值 {judgement_threshold_percent}%，额外 +{judgement_damage_percent}% 伤害。"
+    numeric:
+      judgement_threshold:
+        type: PER_LEVEL
+        values: [0.80, 0.75, 0.70, 0.70, 0.70]
+      judgement_damage:
+        type: PER_LEVEL
+        values: [0.18, 0.27, 0.36, 0.45, 0.60]
+
+  # 效果：满蓄力命中后召唤延迟落箭；第一版先配置。
+  starfall_volley:
+    enabled: true
+    display: "星坠箭雨"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [LONGBOW]
+    description:
+      - "满蓄力命中后召唤延迟落箭，造成 secondary damage。"
+      - "当前 {starfall_count} 支落箭，每支 {starfall_damage_percent}% 命中伤害，冷却 8 秒。"
+    numeric:
+      starfall_count:
+        type: PER_LEVEL
+        values: [2, 3, 4, 5, 6]
+      starfall_damage:
+        type: PER_LEVEL
+        values: [0.08, 0.08, 0.09, 0.09, 0.10]
+
+  # 效果：取代赋能射击，进入无法移动的暮光标记状态；第一版先配置。
+  twilight_zone:
+    enabled: true
+    display: "暮光视域"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [LONGBOW, CROSSBOW]
+    description:
+      - "取代赋能射击，标记视野中的敌人并按暮光层数增伤。"
+      - "当前每层 +{twilight_damage_percent}% 伤害，射击消耗 15% 最大魔力。"
+    numeric:
+      twilight_damage:
+        type: PER_LEVEL
+        values: [0.003, 0.005, 0.007, 0.009, 0.012]

@@ -1,6 +1,7 @@
 package com.servercore.enchant;
 
 import com.servercore.manager.EnchantManager;
+import com.servercore.manager.PDCManager;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -22,8 +23,13 @@ public final class EnchantStatResolver {
 
     public EnchantStatBundle resolveCombatStats(ItemStack item, Player player, EquipmentSlot slot) {
         Map<String, Double> numeric = resolveNumeric(item);
+        double baseDamage = numeric.getOrDefault("base_damage", 0.0);
+        EnchantEffectService effects = EnchantEffectService.getInstance();
+        if (effects != null) {
+            baseDamage += effects.resolveSoulEaterBaseDamageBonus(player, item);
+        }
         return new EnchantStatBundle(
-                numeric.getOrDefault("base_damage", 0.0),
+                baseDamage,
                 numeric.getOrDefault("base_multiplier", 0.0),
                 numeric.getOrDefault("crit_chance", 0.0),
                 numeric.getOrDefault("crit_damage", 0.0),
@@ -52,9 +58,22 @@ public final class EnchantStatResolver {
                 continue;
             }
             int level = entry.getValue();
+            if (definition.id().equals("one_for_all")) {
+                PDCManager pdc = PDCManager.getInstance();
+                if (pdc != null) {
+                    result.merge("base_damage", pdc.getStat(item, pdc.KEY_BASE_DAMAGE) * 1.5, Double::sum);
+                }
+            }
+            boolean hasNumericLifesteal = false;
             for (Map.Entry<String, ValueCurve> numeric : definition.numericBonuses().entrySet()) {
                 String key = normalize(numeric.getKey());
+                if (key.equals("lifesteal")) {
+                    hasNumericLifesteal = true;
+                }
                 result.merge(key, numeric.getValue().valueAt(level), Double::sum);
+            }
+            if (!hasNumericLifesteal && definition.effect().type() == EnchantEffectType.VAMPIRISM) {
+                result.merge("lifesteal", definition.effect().param("heal_ratio", level, 0.0), Double::sum);
             }
         }
         return result;

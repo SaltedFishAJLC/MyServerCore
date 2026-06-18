@@ -5,6 +5,7 @@ import com.servercore.enchant.EnchantDefinition;
 import com.servercore.enchant.EnchantDescriptionRenderer;
 import com.servercore.enchant.EnchantRegistry;
 import com.servercore.enchant.EnchantSettings;
+import com.servercore.enchant.EnchantStatResolver;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -370,55 +371,91 @@ public class ItemFormatManager implements Listener {
     }
 
     private void renderStats(List<Component> lore, ItemStack item, PDCManager pdc) {
-        addStat(lore, "伤害", pdc.getStat(item, pdc.KEY_BASE_DAMAGE), StatFormat.NUMBER, NamedTextColor.RED);
-        addStat(lore, "增伤乘区", pdc.getStat(item, pdc.KEY_BASE_MULTIPLIER), StatFormat.PERCENT, NamedTextColor.GOLD);
-        addStat(lore, "暴击几率", pdc.getStat(item, pdc.KEY_CRIT_CHANCE), StatFormat.PERCENT, NamedTextColor.YELLOW);
-        addStat(lore, "暴击伤害", pdc.getStat(item, pdc.KEY_CRIT_DAMAGE), StatFormat.PERCENT, NamedTextColor.YELLOW);
-        addStat(lore, "残暴", pdc.getStat(item, pdc.KEY_BRUTALITY), StatFormat.NUMBER, NamedTextColor.DARK_RED);
-        addStat(lore, "吸血", pdc.getStat(item, pdc.KEY_LIFESTEAL), StatFormat.PERCENT, NamedTextColor.DARK_RED);
-        addStat(lore, "破甲", pdc.getStat(item, pdc.KEY_ARMOR_PEN), StatFormat.NUMBER, NamedTextColor.GREEN);
-        addStat(lore, "护甲", pdc.getStat(item, pdc.KEY_BASE_ARMOR), StatFormat.NUMBER, NamedTextColor.GREEN);
-        addStat(lore, "攻速加成", pdc.getStat(item, pdc.KEY_ATTACK_SPEED_BONUS), StatFormat.PERCENT_POINTS, NamedTextColor.AQUA);
-        addStat(lore, "格挡阈值", pdc.getStat(item, pdc.KEY_SHIELD_BLOCK_THRESHOLD), StatFormat.NUMBER, NamedTextColor.BLUE);
-        addStat(lore, "有效格挡", pdc.getStat(item, pdc.KEY_SHIELD_EFFECTIVE_BLOCK), StatFormat.PERCENT, NamedTextColor.BLUE);
-        addStat(lore, "盾牌冷却", pdc.getStat(item, pdc.KEY_SHIELD_COOLDOWN_SECONDS), StatFormat.SECONDS, NamedTextColor.BLUE);
-        addStat(lore, "力量", pdc.getStat(item, pdc.KEY_ATTR_TOUGHNESS), StatFormat.NUMBER, NamedTextColor.RED);
-        addStat(lore, "敏捷", pdc.getStat(item, pdc.KEY_ATTR_AGILITY), StatFormat.NUMBER, NamedTextColor.GREEN);
-        addStat(lore, "智慧", pdc.getStat(item, pdc.KEY_ATTR_INTELLIGENCE), StatFormat.NUMBER, NamedTextColor.AQUA);
-        addStat(lore, "意志", pdc.getStat(item, pdc.KEY_ATTR_WILLPOWER), StatFormat.NUMBER, NamedTextColor.YELLOW);
-        addStat(lore, "幸运", pdc.getStat(item, pdc.KEY_ATTR_LUCK), StatFormat.NUMBER, NamedTextColor.LIGHT_PURPLE);
-        addStat(lore, "工具时运", pdc.getStat(item, pdc.KEY_TOOL_FORTUNE), StatFormat.NUMBER, NamedTextColor.GOLD);
-        addStat(lore, "采集时运", pdc.getStat(item, pdc.KEY_COLLECTION_FORTUNE), StatFormat.NUMBER, NamedTextColor.GOLD);
-        addStat(lore, "伐木时运", pdc.getStat(item, pdc.KEY_FORAGING_FORTUNE), StatFormat.NUMBER, NamedTextColor.GREEN);
-        addStat(lore, "Bounty 赏金", pdc.getStat(item, pdc.KEY_BOUNTY), StatFormat.PERCENT_POINTS, NamedTextColor.DARK_GREEN);
-        addStat(lore, "种植时运", pdc.getStat(item, pdc.KEY_FARMING_FORTUNE), StatFormat.NUMBER, NamedTextColor.YELLOW);
-        addStat(lore, "Overbloom 溢绽", pdc.getStat(item, pdc.KEY_OVERBLOOM), StatFormat.PERCENT_POINTS, NamedTextColor.GREEN);
-        addStat(lore, "采掘时运", pdc.getStat(item, pdc.KEY_EXCAVATION_FORTUNE), StatFormat.NUMBER, NamedTextColor.GRAY);
-        addStat(lore, "挖矿时运", pdc.getStat(item, pdc.KEY_MINING_FORTUNE), StatFormat.NUMBER, NamedTextColor.AQUA);
-        addStat(lore, "连锁破坏", pdc.getStat(item, pdc.KEY_TOOL_SWEEP), StatFormat.NUMBER, NamedTextColor.GREEN);
-        addStat(lore, "采集连锁", pdc.getStat(item, pdc.KEY_COLLECTION_SWEEP), StatFormat.NUMBER, NamedTextColor.GREEN);
-        addStat(lore, "伐木连锁", pdc.getStat(item, pdc.KEY_FORAGING_SWEEP), StatFormat.NUMBER, NamedTextColor.GREEN);
-        addStat(lore, "矿物扩散", pdc.getStat(item, pdc.KEY_MINING_SPREAD), StatFormat.NUMBER, NamedTextColor.AQUA);
-        addStat(lore, "挖掘速度", pdc.getStat(item, pdc.KEY_TOOL_MINING_SPEED), StatFormat.NUMBER, NamedTextColor.WHITE);
-        addStat(lore, "破坏力", pdc.getStat(item, pdc.KEY_BREAKING_POWER), StatFormat.NUMBER, NamedTextColor.RED);
-        addStat(lore, "纯度", pdc.getStat(item, pdc.KEY_PURITY), StatFormat.NUMBER, NamedTextColor.LIGHT_PURPLE);
-        addStat(lore, "晶石纯度", pdc.getStat(item, pdc.KEY_MINING_PURITY), StatFormat.NUMBER, NamedTextColor.LIGHT_PURPLE);
-        addStat(lore, "钓鱼速度", pdc.getStat(item, pdc.KEY_FISHING_SPEED), StatFormat.NUMBER, NamedTextColor.BLUE);
-        addStat(lore, "海怪概率", pdc.getStat(item, pdc.KEY_SEA_CREATURE_CHANCE), StatFormat.PERCENT_POINTS, NamedTextColor.DARK_AQUA);
-        addStat(lore, "宝藏概率", pdc.getStat(item, pdc.KEY_TREASURE_CHANCE), StatFormat.PERCENT_POINTS, NamedTextColor.GOLD);
+        Map<String, Double> enchantStats = resolveEnchantStats(item);
+        addStat(lore, "伤害", pdc.getStat(item, pdc.KEY_BASE_DAMAGE), enchantBonus(enchantStats, pdc.KEY_BASE_DAMAGE), StatFormat.NUMBER, NamedTextColor.RED);
+        addStat(lore, "增伤乘区", pdc.getStat(item, pdc.KEY_BASE_MULTIPLIER), enchantBonus(enchantStats, pdc.KEY_BASE_MULTIPLIER), StatFormat.PERCENT, NamedTextColor.GOLD);
+        addStat(lore, "暴击几率", pdc.getStat(item, pdc.KEY_CRIT_CHANCE), enchantBonus(enchantStats, pdc.KEY_CRIT_CHANCE), StatFormat.PERCENT, NamedTextColor.YELLOW);
+        addStat(lore, "暴击伤害", pdc.getStat(item, pdc.KEY_CRIT_DAMAGE), enchantBonus(enchantStats, pdc.KEY_CRIT_DAMAGE), StatFormat.PERCENT, NamedTextColor.YELLOW);
+        addStat(lore, "残暴", pdc.getStat(item, pdc.KEY_BRUTALITY), enchantBonus(enchantStats, pdc.KEY_BRUTALITY), StatFormat.NUMBER, NamedTextColor.DARK_RED);
+        addStat(lore, "吸血", pdc.getStat(item, pdc.KEY_LIFESTEAL), enchantBonus(enchantStats, pdc.KEY_LIFESTEAL), StatFormat.PERCENT, NamedTextColor.DARK_RED);
+        addStat(lore, "破甲", pdc.getStat(item, pdc.KEY_ARMOR_PEN), enchantBonus(enchantStats, pdc.KEY_ARMOR_PEN), StatFormat.NUMBER, NamedTextColor.GREEN);
+        addStat(lore, "护甲", pdc.getStat(item, pdc.KEY_BASE_ARMOR), enchantBonus(enchantStats, pdc.KEY_BASE_ARMOR), StatFormat.NUMBER, NamedTextColor.GREEN);
+        addStat(lore, "攻速加成", pdc.getStat(item, pdc.KEY_ATTACK_SPEED_BONUS), enchantBonus(enchantStats, pdc.KEY_ATTACK_SPEED_BONUS), StatFormat.PERCENT_POINTS, NamedTextColor.AQUA);
+        addStat(lore, "格挡阈值", pdc.getStat(item, pdc.KEY_SHIELD_BLOCK_THRESHOLD), enchantBonus(enchantStats, pdc.KEY_SHIELD_BLOCK_THRESHOLD), StatFormat.NUMBER, NamedTextColor.BLUE);
+        addStat(lore, "有效格挡", pdc.getStat(item, pdc.KEY_SHIELD_EFFECTIVE_BLOCK), enchantBonus(enchantStats, pdc.KEY_SHIELD_EFFECTIVE_BLOCK), StatFormat.PERCENT, NamedTextColor.BLUE);
+        addStat(lore, "盾牌冷却", pdc.getStat(item, pdc.KEY_SHIELD_COOLDOWN_SECONDS), enchantBonus(enchantStats, pdc.KEY_SHIELD_COOLDOWN_SECONDS), StatFormat.SECONDS, NamedTextColor.BLUE);
+        addStat(lore, "力量", pdc.getStat(item, pdc.KEY_ATTR_TOUGHNESS), enchantBonus(enchantStats, pdc.KEY_ATTR_TOUGHNESS), StatFormat.NUMBER, NamedTextColor.RED);
+        addStat(lore, "敏捷", pdc.getStat(item, pdc.KEY_ATTR_AGILITY), enchantBonus(enchantStats, pdc.KEY_ATTR_AGILITY), StatFormat.NUMBER, NamedTextColor.GREEN);
+        addStat(lore, "智慧", pdc.getStat(item, pdc.KEY_ATTR_INTELLIGENCE), enchantBonus(enchantStats, pdc.KEY_ATTR_INTELLIGENCE), StatFormat.NUMBER, NamedTextColor.AQUA);
+        addStat(lore, "意志", pdc.getStat(item, pdc.KEY_ATTR_WILLPOWER), enchantBonus(enchantStats, pdc.KEY_ATTR_WILLPOWER), StatFormat.NUMBER, NamedTextColor.YELLOW);
+        addStat(lore, "幸运", pdc.getStat(item, pdc.KEY_ATTR_LUCK), enchantBonus(enchantStats, pdc.KEY_ATTR_LUCK), StatFormat.NUMBER, NamedTextColor.LIGHT_PURPLE);
+        addStat(lore, "工具时运", pdc.getStat(item, pdc.KEY_TOOL_FORTUNE), enchantBonus(enchantStats, pdc.KEY_TOOL_FORTUNE), StatFormat.NUMBER, NamedTextColor.GOLD);
+        addStat(lore, "采集时运", pdc.getStat(item, pdc.KEY_COLLECTION_FORTUNE), enchantBonus(enchantStats, pdc.KEY_COLLECTION_FORTUNE), StatFormat.NUMBER, NamedTextColor.GOLD);
+        addStat(lore, "伐木时运", pdc.getStat(item, pdc.KEY_FORAGING_FORTUNE), enchantBonus(enchantStats, pdc.KEY_FORAGING_FORTUNE), StatFormat.NUMBER, NamedTextColor.GREEN);
+        addStat(lore, "Bounty 赏金", pdc.getStat(item, pdc.KEY_BOUNTY), enchantBonus(enchantStats, pdc.KEY_BOUNTY), StatFormat.PERCENT_POINTS, NamedTextColor.DARK_GREEN);
+        addStat(lore, "种植时运", pdc.getStat(item, pdc.KEY_FARMING_FORTUNE), enchantBonus(enchantStats, pdc.KEY_FARMING_FORTUNE), StatFormat.NUMBER, NamedTextColor.YELLOW);
+        addStat(lore, "Overbloom 溢绽", pdc.getStat(item, pdc.KEY_OVERBLOOM), enchantBonus(enchantStats, pdc.KEY_OVERBLOOM), StatFormat.PERCENT_POINTS, NamedTextColor.GREEN);
+        addStat(lore, "采掘时运", pdc.getStat(item, pdc.KEY_EXCAVATION_FORTUNE), enchantBonus(enchantStats, pdc.KEY_EXCAVATION_FORTUNE), StatFormat.NUMBER, NamedTextColor.GRAY);
+        addStat(lore, "挖矿时运", pdc.getStat(item, pdc.KEY_MINING_FORTUNE), enchantBonus(enchantStats, pdc.KEY_MINING_FORTUNE), StatFormat.NUMBER, NamedTextColor.AQUA);
+        addStat(lore, "连锁破坏", pdc.getStat(item, pdc.KEY_TOOL_SWEEP), enchantBonus(enchantStats, pdc.KEY_TOOL_SWEEP), StatFormat.NUMBER, NamedTextColor.GREEN);
+        addStat(lore, "采集连锁", pdc.getStat(item, pdc.KEY_COLLECTION_SWEEP), enchantBonus(enchantStats, pdc.KEY_COLLECTION_SWEEP), StatFormat.NUMBER, NamedTextColor.GREEN);
+        addStat(lore, "伐木连锁", pdc.getStat(item, pdc.KEY_FORAGING_SWEEP), enchantBonus(enchantStats, pdc.KEY_FORAGING_SWEEP), StatFormat.NUMBER, NamedTextColor.GREEN);
+        addStat(lore, "矿物扩散", pdc.getStat(item, pdc.KEY_MINING_SPREAD), enchantBonus(enchantStats, pdc.KEY_MINING_SPREAD), StatFormat.NUMBER, NamedTextColor.AQUA);
+        addStat(lore, "挖掘速度", pdc.getStat(item, pdc.KEY_TOOL_MINING_SPEED), enchantBonus(enchantStats, pdc.KEY_TOOL_MINING_SPEED), StatFormat.NUMBER, NamedTextColor.WHITE);
+        addStat(lore, "破坏力", pdc.getStat(item, pdc.KEY_BREAKING_POWER), enchantBonus(enchantStats, pdc.KEY_BREAKING_POWER), StatFormat.NUMBER, NamedTextColor.RED);
+        addStat(lore, "纯度", pdc.getStat(item, pdc.KEY_PURITY), enchantBonus(enchantStats, pdc.KEY_PURITY), StatFormat.NUMBER, NamedTextColor.LIGHT_PURPLE);
+        addStat(lore, "晶石纯度", pdc.getStat(item, pdc.KEY_MINING_PURITY), enchantBonus(enchantStats, pdc.KEY_MINING_PURITY), StatFormat.NUMBER, NamedTextColor.LIGHT_PURPLE);
+        addStat(lore, "钓鱼速度", pdc.getStat(item, pdc.KEY_FISHING_SPEED), enchantBonus(enchantStats, pdc.KEY_FISHING_SPEED), StatFormat.NUMBER, NamedTextColor.BLUE);
+        addStat(lore, "海怪概率", pdc.getStat(item, pdc.KEY_SEA_CREATURE_CHANCE), enchantBonus(enchantStats, pdc.KEY_SEA_CREATURE_CHANCE), StatFormat.PERCENT_POINTS, NamedTextColor.DARK_AQUA);
+        addStat(lore, "宝藏概率", pdc.getStat(item, pdc.KEY_TREASURE_CHANCE), enchantBonus(enchantStats, pdc.KEY_TREASURE_CHANCE), StatFormat.PERCENT_POINTS, NamedTextColor.GOLD);
     }
 
     private void addStat(List<Component> lore, String label, double value, StatFormat format, NamedTextColor color) {
-        if (Math.abs(value) < 0.0001) return;
-        String rendered = switch (format) {
+        addStat(lore, label, value, 0.0, format, color);
+    }
+
+    private void addStat(List<Component> lore, String label, double value, double enchantBonus, StatFormat format, NamedTextColor color) {
+        boolean hasBaseValue = Math.abs(value) >= 0.0001;
+        boolean hasEnchantBonus = Math.abs(enchantBonus) >= 0.0001;
+        if (!hasBaseValue && !hasEnchantBonus) return;
+
+        Component line = Component.text(label + ": ", NamedTextColor.GRAY);
+        if (hasBaseValue) {
+            line = line.append(Component.text(formatSignedStat(value, format), color));
+        }
+        if (hasEnchantBonus) {
+            if (hasBaseValue) {
+                line = line.append(Component.space());
+            }
+            line = line.append(Component.text("(" + formatSignedStat(enchantBonus, format) + ")", NamedTextColor.BLUE));
+        }
+        lore.add(line
+                .decoration(TextDecoration.ITALIC, false));
+    }
+
+    private Map<String, Double> resolveEnchantStats(ItemStack item) {
+        EnchantStatResolver resolver = EnchantStatResolver.getInstance();
+        if (resolver == null) {
+            return Map.of();
+        }
+        return resolver.resolveNumeric(item);
+    }
+
+    private double enchantBonus(Map<String, Double> enchantStats, NamespacedKey statKey) {
+        return enchantStats.getOrDefault(statKey.getKey(), 0.0);
+    }
+
+    private String formatSignedStat(double value, StatFormat format) {
+        return (value >= 0.0 ? "+" : "") + renderStatValue(value, format);
+    }
+
+    private String renderStatValue(double value, StatFormat format) {
+        return switch (format) {
             case PERCENT -> formatPercent(value);
             case PERCENT_POINTS -> formatNumber(value) + "%";
             case SECONDS -> formatNumber(value) + "s";
             case NUMBER -> formatNumber(value);
         };
-        lore.add(Component.text(label + ": ", NamedTextColor.GRAY)
-                .append(Component.text("+" + rendered, color))
-                .decoration(TextDecoration.ITALIC, false));
     }
 
     private void renderGemstones(List<Component> lore, PersistentDataContainer container, PDCManager pdc) {

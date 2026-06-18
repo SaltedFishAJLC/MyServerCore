@@ -98,6 +98,10 @@ public final class EnchantRegistry {
                         section.getInt("enchant_table_max_level", maxLevel)));
         Set<EnchantSlot> slots = parseEnumSet(EnchantSlot.class, section.getStringList("slots"));
         String conflictGroup = normalize(section.getString("conflict_group", ""));
+        Set<String> conflicts = section.getStringList("conflicts").stream()
+                .map(EnchantRegistry::normalize)
+                .filter(value -> !value.isBlank())
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
         if (rarity == EnchantRarity.ULTIMATE) {
             conflictGroup = "ultimate";
         }
@@ -129,6 +133,7 @@ public final class EnchantRegistry {
                 softMaxLevel,
                 slots,
                 conflictGroup,
+                conflicts,
                 description,
                 numeric,
                 effect,

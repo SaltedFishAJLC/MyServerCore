@@ -14,6 +14,7 @@ public record EnchantDefinition(
         int softMaxLevel,
         Set<EnchantSlot> slots,
         String conflictGroup,
+        Set<String> conflicts,
         List<String> description,
         Map<String, ValueCurve> numericBonuses,
         EnchantEffectSpec effect,
@@ -28,6 +29,10 @@ public record EnchantDefinition(
         softMaxLevel = Math.max(1, Math.min(softMaxLevel <= 0 ? maxLevel : softMaxLevel, maxLevel));
         slots = slots == null ? Set.of() : Set.copyOf(slots);
         conflictGroup = conflictGroup == null ? "" : normalize(conflictGroup);
+        conflicts = conflicts == null ? Set.of() : conflicts.stream()
+                .map(EnchantDefinition::normalize)
+                .filter(value -> !value.isBlank())
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
         description = description == null ? List.of() : List.copyOf(description);
         numericBonuses = numericBonuses == null ? Map.of() : Map.copyOf(numericBonuses);
         effect = effect == null ? EnchantEffectSpec.none() : effect;
@@ -40,6 +45,10 @@ public record EnchantDefinition(
 
     public boolean hasConflictGroup() {
         return !conflictGroup.isBlank();
+    }
+
+    public boolean explicitlyConflictsWith(String otherId) {
+        return conflicts.contains(normalize(otherId)) || conflicts.contains("*");
     }
 
     private static String normalize(String raw) {

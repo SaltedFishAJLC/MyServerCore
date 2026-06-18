@@ -117,3 +117,34 @@ recipes:
         material: COMPASS
     result:
       custom_item: gatherers_compass
+
+  magic_dust:
+    shape:
+      - " A "
+      - "ABA"
+      - " A "
+    ingredients:
+      A:
+        material: GLOWSTONE_DUST
+      B:
+        material: AMETHYST_SHARD
+    result:
+      custom_item: magic_dust
+      amount: 8
+
+  ultimate_enchant_catalyst:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "ABA"
+    ingredients:
+      A:
+        custom_item: magic_dust
+      B:
+        custom_item: gem_dust
+      C:
+        material: ECHO_SHARD
+      D:
+        material: NETHER_STAR
+    result:
+      custom_item: ultimate_enchant_catalyst

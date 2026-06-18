@@ -121,6 +121,7 @@ public record CombatStats(
             totalCritChance += classManager.getBonusCritChance(player);
             totalCritDamage += classManager.getBonusCritDamage(player);
             totalArmorPen += classManager.getBonusArmorPen(player);
+            totalLifesteal += classManager.getBaseLifesteal(player);
             if (classManager.suppressesCriticalHits(player)) {
                 totalCritChance = 0.0;
             }
@@ -198,6 +199,14 @@ public record CombatStats(
         ClassManager classManager = ClassManager.getInstance();
         if (classManager != null && classManager.suppressesCriticalHits(player)) {
             totalCritChance = 0.0;
+        }
+
+        EnchantManager enchantManager = EnchantManager.getInstance();
+        int overloadLevel = enchantManager == null ? 0 : enchantManager.getActiveEnchantLevel(mainHand, "overload");
+        if (overloadLevel > 0 && totalCritChance > 1.0) {
+            double[] conversion = {0.01, 0.02, 0.03, 0.04, 0.05};
+            double perPoint = conversion[Math.max(0, Math.min(overloadLevel - 1, conversion.length - 1))];
+            totalCritDamage += (totalCritChance - 1.0) * 100.0 * perPoint;
         }
         
         return new CombatStats(totalBaseDamage, totalBaseMultiplier, totalCritChance, totalCritDamage, totalBrutality, totalLifesteal, totalArmorPen);

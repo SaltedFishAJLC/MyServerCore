@@ -580,9 +580,14 @@ public class WeaponTemplateManager implements Listener {
         if (player == null) {
             return false;
         }
-        return player.getGameMode() == GameMode.CREATIVE
+        if (player.getGameMode() == GameMode.CREATIVE
                 || player.getGameMode() == GameMode.SPECTATOR
-                || (weapon != null && weapon.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.INFINITY) > 0);
+                || (weapon != null && weapon.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.INFINITY) > 0)) {
+            return true;
+        }
+        EnchantManager enchantManager = EnchantManager.getInstance();
+        int level = enchantManager == null ? 0 : enchantManager.getActiveEnchantLevel(weapon, "infinite_quiver");
+        return level > 0 && java.util.concurrent.ThreadLocalRandom.current().nextDouble() < Math.min(1.0, level * 0.05);
     }
 
     public void stripHasteAttackSpeedModifiers(Player player) {

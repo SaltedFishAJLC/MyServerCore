@@ -60,9 +60,10 @@ public final class EnchantAnvilListener implements Listener {
         ItemStack result = left.clone();
         Map<String, Integer> merged = new LinkedHashMap<>(enchantManager.getAllCustomEnchants(left));
         boolean leftIsBook = isBook(left);
+        boolean rightIsBook = isBook(right);
         boolean changed = false;
         for (Map.Entry<String, Integer> entry : rightEnchants.entrySet()) {
-            MergeOutcome outcome = mergeOne(result, merged, entry.getKey(), entry.getValue(), leftIsBook);
+            MergeOutcome outcome = mergeOne(result, merged, entry.getKey(), entry.getValue(), leftIsBook, rightIsBook);
             if (outcome.changed()) {
                 changed = true;
                 merged.put(entry.getKey(), outcome.level());
@@ -81,7 +82,8 @@ public final class EnchantAnvilListener implements Listener {
         return result;
     }
 
-    private MergeOutcome mergeOne(ItemStack result, Map<String, Integer> current, String id, int incomingLevel, boolean leftIsBook) {
+    private MergeOutcome mergeOne(ItemStack result, Map<String, Integer> current, String id, int incomingLevel,
+                                  boolean leftIsBook, boolean rightIsBook) {
         EnchantRegistry registry = EnchantRegistry.getInstance();
         EnchantManager enchantManager = EnchantManager.getInstance();
         if (registry == null || enchantManager == null) {
@@ -98,8 +100,16 @@ public final class EnchantAnvilListener implements Listener {
             return existing > 0 ? MergeOutcome.changed(existing) : MergeOutcome.unchanged();
         }
 
-        int next = existing <= 0 ? incomingLevel : existing == incomingLevel ? existing + 1 : Math.max(existing, incomingLevel);
+        int incoming = Math.max(1, Math.min(incomingLevel, definition.maxLevel()));
+        int next = existing <= 0 ? incoming : existing == incoming ? existing + 1 : Math.max(existing, incoming);
         next = Math.min(next, definition.maxLevel());
+        if (next <= existing) {
+            return MergeOutcome.unchanged();
+        }
+
+        if (next > definition.softMaxLevel() && !canAcceptAboveSoftFromAnvil(leftIsBook, rightIsBook, incoming, next)) {
+            return MergeOutcome.unchanged();
+        }
 
         if (!leftIsBook && !EnchantSlotMatcher.matches(result, definition.slots())) {
             return MergeOutcome.unchanged();
@@ -109,9 +119,19 @@ public final class EnchantAnvilListener implements Listener {
         if (!validation.success()) {
             return MergeOutcome.unchanged();
         }
+        if ("one_for_all".equals(id)) {
+            current.clear();
+        }
         current.put(id, next);
         enchantManager.writeEnchants(result, current);
         return MergeOutcome.changed(next);
+    }
+
+    private boolean canAcceptAboveSoftFromAnvil(boolean leftIsBook, boolean rightIsBook, int incomingLevel, int nextLevel) {
+        if (leftIsBook || !rightIsBook) {
+            return false;
+        }
+        return incomingLevel == nextLevel;
     }
 
     private boolean isBook(ItemStack item) {

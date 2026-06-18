@@ -362,7 +362,7 @@ public class PowerLevelManager {
         double lifestealRate = stats.lifesteal();
         ClassManager classManager = ClassManager.getInstance();
         if (classManager != null) {
-            lifestealRate = (lifestealRate + classManager.getBaseLifesteal(player)) * classManager.getLifestealMultiplier(player);
+            lifestealRate *= classManager.getLifestealMultiplier(player);
         }
         return Math.max(0.0, lifestealRate);
     }

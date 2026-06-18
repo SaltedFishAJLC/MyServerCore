@@ -1,5 +1,8 @@
 package com.servercore.manager;
 
+import com.servercore.enchant.EnchantBookFactory;
+import com.servercore.enchant.EnchantDefinition;
+import com.servercore.enchant.EnchantRegistry;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -564,6 +567,10 @@ public class CustomMobRegistry {
     private DropRule parseDrop(String mobId, int index, Map<?, ?> rawDrop) {
         String itemId = blankToNull(stringValue(rawDrop.get("item_id")));
         String materialName = blankToNull(stringValue(rawDrop.get("material")));
+        String enchantBookId = blankToNull(stringValue(rawDrop.get("enchant_book")));
+        if (enchantBookId == null) {
+            enchantBookId = blankToNull(stringValue(rawDrop.get("enchant_id")));
+        }
         Material material = null;
         if (materialName != null) {
             material = Material.matchMaterial(materialName);
@@ -573,14 +580,24 @@ public class CustomMobRegistry {
             }
         }
 
-        if (itemId == null && material == null) {
-            plugin.getLogger().warning("Skipped custom_mobs.yml drop " + mobId + "[" + index + "] because it has no item_id or material.");
+        if (itemId == null && material == null && enchantBookId == null) {
+            plugin.getLogger().warning("Skipped custom_mobs.yml drop " + mobId + "[" + index + "] because it has no item_id, material, or enchant_book.");
             return null;
         }
 
         double chance = parseChance(rawDrop.get("chance"), 1.0);
         AmountRange amount = parseAmount(rawDrop);
-        return new DropRule(itemId == null ? null : normalize(itemId), material, chance, amount.min(), amount.max());
+        AmountRange enchantLevel = parseLevelRange(rawDrop);
+        return new DropRule(
+                itemId == null ? null : normalize(itemId),
+                material,
+                enchantBookId == null ? null : normalize(enchantBookId),
+                chance,
+                amount.min(),
+                amount.max(),
+                enchantLevel.min(),
+                enchantLevel.max()
+        );
     }
 
     private double parseChance(Object raw, double defaultValue) {
@@ -652,6 +669,40 @@ public class CustomMobRegistry {
         try {
             int amount = Math.max(1, Integer.parseInt(amountText));
             return new AmountRange(amount, amount);
+        } catch (NumberFormatException ignored) {
+            return new AmountRange(1, 1);
+        }
+    }
+
+    private AmountRange parseLevelRange(Map<?, ?> rawDrop) {
+        Object rawLevel = rawDrop.get("level");
+        if (rawLevel == null) {
+            rawLevel = rawDrop.get("enchant_level");
+        }
+        if (rawLevel == null) {
+            return new AmountRange(1, 1);
+        }
+
+        if (rawLevel instanceof Number number) {
+            int level = Math.max(1, number.intValue());
+            return new AmountRange(level, level);
+        }
+
+        String levelText = String.valueOf(rawLevel).trim();
+        String[] parts = levelText.split("-", 2);
+        if (parts.length == 2) {
+            try {
+                int parsedMin = Math.max(1, Integer.parseInt(parts[0].trim()));
+                int parsedMax = Math.max(parsedMin, Integer.parseInt(parts[1].trim()));
+                return new AmountRange(parsedMin, parsedMax);
+            } catch (NumberFormatException ignored) {
+                return new AmountRange(1, 1);
+            }
+        }
+
+        try {
+            int level = Math.max(1, Integer.parseInt(levelText));
+            return new AmountRange(level, level);
         } catch (NumberFormatException ignored) {
             return new AmountRange(1, 1);
         }
@@ -995,9 +1046,12 @@ public class CustomMobRegistry {
     private record DropRule(
             String itemId,
             Material material,
+            String enchantBookId,
             double chance,
             int minAmount,
-            int maxAmount
+            int maxAmount,
+            int minLevel,
+            int maxLevel
     ) {
         ItemStack roll(ThreadLocalRandom random, org.bukkit.entity.Player killer) {
             boolean success;
@@ -1009,6 +1063,18 @@ public class CustomMobRegistry {
             }
             if (!success) {
                 return null;
+            }
+
+            if (enchantBookId != null) {
+                EnchantRegistry registry = EnchantRegistry.getInstance();
+                EnchantDefinition definition = registry == null ? null : registry.get(enchantBookId).orElse(null);
+                if (definition == null || !definition.enabled()) {
+                    return null;
+                }
+                int safeMax = Math.min(Math.max(minLevel, maxLevel), definition.maxLevel());
+                int safeMin = Math.min(Math.max(1, minLevel), safeMax);
+                int level = safeMin == safeMax ? safeMin : random.nextInt(safeMin, safeMax + 1);
+                return EnchantBookFactory.createBook(definition, level);
             }
 
             int amount = minAmount == maxAmount ? minAmount : random.nextInt(minAmount, maxAmount + 1);

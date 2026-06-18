@@ -200,7 +200,7 @@ public class StatsMenu {
         ClassManager classManager = ClassManager.getInstance();
         double lifesteal = classManager == null
                 ? stats.lifesteal()
-                : (stats.lifesteal() + classManager.getBaseLifesteal(player)) * classManager.getLifestealMultiplier(player);
+                : stats.lifesteal() * classManager.getLifestealMultiplier(player);
 
         List<Component> lore = new ArrayList<>();
         lore.add(Component.empty());

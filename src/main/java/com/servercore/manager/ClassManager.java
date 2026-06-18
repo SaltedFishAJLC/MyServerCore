@@ -44,7 +44,7 @@ public class ClassManager {
     public enum PlayerClass {
         NONE("无职业", Material.BARRIER, null, null, List.of("未选择职业流派")),
         BLOOD_MAGE("血魔", Material.REDSTONE, AttributeManager.CoreAttribute.TOUGHNESS, AttributeManager.CoreAttribute.AGILITY,
-                List.of("额外残暴值 = Power * 0.6", "自带 2.5% 近战吸血", "所有吸血效果翻倍")),
+                List.of("额外残暴值 = Power * 0.6", "基础吸血 +2.5%", "总吸血效果翻倍")),
         GUARDIAN("守护者", Material.SHIELD, AttributeManager.CoreAttribute.TOUGHNESS, AttributeManager.CoreAttribute.WILLPOWER,
                 List.of("额外生命恢复 = Power * 0.08", "战斗中生命恢复保留至 70%", "承受附近队友 25% 实际伤害")),
         MARKSMAN("神射手", Material.BOW, AttributeManager.CoreAttribute.AGILITY, AttributeManager.CoreAttribute.INTELLIGENCE,

@@ -311,3 +311,170 @@
 
 - `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
 - 构建仅提示 Bukkit 过时 API，其中本次铁砧监听器使用的 repair cost API 已过时；不影响当前附魔功能编译与打包。
+
+## 2026-06-16 附魔获取入口收尾
+### 更新日志
+
+- 审查现有商店/NPC/战利品代码后，确认仓库内没有独立 NPC/商店模块；本次复用 `/sc` 命令、Bukkit 背包 GUI、`CustomMobRegistry` 掉落和既有铁砧合并链路落地新入口。
+- 新增玩家可用入口 `/sc enchant special <enchant_id> <level>`：按 `special_enchant_table` 校验启用状态、允许稀有度、硬等级上限、槽位、冲突和终极附魔数量，然后消耗粉尘与经验等级，对主手物品进行定向附魔。
+- 新增玩家可用入口 `/sc enchant books`：打开轮换附魔书 GUI，读取 `npc_books.pools` 生成当前轮换 offer；购买后得到带自定义附魔 PDC 的 `ENCHANTED_BOOK`，可直接作为铁砧右侧材料合并到装备。
+- 新增 `EnchantBookFactory` 统一生成自定义附魔书，避免轮换商店和掉落各自手写 PDC/lore。
+- `EnchantPoolRegistry` 现在实际解析 `special_enchant_table` 与 `npc_books`，支持轮换数量、刷新小时、等级范围、粉尘费用和经验等级费用；RARE 默认每日轮换，ULTIMATE 默认三日轮换。
+- `CustomMobRegistry` 掉落表支持 `enchant_book` / `enchant_id`，并支持 `level: 1-3` 这类等级范围；命中后生成可铁砧使用的自定义附魔书。
+- `custom_mobs.yml` 已加入附魔书掉落示例：Foundry 护卫队长和幽灵船长掉落 RARE 书，Flame Boss 与 Ancient Warden 掉落 ULTIMATE 书，RARE / ULTIMATE 不再只能依赖调试命令。
+- `enchants.yml` 为所有既有附魔补充 `# 效果：...` 注释，并在 `enchants:` 下写明后续新增附魔也必须补充效果注释。
+
+### 实现细节
+
+- 定向附魔消耗的“粉尘”兼容 `magic_dust`、现有配置中的 `gem_dust`，以及无自定义模板时的 `GLOWSTONE_DUST`，避免材料命名不一致导致入口不可用。
+- 普通附魔台仍只受软上限 `soft_max_level` 限制；定向附魔、轮换附魔书和怪物掉落书按硬上限 `max_level` 处理。
+- 轮换书按 pool id 与当前刷新窗口生成稳定随机结果，服务器重启不会在同一窗口内刷新出另一套商品。
+- 自定义怪物掉落仍复用 `GlobalStatManager.rollRareDrop()`，稀有掉落概率继续吃 Magic Find 逻辑。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
+- `git diff --check` 未发现空白错误，仅提示当前工作区文件行尾会在 Git 触碰时由 LF 替换为 CRLF。
+
+## 2026-06-16 附魔数值面板与文案修正
+### 更新日志
+
+- 物品面板的属性行现在会读取 `EnchantStatResolver.resolveNumeric()` 的动态附魔加成，并在基础属性后追加蓝色括号显示，例如 `伤害: +24 (+10)`。
+- 如果某个属性完全来自附魔而基础物品没有该属性，面板会显示该属性名和蓝色括号加成，例如 `暴击伤害: (+20.0%)`，避免伪造一个 `+0` 基础值。
+- 附魔说明中的线性数值附魔从“每级 +当前总值”改为“当前总计 +数值”，修正高等级附魔被误读为再次按等级累加的问题。
+- 缺少具体数值说明的目标杀手、蓄势、采矿专精和终极附魔已补充当前数值/参数说明，方便玩家直接从 lore 判断实际效果。
+
+### 实现细节
+
+- 面板显示复用现有附魔注册表、启用状态过滤和数值曲线解析；禁用附魔、未知附魔不会额外显示为有效属性。
+- 顶部属性面板只展示可归入现有物品属性键的数值加成；对特定目标增伤、满蓄力伤害等情境加成仍保留在对应附魔 lore 中说明。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
+- 构建仅提示既有铁砧 repair cost API 过时警告；本次面板显示和 YAML 文案调整编译通过。
+- 构建仅提示既有 `EntityRemoveEvent`、铁砧 repair cost API 过时警告；本次新增入口编译与打包通过。
+
+## 2026-06-16 砂轮单条拆除收尾
+### 更新日志
+
+- `EnchantGrindstoneListener` 保留原版砂轮单槽结果的 clear-all 行为：放入带自定义附魔的物品后，取出结果会清空全部自定义附魔，并继续按 `grindstone.clear_all` 比例返还经验与魔尘。
+- 新增“按附魔单独拆除”流程：玩家潜行右键砂轮打开 `附魔拆除` GUI，左侧放入装备，中间列出该装备上的每个自定义附魔；点击某个条目会只移除该附魔。
+- 单条拆除现在真正读取 `grindstone.remove_single.<RARITY>.dust_per_level`，按附魔等级计算魔尘消耗；普通、罕见、稀有附魔只消耗魔尘。
+- 终极附魔拆除现在真正读取 `require_special_material`，默认额外需要 `ultimate_enchant_catalyst`；材料不足时不会移除附魔，也不会扣除魔尘。
+- `EnchantPoolRegistry` 增加单条拆除费用与特殊材料查询接口，clear-all 返还仍沿用原有 `dustRefund` / `expRefund` 路径，避免破坏旧砂轮逻辑。
+- `custom_items.yml` 新增 `magic_dust` 与 `ultimate_enchant_catalyst`，`recipes.yml` 增加默认制作配方，`recycle.yml` 增加回收价格。
+
+### 实现细节
+
+- 单条拆除 GUI 关闭时会把左侧槽位中的装备返还到玩家背包，背包满时掉落在玩家位置，避免吞物品。
+- 魔尘兼容 `magic_dust`、历史 `gem_dust` 和无自定义物品时的原版 `GLOWSTONE_DUST`；clear-all 返还现在会按堆拆分，避免返还数量超过 64 时丢失。
+- 终极附魔特殊材料通过 `special_material_item_id` / `special_material_amount` 配置，后续可以直接换成更稀有的掉落材料。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
+- 构建仅提示既有铁砧 repair cost API 过时警告；本次砂轮 GUI 与配置解析编译通过。
+
+## 2026-06-16 魔法粉尘循环总收口
+### 更新日志
+
+- 审查 `enchant_pools.yml`、`EnchantPoolRegistry`、`EnchantGrindstoneListener`、`EnchantTableListener`、`EnchantManager` 与 `custom_items.yml` 后，确认此前未闭合点集中在粉尘物品定义、单条拆除费用、终极拆除材料、定向附魔消耗与轮换附魔书购买链路。
+- `magic_dust` 已作为正式自定义物品落入 `custom_items.yml`，并补充默认配方与回收价格；砂轮返还、定向附魔和轮换书购买都优先走该自定义物品。
+- `grindstone.remove_single` 已由 `EnchantPoolRegistry` 解析为单条拆除规则：按稀有度读取 `dust_per_level`，并支持 `require_special_material`、`special_material_item_id` 与 `special_material_amount`。
+- 单条拆除通过潜行右键砂轮打开 `附魔拆除` GUI；左槽放装备，点击附魔条目后只移除该附魔，并按等级扣除魔尘。终极附魔默认额外消耗 `ultimate_enchant_catalyst`。
+- clear-all 砂轮路径保持兼容：普通砂轮取结果仍会清空全部自定义附魔并返还经验/魔尘；取出阶段现在和 prepare 阶段使用同一套“寻找带自定义附魔源物品”逻辑，避免双槽场景返还错位。
+- `special_enchant_table` 已接入 `/sc enchant special <enchant_id> <level>`，完整走启用状态、稀有度、硬上限、槽位、冲突校验、魔尘/经验消耗与 lore 刷新。
+- `npc_books` 已接入 `/sc enchant books` 轮换书 GUI，按 pool 刷新窗口生成 RARE / ULTIMATE 附魔书 offer，购买时消耗魔尘与经验等级并产出可铁砧合并的自定义附魔书。
+
+### 第一版限制
+
+- 定向附魔暂时是命令入口，不是实体方块 GUI；轮换附魔书暂时是命令打开的商店 GUI，不是正式 NPC 对话/交易系统。
+- 魔尘识别仍兼容历史 `gem_dust` 与无模板时的 `GLOWSTONE_DUST`，用于迁移旧物品和旧配置；新产出优先使用正式 `magic_dust`。
+- `recipes.yml`、`custom_items.yml` 等默认资源只会在新数据文件生成时自动复制；已经部署过的服务器需要手动合并或执行对应 reload/重新生成流程。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
+- `git diff --check` 未发现空白错误，仅提示当前工作区文件行尾会在 Git 触碰时由 LF 替换为 CRLF。
+
+## 2026-06-17 铁砧软上限合并修正
+### 更新日志
+
+- 铁砧合并自定义附魔时，现在把 `soft_max_level` 作为普通合并升级的最高等级；两件同级物品或两本同级附魔书不能再通过铁砧把等级推到软上限以上。
+- 超过软上限但不超过 `max_level` 的附魔，仍可通过特殊来源的高等级附魔书敲到装备上，保留“特殊掉落/商店书 -> 装备”的高阶入口。
+- 自定义装备模板自带的高等级附魔仍按硬上限生效；左侧装备已有的高等级附魔也会保留，但不能靠同级合并继续升级。
+
+### 实现细节
+
+- `EnchantAnvilListener` 现在区分左右物品是否为附魔书：只有“左侧为装备、右侧为附魔书，并且右侧书本身提供目标高等级”时，铁砧才允许产出软上限以上的等级。
+- `III + III -> IV` 这类会越过软上限的合并会被拒绝；`右侧 IV 书 -> 左侧装备` 这类特殊书应用会被允许，前提是仍通过槽位、冲突、终极附魔数量和硬上限校验。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
+- 构建仅提示既有铁砧 repair cost API 过时警告；本次铁砧软上限规则调整编译通过。
+
+## 2026-06-17 吸血统计收束
+### 更新日志
+
+- `vampirism` / `嗜血` 附魔从独立 `VAMPIRISM` 治疗效果改为 `lifesteal` 数值加成，进入物品面板、`CombatStats`、战力计算和统一吸血上限。
+- 血魔职业的基础 2.5% 吸血现在并入 `CombatStats.lifesteal`；血魔“总吸血效果翻倍”保留为最终倍率，放大装备、宝石、附魔和职业基础等所有吸血来源。
+- 旧配置中仍写着 `effect: VAMPIRISM` / `heal_ratio` 的嗜血类附魔会被 `EnchantStatResolver` 兼容折算为 `lifesteal`，避免迁移时完全失效。
+
+### 实现细节
+
+- `EnchantEffectService` 不再在命中后单独触发嗜血回血，避免嗜血同时走独立治疗和统计吸血造成双算。
+- 统一吸血仍只在现有近战允许路径生效，并继续受 `power.sustain.max_lifesteal_per_hit_ratio` 单次吸血上限控制。
+- `enchants.yml` 的嗜血说明改为“当前总计 +X% 吸血”；硬上限等级超出已配置曲线时仍沿用 `PER_LEVEL` 的最后一档数值。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
+- 构建仅提示既有过时 API；本次吸血统计收束编译通过。
+
+## 2026-06-18 特殊附魔台、赋能射击与武器附魔扩展
+### 更新日志
+
+- 特殊附魔台从命令入口扩展为可交互 GUI：玩家潜行右键原版附魔台打开 `定向附魔台`，左侧放入装备后，界面会列出该物品可继续提升的 COMMON / UNCOMMON 附魔。
+- 定向附魔台复用 `special_enchant_table` 的稀有度白名单与费用配置，每次点击把目标附魔提升 1 级，最高不超过 `soft_max_level`，并完整走槽位、冲突、终极限制、魔尘/经验消耗和物品 lore 刷新。
+- 新增远程武器主动状态 `赋能射击`：手持长弓、短弓或弩时 Shift+左键切换；开启后射出的箭命中时按飞行距离计算 +1.5%/格伤害，并消耗 1.5 魔力/格，魔力不足时按可支付距离向上取整计算增伤。
+- `Ultimate Wise / 究极之智` 已接入赋能射击耗魔折扣，当前等级分别降低 10%/20%/30%/40%/50% 魔力消耗。
+- `Rend / 撕裂` 作为第一版主动技能接入：带 Rend 的远程武器 Shift+左键不再切换赋能射击，而是清除这把武器命中过目标留下的箭矢标记并造成 secondary damage，单目标最多 7 次，冷却 5 秒。
+- 附魔模型新增显式 `conflicts` 列表，补足“Chain Lightning 与 Cleave/ThunderBolt 互斥，但 ThunderBolt 可和 Cleave 共存”这类无法只靠单个 `conflict_group` 表达的关系。
+- `EnchantSlot` 增加 `SHORTBOW`、`LONGBOW`、`CROSSBOW`、`TWO_HANDED_MELEE`，新附魔可以精确限制到长弓、弩或双手近战武器。
+- `One For All / 以一镇万` 已接入：应用时清空武器上除自身外的所有自定义附魔，且带有该附魔的武器不能再追加其他附魔；面板伤害显示蓝色括号的 +150% 基础伤害加成。
+- `Mana Steal / 魔力汲取`、`Drain / 饮血`、`Fire Aspect / 火舌`、`Anatomy / 解剖`、`Scavenger / 野蛮`、`First Strike / 先发制人`、`Triple Strike / 三连击`、`Chain Lightning / 连锁闪电`、`ThunderBolt / 雷击`、`Knockback / 击退`、`Ruthless / 冷酷`、`Antigravity / 反重力`、`Infinite Quiver / 无尽`、`Overload / 超载`、`Power / 力量`、`Punch / 冲击`、`Combo / 以战养战`、`Soul Eater / 灵魂收割`、`Swarm / 困兽之斗`、`Execute / 血腥屠戮` 已接入当前战斗或经济链路。
+- 吸血和吸蓝都加上 0.75 秒触发冷却：职业基础吸血、Vampirism 面板吸血等统一走 `ClassPassiveManager.applyLifesteal` 冷却；Mana Steal 走独立吸蓝冷却；Drain 击杀治疗也受 0.75 秒门槛限制。
+- `Scavenger` 现在会放大生态击杀金币奖励；`Infinite Quiver` 会在远程消耗箭矢判定中按等级提供不消耗概率；`Overload` 会把 100% 以上暴击率按等级转为暴击伤害。
+- `enchant_pools.yml` 的 RARE / ULTIMATE 轮换书等级上限提升到 5，并继续由每个附魔自己的 `max_level` 截断，让高于软上限的特殊书有实际产出入口。
+- `enchants.yml` 新增本批武器、长弓、弩、终极附魔定义，并为每个新增附魔补充 `# 效果：...` 注释和玩家可读说明。
+
+### 第一版限制
+
+- 特殊附魔台第一版是“顺序提升 1 级”的指定附魔 GUI，还不是同一附魔直接选择任意目标等级的多按钮版本。
+- `Fire Aspect` 第一版用火焰视觉和一次性 magic secondary damage 表达点燃总伤害，尚未拆成逐秒 DoT 状态。
+- 长弓/弩中需要复杂蓄力、移动检测、视野标记、追踪弹道、未命中惩罚或额外箭矢 AI 的附魔已完成配置、槽位和互斥入口；其中 `Full Draw`、`Cloudpiercer` 已有简化伤害分支，`Rend` 已有主动第一版，其余需要后续专门补弹道状态机。
+- `Mana Steal` 通过 AuraSkills 用户对象反射读写当前魔力；如果 AuraSkills API 在运行端没有 `getMana/setMana` 或 `getCurrentMana/setCurrentMana`，该效果会安全失败为不恢复魔力，需要按实际服务端 API 名称补适配。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 构建通过。
+- 构建仅提示既有 `EntityRemoveEvent`、铁砧 repair cost API 过时警告；本次特殊附魔台、赋能射击和附魔扩展编译与打包通过。
+
+## 2026-06-18 钓鱼系统 P0 整合修复
+### 更新日志
+
+- 修复海怪概率命中但当前等级没有合格条目时吞掉原渔获的问题：现在先选择条目并确认海怪成功生成，失败时继续进入宝藏判定。
+- 海怪生成改为统一走 `MobSpawnManager#spawnFishingSeaCreature()`；同步生成期间跳过通用自然怪物缩放，之后一次性写入生命、攻击、减伤、魔抗、战斗等级、标签和全息。
+- 海怪生命复用现有虚拟血池链路；理论生命超过实体 Attribute 可承载上限时，实际总血量写入虚拟血量 PDC，并由全息显示。
+- 明确 MythicMobs 所有权：MythicMobs 负责实体类型、AI 和技能，ServerCore 负责全部战斗数值与显示。
+- 钓鱼属性从“仅主手”扩展为主手、护甲、4 个饰品槽和护符袋统一聚合；副手不生效。每件物品的 active 附魔数值继续通过 `EnchantStatResolver` 临时计算。
+- `/sc gathering` 钓鱼面板现在按主手、护甲、饰品槽、护符袋拆分 Fishing Speed、Sea Creature Chance 和 Treasure Chance，默认 `gatherers_compass` 的宝藏概率正式进入实际计算。
+- 自定义海怪/宝藏结果改为两阶段收尾：AuraSkills 2.3.12 先在 `MONITOR` 读取原始渔获并发放一次常规 Fishing XP，ServerCore 后注册的 `MONITOR` 监听器再移除或替换物品；条目 `xp` 明确作为额外奖励。
+
+### 验证记录
+
+- 对照 AuraSkills 2.3.12 官方源码确认 `FishingLeveler` 使用 `PlayerFishEvent` 的 `MONITOR` 优先级，并读取当时的 ItemStack。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon compileJava` 编译通过。
+- 仓库当前没有可构造 Paper 钓鱼事件、AuraSkills 和 MythicMobs 联动的自动化测试缝；真实服务器仍需验证普通鱼、海怪、三个宝藏档位和 fallback 分支的 XP 记录。
