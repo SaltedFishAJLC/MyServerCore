@@ -2,6 +2,7 @@ package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
 import com.servercore.enchant.EnchantStatResolver;
+import com.servercore.passive.PassiveSnapshotService;
 import dev.aurelium.auraskills.api.AuraSkillsBukkit;
 import dev.aurelium.auraskills.api.event.skill.XpGainEvent;
 import dev.aurelium.auraskills.api.skill.Skill;
@@ -255,7 +256,7 @@ public class CollectionSkillManager implements Listener {
             }
 
             ItemStack tool = player.getInventory().getItemInMainHand();
-            int copies = calculateFortuneDrops(player, getEquipmentFortune(tool, pending.category()));
+            int copies = calculateFortuneDrops(player, getEquipmentFortune(player, tool, pending.category()));
             dropExtraCopies(pending.state(), tool, player, pending.location(), Math.max(0, copies - 1));
             if (pending.category() == CollectionCategory.FARMING) {
                 if (pending.matureCrop()) {
@@ -265,7 +266,7 @@ public class CollectionSkillManager implements Listener {
                 rollBounty(player, tool, pending.location());
             }
 
-            int sweep = pending.category() == CollectionCategory.FORAGING ? getSweep(tool) : 0;
+            int sweep = pending.category() == CollectionCategory.FORAGING ? getSweep(player, tool) : 0;
             if (sweep > 0) {
                 sweepBlocks(player, pending, tool, sweep);
             }
@@ -310,7 +311,7 @@ public class CollectionSkillManager implements Listener {
             }
 
             BlockState state = current.getState();
-            int copies = calculateFortuneDrops(player, getEquipmentFortune(tool, origin.category()));
+            int copies = calculateFortuneDrops(player, getEquipmentFortune(player, tool, origin.category()));
             dropCopies(state, tool, player, current.getLocation(), copies);
             current.setType(Material.AIR, true);
             rollBounty(player, tool, current.getLocation());
@@ -359,7 +360,9 @@ public class CollectionSkillManager implements Listener {
     }
 
     private void rollBounty(Player player, ItemStack tool, Location location) {
-        double chance = Math.min(1.0, Math.max(0.0, readToolStat(tool, bountyKey) / 100.0));
+        PassiveSnapshotService passives = PassiveSnapshotService.getInstance();
+        double passive = passives == null ? 0.0 : passives.getStatBonus(player, bountyKey.getKey());
+        double chance = Math.min(1.0, Math.max(0.0, (readToolStat(tool, bountyKey) + passive) / 100.0));
         ThreadLocalRandom random = ThreadLocalRandom.current();
         if (!rollRareGatheringDrop(player, chance, random)) {
             return;
@@ -386,7 +389,9 @@ public class CollectionSkillManager implements Listener {
     }
 
     private void rollOverbloom(Player player, ItemStack tool, Location location) {
-        double chance = Math.min(1.0, Math.max(0.0, readToolStat(tool, overbloomKey) / 100.0));
+        PassiveSnapshotService passives = PassiveSnapshotService.getInstance();
+        double passive = passives == null ? 0.0 : passives.getStatBonus(player, overbloomKey.getKey());
+        double chance = Math.min(1.0, Math.max(0.0, (readToolStat(tool, overbloomKey) + passive) / 100.0));
         ThreadLocalRandom random = ThreadLocalRandom.current();
         if (!rollRareGatheringDrop(player, chance, random)) {
             return;
@@ -816,20 +821,37 @@ public class CollectionSkillManager implements Listener {
         );
     }
 
-    private double getEquipmentFortune(ItemStack tool, CollectionCategory category) {
-        return readToolStat(tool, toolFortuneKey)
+    private double getEquipmentFortune(Player player, ItemStack tool, CollectionCategory category) {
+        double value = readToolStat(tool, toolFortuneKey)
                 + readToolStat(tool, collectionFortuneKey)
                 + switch (category) {
                     case FORAGING -> readToolStat(tool, foragingFortuneKey);
                     case FARMING -> readToolStat(tool, farmingFortuneKey);
                     case EXCAVATION -> readToolStat(tool, excavationFortuneKey);
                 };
+        PassiveSnapshotService passives = PassiveSnapshotService.getInstance();
+        if (passives != null) {
+            value += passives.getStatBonus(player, toolFortuneKey.getKey());
+            value += passives.getStatBonus(player, collectionFortuneKey.getKey());
+            value += switch (category) {
+                case FORAGING -> passives.getStatBonus(player, foragingFortuneKey.getKey());
+                case FARMING -> passives.getStatBonus(player, farmingFortuneKey.getKey());
+                case EXCAVATION -> passives.getStatBonus(player, excavationFortuneKey.getKey());
+            };
+        }
+        return value;
     }
 
-    private int getSweep(ItemStack tool) {
+    private int getSweep(Player player, ItemStack tool) {
         double value = readToolStat(tool, toolSweepKey)
                 + readToolStat(tool, collectionSweepKey)
                 + readToolStat(tool, foragingSweepKey);
+        PassiveSnapshotService passives = PassiveSnapshotService.getInstance();
+        if (passives != null) {
+            value += passives.getStatBonus(player, toolSweepKey.getKey());
+            value += passives.getStatBonus(player, collectionSweepKey.getKey());
+            value += passives.getStatBonus(player, foragingSweepKey.getKey());
+        }
         if (value <= 0.0 && tool != null && tool.getType().name().endsWith("_AXE")) {
             value = tool.getEnchantmentLevel(Enchantment.EFFICIENCY);
         }

@@ -6,6 +6,7 @@ import com.servercore.enchant.EnchantDescriptionRenderer;
 import com.servercore.enchant.EnchantRegistry;
 import com.servercore.enchant.EnchantSettings;
 import com.servercore.enchant.EnchantStatResolver;
+import com.servercore.passive.PassiveAbilityRegistry;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -297,6 +298,10 @@ public class ItemFormatManager implements Listener {
         addBlankIfNeeded(lore);
         renderAbilities(lore, container, pdc);
         addBlankIfNeeded(lore);
+        renderRegisteredAbilities(lore, item);
+        addBlankIfNeeded(lore);
+        renderEquipmentIdentity(lore, item);
+        addBlankIfNeeded(lore);
         lore.add(rarity.colorize(rarity.localizedLabel() + " " + getItemKind(item.getType())).decoration(TextDecoration.BOLD, true));
         renderStoryLore(lore, container, pdc);
 
@@ -570,6 +575,65 @@ public class ItemFormatManager implements Listener {
                 .decoration(TextDecoration.ITALIC, false));
         for (String ability : abilities) {
             lore.add(Component.text(ability, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+        }
+    }
+
+    private void renderRegisteredAbilities(List<Component> lore, ItemStack item) {
+        CustomItemRegistry itemRegistry = CustomItemRegistry.getInstance();
+        if (itemRegistry == null) {
+            return;
+        }
+        List<CustomItemRegistry.AbilityDefinition> abilities = itemRegistry.getAbilities(item);
+        if (abilities.isEmpty()) {
+            return;
+        }
+
+        PassiveAbilityRegistry passiveRegistry = PassiveAbilityRegistry.getInstance();
+        for (CustomItemRegistry.AbilityDefinition ability : abilities) {
+            if (!ability.trigger().equals("PASSIVE")) {
+                lore.add(Component.text("主动技能: " + ability.id(), NamedTextColor.GOLD)
+                        .decoration(TextDecoration.ITALIC, false));
+                continue;
+            }
+            PassiveAbilityRegistry.PassiveDefinition definition =
+                    passiveRegistry == null ? null : passiveRegistry.get(ability.id());
+            if (definition == null) {
+                lore.add(Component.text("[尚未实现] " + ability.id(), NamedTextColor.DARK_GRAY)
+                        .decoration(TextDecoration.ITALIC, false));
+                continue;
+            }
+            Map<String, Object> options = new LinkedHashMap<>(definition.defaultOptions());
+            options.putAll(ability.options());
+            lore.add(Component.text("被动: " + definition.displayName(), NamedTextColor.LIGHT_PURPLE)
+                    .decoration(TextDecoration.ITALIC, false));
+            for (String line : definition.renderDescription(options)) {
+                lore.add(Component.text(line, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+            }
+        }
+    }
+
+    private void renderEquipmentIdentity(List<Component> lore, ItemStack item) {
+        CustomItemRegistry registry = CustomItemRegistry.getInstance();
+        if (registry == null) {
+            return;
+        }
+        CustomItemRegistry.CustomItemDefinition definition =
+                registry.getDefinition(registry.getItemId(item));
+        if (definition == null) {
+            return;
+        }
+        if (definition.imprintEligible() || definition.accessoryType().equalsIgnoreCase("IMPRINT")) {
+            lore.add(Component.text("可作为印记：仅被动与套装身份生效", NamedTextColor.DARK_PURPLE)
+                    .decoration(TextDecoration.ITALIC, false));
+        }
+        if (!definition.setId().isBlank()) {
+            lore.add(Component.text("套装: " + definition.setId() + " [" + definition.setPieceId() + "]",
+                            NamedTextColor.AQUA)
+                    .decoration(TextDecoration.ITALIC, false));
+        }
+        if (!definition.talismanFamily().isBlank()) {
+            lore.add(Component.text("护符系列: " + definition.talismanFamily(), NamedTextColor.YELLOW)
+                    .decoration(TextDecoration.ITALIC, false));
         }
     }
 

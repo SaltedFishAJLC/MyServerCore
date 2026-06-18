@@ -2,6 +2,7 @@ package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
 import com.servercore.combat.damage.DamageService;
+import com.servercore.passive.PassiveSnapshotService;
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.trait.TraitModifier;
 import dev.aurelium.auraskills.api.trait.Traits;
@@ -147,9 +148,24 @@ public class AttributeManager implements Listener {
             for (ItemStack accessory : accessoryManager.loadAccessories(player)) {
                 addItemAttributes(totals, accessory);
             }
-            for (ItemStack talisman : accessoryManager.loadTalismanBag(player, 54)) {
+            for (ItemStack talisman : accessoryManager.loadActiveTalismans(player)) {
                 addItemAttributes(totals, talisman);
             }
+        }
+
+        PassiveSnapshotService passiveService = PassiveSnapshotService.getInstance();
+        PDCManager pdc = PDCManager.getInstance();
+        if (passiveService != null && pdc != null) {
+            totals.merge(CoreAttribute.TOUGHNESS,
+                    passiveService.getStatBonus(player, pdc.KEY_ATTR_TOUGHNESS.getKey()), Double::sum);
+            totals.merge(CoreAttribute.AGILITY,
+                    passiveService.getStatBonus(player, pdc.KEY_ATTR_AGILITY.getKey()), Double::sum);
+            totals.merge(CoreAttribute.INTELLIGENCE,
+                    passiveService.getStatBonus(player, pdc.KEY_ATTR_INTELLIGENCE.getKey()), Double::sum);
+            totals.merge(CoreAttribute.WILLPOWER,
+                    passiveService.getStatBonus(player, pdc.KEY_ATTR_WILLPOWER.getKey()), Double::sum);
+            totals.merge(CoreAttribute.LUCK,
+                    passiveService.getStatBonus(player, pdc.KEY_ATTR_LUCK.getKey()), Double::sum);
         }
 
         AuraSkillsBridge auraSkillsBridge = AuraSkillsBridge.getInstance();

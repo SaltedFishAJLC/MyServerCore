@@ -68,6 +68,11 @@ public class PDCManager {
     public final NamespacedKey KEY_ITEM_CUSTOM_ENCHANTS;
     public final NamespacedKey KEY_ITEM_ABILITIES;
     public final NamespacedKey KEY_ITEM_STORY_LORE;
+    public final NamespacedKey KEY_ITEM_INSTANCE_ID;
+    public final NamespacedKey KEY_ITEM_SET_ID;
+    public final NamespacedKey KEY_ITEM_SET_PIECE_ID;
+    public final NamespacedKey KEY_ITEM_IMPRINT_ELIGIBLE;
+    public final NamespacedKey KEY_ITEM_TALISMAN_FAMILY;
     public final NamespacedKey KEY_WEAPON_TEMPLATE;
     public final NamespacedKey KEY_WEAPON_HAND_RULE;
     public final NamespacedKey KEY_ITEM_OVERRIDE_ID;
@@ -76,6 +81,7 @@ public class PDCManager {
     public final NamespacedKey KEY_PLAYER_CLASS_MAIN;
     public final NamespacedKey KEY_PLAYER_CLASS_SUB;
     public final NamespacedKey KEY_PLAYER_CLASS_SWITCH_AT;
+    public final NamespacedKey KEY_PLAYER_PASSIVE_COOLDOWNS;
 
     public final NamespacedKey KEY_SOUL_CONTAINER_ID;
     public final NamespacedKey KEY_SOUL_OWNER_UUID;
@@ -152,6 +158,11 @@ public class PDCManager {
         this.KEY_ITEM_CUSTOM_ENCHANTS = key("item_custom_enchants");
         this.KEY_ITEM_ABILITIES = key("item_abilities");
         this.KEY_ITEM_STORY_LORE = key("item_story_lore");
+        this.KEY_ITEM_INSTANCE_ID = key("item_instance_id");
+        this.KEY_ITEM_SET_ID = key("item_set_id");
+        this.KEY_ITEM_SET_PIECE_ID = key("item_set_piece_id");
+        this.KEY_ITEM_IMPRINT_ELIGIBLE = key("item_imprint_eligible");
+        this.KEY_ITEM_TALISMAN_FAMILY = key("item_talisman_family");
         this.KEY_WEAPON_TEMPLATE = key("weapon_template");
         this.KEY_WEAPON_HAND_RULE = key("weapon_hand_rule");
         this.KEY_ITEM_OVERRIDE_ID = key("item_override_id");
@@ -159,6 +170,7 @@ public class PDCManager {
         this.KEY_PLAYER_CLASS_MAIN = key("player_class_main");
         this.KEY_PLAYER_CLASS_SUB = key("player_class_sub");
         this.KEY_PLAYER_CLASS_SWITCH_AT = key("player_class_switch_at");
+        this.KEY_PLAYER_PASSIVE_COOLDOWNS = key("player_passive_cooldowns");
         this.KEY_SOUL_CONTAINER_ID = key("soul_container_id");
         this.KEY_SOUL_OWNER_UUID = key("soul_owner_uuid");
         this.KEY_MOB_POWER_LEVEL = key("mob_power_level");

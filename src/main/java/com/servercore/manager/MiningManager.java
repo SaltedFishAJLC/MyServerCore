@@ -2,6 +2,7 @@ package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
 import com.servercore.enchant.EnchantStatResolver;
+import com.servercore.passive.PassiveSnapshotService;
 import dev.aurelium.auraskills.api.AuraSkillsBukkit;
 import dev.aurelium.auraskills.api.event.skill.XpGainEvent;
 import dev.aurelium.auraskills.api.skill.Skills;
@@ -274,7 +275,7 @@ public class MiningManager implements Listener {
             dropExtraCopies(pending.state(), pending.customBlock(), tool, player, pending.location(), Math.max(0, copies - 1));
             rollMiningRare(player, pending.customBlock(), pending.location());
 
-            int spread = getMiningSpread(tool);
+            int spread = getMiningSpread(player, tool);
             if (spread > 0 && pending.customBlock().oreType() != OreType.MAGIC_CRYSTAL) {
                 spreadOres(player, pending, tool, spread);
             }
@@ -339,12 +340,13 @@ public class MiningManager implements Listener {
     }
 
     private int calculateMiningCopies(Player player, ItemStack tool, CustomBlock customBlock) {
-        int fortuneCopies = calculateStatCopies(getEquipmentFortune(tool) + (globalStats == null ? 0.0 : globalStats.getGlobalFortune(player)));
+        int fortuneCopies = calculateStatCopies(getEquipmentFortune(player, tool)
+                + (globalStats == null ? 0.0 : globalStats.getGlobalFortune(player)));
         if (customBlock.oreType() != OreType.GEMSTONE && customBlock.oreType() != OreType.MAGIC_CRYSTAL) {
             return fortuneCopies;
         }
 
-        int purityCopies = calculateStatCopies(getPurity(tool));
+        int purityCopies = calculateStatCopies(getPurity(player, tool));
         return Math.max(1, fortuneCopies * purityCopies);
     }
 
@@ -360,7 +362,9 @@ public class MiningManager implements Listener {
     private void tickMiningSpeed() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             ItemStack tool = player.getInventory().getItemInMainHand();
-            double speed = readToolStat(tool, miningSpeedKey) / MINING_SPEED_POINTS_PER_ATTRIBUTE;
+            PassiveSnapshotService passives = PassiveSnapshotService.getInstance();
+            double passiveSpeed = passives == null ? 0.0 : passives.getStatBonus(player, miningSpeedKey.getKey());
+            double speed = (readToolStat(tool, miningSpeedKey) + passiveSpeed) / MINING_SPEED_POINTS_PER_ATTRIBUTE;
             if (speed <= 0.0 && tool != null && tool.getType().name().endsWith("_PICKAXE")) {
                 speed = tool.getEnchantmentLevel(Enchantment.EFFICIENCY) * 0.05;
             }
@@ -368,16 +372,33 @@ public class MiningManager implements Listener {
         }
     }
 
-    private double getEquipmentFortune(ItemStack tool) {
-        return readToolStat(tool, toolFortuneKey) + readToolStat(tool, miningFortuneKey);
+    private double getEquipmentFortune(Player player, ItemStack tool) {
+        double value = readToolStat(tool, toolFortuneKey) + readToolStat(tool, miningFortuneKey);
+        PassiveSnapshotService passives = PassiveSnapshotService.getInstance();
+        if (passives != null) {
+            value += passives.getStatBonus(player, toolFortuneKey.getKey());
+            value += passives.getStatBonus(player, miningFortuneKey.getKey());
+        }
+        return value;
     }
 
-    private int getMiningSpread(ItemStack tool) {
-        return Math.max(0, (int) Math.floor(Math.max(readToolStat(tool, toolSpreadKey), readToolStat(tool, miningSpreadKey))));
+    private int getMiningSpread(Player player, ItemStack tool) {
+        PassiveSnapshotService passives = PassiveSnapshotService.getInstance();
+        double toolSpread = readToolStat(tool, toolSpreadKey)
+                + (passives == null ? 0.0 : passives.getStatBonus(player, toolSpreadKey.getKey()));
+        double miningSpread = readToolStat(tool, miningSpreadKey)
+                + (passives == null ? 0.0 : passives.getStatBonus(player, miningSpreadKey.getKey()));
+        return Math.max(0, (int) Math.floor(Math.max(toolSpread, miningSpread)));
     }
 
-    private double getPurity(ItemStack tool) {
-        return readToolStat(tool, purityKey) + readToolStat(tool, miningPurityKey);
+    private double getPurity(Player player, ItemStack tool) {
+        double value = readToolStat(tool, purityKey) + readToolStat(tool, miningPurityKey);
+        PassiveSnapshotService passives = PassiveSnapshotService.getInstance();
+        if (passives != null) {
+            value += passives.getStatBonus(player, purityKey.getKey());
+            value += passives.getStatBonus(player, miningPurityKey.getKey());
+        }
+        return value;
     }
 
     private int getBreakingPower(ItemStack tool) {

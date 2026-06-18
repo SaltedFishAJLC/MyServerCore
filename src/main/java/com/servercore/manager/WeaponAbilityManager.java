@@ -11,18 +11,13 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import com.servercore.passive.AbilityCooldownService;
 
 /**
  * Dispatches active weapon abilities while leaving ability cost/effect behavior
  * to registered custom item handlers.
  */
 public class WeaponAbilityManager implements Listener {
-
-    private final Map<UUID, Map<String, Long>> cooldownUntil = new HashMap<>();
 
     public WeaponAbilityManager(ServerCorePlugin plugin) {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -47,7 +42,7 @@ public class WeaponAbilityManager implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        cooldownUntil.remove(event.getPlayer().getUniqueId());
+        // Persistent cooldowns are owned by AbilityCooldownService.
     }
 
     private AbilityAttempt tryTrigger(Player player, ItemStack item, EquipmentSlot hand) {
@@ -76,20 +71,16 @@ public class WeaponAbilityManager implements Listener {
         }
 
         String cooldownKey = cooldownKey(registry, item, ability);
-        long now = System.currentTimeMillis();
-        long readyAt = cooldownUntil
-                .getOrDefault(player.getUniqueId(), Map.of())
-                .getOrDefault(cooldownKey, 0L);
-        if (readyAt > now) {
-            player.sendActionBar(Component.text("技能冷却中: " + formatSeconds(readyAt - now) + "s"));
+        AbilityCooldownService cooldownService = AbilityCooldownService.getInstance();
+        long remaining = cooldownService == null ? 0L : cooldownService.remainingMillis(player, cooldownKey);
+        if (remaining > 0L) {
+            player.sendActionBar(Component.text("技能冷却中: " + formatSeconds(remaining) + "s"));
             return AbilityAttempt.HANDLED;
         }
 
         boolean executed = registry.triggerAbility(player, item, ability);
-        if (executed && ability.cooldown() > 0) {
-            cooldownUntil
-                    .computeIfAbsent(player.getUniqueId(), ignored -> new HashMap<>())
-                    .put(cooldownKey, now + ability.cooldown() * 1000L);
+        if (executed && ability.cooldown() > 0 && cooldownService != null) {
+            cooldownService.start(player, cooldownKey, ability.cooldown() * 1000L);
         }
         return AbilityAttempt.HANDLED;
     }
@@ -99,8 +90,15 @@ public class WeaponAbilityManager implements Listener {
     }
 
     private String cooldownKey(CustomItemRegistry registry, ItemStack item, CustomItemRegistry.AbilityDefinition ability) {
-        String itemId = registry.getItemId(item);
-        return (itemId == null || itemId.isBlank() ? item.getType().name() : itemId) + ":" + ability.id();
+        AbilityCooldownService cooldownService = AbilityCooldownService.getInstance();
+        String group = String.valueOf(ability.options().getOrDefault("cooldown_group", ""));
+        String scope = String.valueOf(ability.options().getOrDefault("cooldown_scope", "SHARED"));
+        String sourceId = AccessoryManager.getInstance() == null
+                ? registry.getItemId(item)
+                : AccessoryManager.getInstance().ensureItemInstanceId(item);
+        return cooldownService == null
+                ? "shared:" + ability.id()
+                : cooldownService.key(ability.id(), group, scope, sourceId);
     }
 
     private long formatSeconds(long millis) {

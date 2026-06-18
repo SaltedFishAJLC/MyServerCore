@@ -6,6 +6,7 @@ import com.servercore.combat.integration.EnchantTargetMatcher;
 import com.servercore.enchant.EnchantDamageContext;
 import com.servercore.enchant.EnchantEffectService;
 import com.servercore.enchant.RangedEmpowermentManager;
+import com.servercore.passive.PassiveSnapshotService;
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.stat.Stats;
 import org.bukkit.entity.Player;
@@ -188,6 +189,14 @@ public class CombatManager implements Listener {
                     lifestealEffectiveDamage *= finalDamage / beforeEffects;
                 }
             }
+            PassiveSnapshotService passiveService = PassiveSnapshotService.getInstance();
+            if (passiveService != null) {
+                double beforePassive = finalDamage;
+                finalDamage = passiveService.modifyOutgoingDamage(player, target, finalDamage);
+                if (beforePassive > 0.0) {
+                    lifestealEffectiveDamage *= finalDamage / beforePassive;
+                }
+            }
 
             if (target instanceof Player targetPlayer) {
                 ShieldManager shieldManager = ShieldManager.getInstance();
@@ -231,6 +240,10 @@ public class CombatManager implements Listener {
             EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
             if (enchantEffects != null) {
                 enchantEffects.afterPlayerAttack(event, player, target, finalDamage, isRanged, usesMagicDamage, isCrit);
+            }
+            PassiveSnapshotService passiveService = PassiveSnapshotService.getInstance();
+            if (passiveService != null) {
+                passiveService.afterPlayerAttack(player, target, finalDamage);
             }
         }
     }
@@ -313,9 +326,18 @@ public class CombatManager implements Listener {
         EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
         if (enchantEffects != null) {
             finalDamage = enchantEffects.applyIncomingDamageModifiers(player, finalDamage);
-            if (enchantEffects.tryPreventFatalDamage(player, event, finalDamage)) {
+        }
+
+        PassiveSnapshotService passiveService = PassiveSnapshotService.getInstance();
+        if (passiveService != null) {
+            finalDamage = passiveService.modifyIncomingDamage(player, finalDamage);
+            if (passiveService.tryPreventFatalDamage(player, event, finalDamage)) {
                 return;
             }
+        }
+
+        if (enchantEffects != null && enchantEffects.tryPreventFatalDamage(player, event, finalDamage)) {
+            return;
         }
 
         event.setDamage(finalDamage);

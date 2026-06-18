@@ -12,6 +12,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
@@ -61,16 +62,24 @@ public class CustomItemRegistry {
     }
 
     public void reloadItems() {
-        items.clear();
         ensureItemsFile();
 
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(itemsFile);
+        YamlConfiguration config = new YamlConfiguration();
+        try {
+            config.load(itemsFile);
+        } catch (IOException | InvalidConfigurationException exception) {
+            plugin.getLogger().severe("Could not reload custom_items.yml; keeping the previous registry: "
+                    + exception.getMessage());
+            return;
+        }
         ConfigurationSection root = config.getConfigurationSection(ITEMS_ROOT);
         if (root == null) {
+            items.clear();
             plugin.getLogger().info("Loaded 0 custom item template(s).");
             return;
         }
 
+        Map<String, CustomItemDefinition> loadedItems = new LinkedHashMap<>();
         int loaded = 0;
         for (String rawId : root.getKeys(false)) {
             ConfigurationSection section = root.getConfigurationSection(rawId);
@@ -84,10 +93,12 @@ public class CustomItemRegistry {
                 continue;
             }
 
-            items.put(itemId, definition);
+            loadedItems.put(itemId, definition);
             loaded++;
         }
 
+        items.clear();
+        items.putAll(loadedItems);
         plugin.getLogger().info("Loaded " + loaded + " custom item template(s).");
     }
 
@@ -97,6 +108,10 @@ public class CustomItemRegistry {
 
     public List<String> getItemIds() {
         return List.copyOf(items.keySet());
+    }
+
+    public Map<String, CustomItemDefinition> getDefinitions() {
+        return Map.copyOf(items);
     }
 
     public CustomItemDefinition getDefinition(String itemId) {
@@ -152,6 +167,18 @@ public class CustomItemRegistry {
 
         if (definition.accessoryType() != null && !definition.accessoryType().isBlank()) {
             container.set(pdc.KEY_ACC_TYPE, PersistentDataType.STRING, definition.accessoryType());
+        }
+        if (definition.imprintEligible()) {
+            container.set(pdc.KEY_ITEM_IMPRINT_ELIGIBLE, PersistentDataType.BYTE, (byte) 1);
+        }
+        if (!definition.setId().isBlank()) {
+            container.set(pdc.KEY_ITEM_SET_ID, PersistentDataType.STRING, definition.setId());
+        }
+        if (!definition.setPieceId().isBlank()) {
+            container.set(pdc.KEY_ITEM_SET_PIECE_ID, PersistentDataType.STRING, definition.setPieceId());
+        }
+        if (!definition.talismanFamily().isBlank()) {
+            container.set(pdc.KEY_ITEM_TALISMAN_FAMILY, PersistentDataType.STRING, definition.talismanFamily());
         }
 
         if (definition.weaponTemplate() != null) {
@@ -485,6 +512,11 @@ public class CustomItemRegistry {
                 abilityLore,
                 readStringList(section, "story_lore"),
                 section.getString("accessory_type", section.getString("acc_type", "")),
+                section.getBoolean("imprint_eligible", false),
+                normalizeItemId(section.getString("set_id", "")),
+                normalizeItemId(section.getString("set_piece_id", "")),
+                normalizeItemId(section.getString("talisman_family", "")),
+                section.getInt("talisman_priority", 0),
                 section.getString("reforge", ""),
                 readRequirement(section, "skill"),
                 readRequirement(section, "slayer"),
@@ -720,6 +752,21 @@ public class CustomItemRegistry {
         String accessoryType = container.get(pdc.KEY_ACC_TYPE, PersistentDataType.STRING);
         if (accessoryType != null && !accessoryType.isBlank()) {
             section.set("accessory_type", accessoryType);
+        }
+        if (container.getOrDefault(pdc.KEY_ITEM_IMPRINT_ELIGIBLE, PersistentDataType.BYTE, (byte) 0) != 0) {
+            section.set("imprint_eligible", true);
+        }
+        String setId = container.get(pdc.KEY_ITEM_SET_ID, PersistentDataType.STRING);
+        if (setId != null && !setId.isBlank()) {
+            section.set("set_id", setId);
+        }
+        String setPieceId = container.get(pdc.KEY_ITEM_SET_PIECE_ID, PersistentDataType.STRING);
+        if (setPieceId != null && !setPieceId.isBlank()) {
+            section.set("set_piece_id", setPieceId);
+        }
+        String talismanFamily = container.get(pdc.KEY_ITEM_TALISMAN_FAMILY, PersistentDataType.STRING);
+        if (talismanFamily != null && !talismanFamily.isBlank()) {
+            section.set("talisman_family", talismanFamily);
         }
 
         String reforge = container.get(pdc.KEY_ITEM_REFORGE_ID, PersistentDataType.STRING);
@@ -1145,8 +1192,15 @@ public class CustomItemRegistry {
 
     private AbilityDefinition readAbilityDefinition(String id, ConfigurationSection section) {
         Map<String, Object> options = new LinkedHashMap<>();
+        ConfigurationSection nestedOptions = section.getConfigurationSection("options");
+        if (nestedOptions != null) {
+            for (String key : nestedOptions.getKeys(false)) {
+                options.put(key, nestedOptions.get(key));
+            }
+        }
         for (String key : section.getKeys(false)) {
-            if (key.equalsIgnoreCase("trigger") || key.equalsIgnoreCase("cooldown") || key.equalsIgnoreCase("lore")) {
+            if (key.equalsIgnoreCase("trigger") || key.equalsIgnoreCase("cooldown")
+                    || key.equalsIgnoreCase("lore") || key.equalsIgnoreCase("options")) {
                 continue;
             }
             options.put(key, section.get(key));
@@ -1167,10 +1221,16 @@ public class CustomItemRegistry {
         int cooldown = intValue(map.get("cooldown"), 0);
         List<String> lore = toStringList(map.get("lore"));
         Map<String, Object> options = new LinkedHashMap<>();
+        if (map.get("options") instanceof Map<?, ?> nested) {
+            for (Map.Entry<?, ?> entry : nested.entrySet()) {
+                options.put(String.valueOf(entry.getKey()), entry.getValue());
+            }
+        }
         for (Map.Entry<?, ?> entry : map.entrySet()) {
             String key = String.valueOf(entry.getKey());
             if (key.equalsIgnoreCase("id") || key.equalsIgnoreCase("trigger")
-                    || key.equalsIgnoreCase("cooldown") || key.equalsIgnoreCase("lore")) {
+                    || key.equalsIgnoreCase("cooldown") || key.equalsIgnoreCase("lore")
+                    || key.equalsIgnoreCase("options")) {
                 continue;
             }
             options.put(key, entry.getValue());
@@ -1396,6 +1456,11 @@ public class CustomItemRegistry {
             List<String> abilityLore,
             List<String> storyLore,
             String accessoryType,
+            boolean imprintEligible,
+            String setId,
+            String setPieceId,
+            String talismanFamily,
+            int talismanPriority,
             String reforgeId,
             String skillRequirement,
             String slayerRequirement,

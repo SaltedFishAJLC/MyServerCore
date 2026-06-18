@@ -1,0 +1,39 @@
+# Passive ability presentation and handler registry.
+# Items and equipment sets reference these ids from trigger: PASSIVE entries.
+abilities:
+  test_vitality:
+    handler: stat_bonus
+    name: "测试·生命刻印"
+    description:
+      - "被动提供 {amount} 点力量。"
+    allowed_sources: [MAIN_HAND, OFF_HAND, ARMOR, ACCESSORY, TALISMAN, IMPRINT, SET_BONUS]
+
+  test_guard:
+    handler: damage_reduction
+    name: "测试·守护"
+    description:
+      - "受到的伤害降低 {amount}。"
+    allowed_sources: [ARMOR, ACCESSORY, TALISMAN, IMPRINT, SET_BONUS]
+
+  test_echo_strike:
+    handler: on_hit_damage
+    name: "测试·回响打击"
+    description:
+      - "攻击后追加 {amount} 点真实伤害。"
+    allowed_sources: [MAIN_HAND, OFF_HAND, ARMOR, ACCESSORY, TALISMAN, IMPRINT, SET_BONUS]
+
+  test_revival:
+    handler: revive
+    name: "测试·不灭印记"
+    description:
+      - "受到致死伤害时保留 {health} 点生命。"
+    allowed_sources: [ARMOR, ACCESSORY, TALISMAN, IMPRINT, SET_BONUS]
+    survival_group: REVIVE
+    event_priority: 100
+
+  test_set_fury:
+    handler: outgoing_multiplier
+    name: "测试·套装怒意"
+    description:
+      - "造成的伤害提高 {amount}。"
+    allowed_sources: [SET_BONUS]

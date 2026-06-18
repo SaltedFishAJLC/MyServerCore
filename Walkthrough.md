@@ -478,3 +478,33 @@
 - 对照 AuraSkills 2.3.12 官方源码确认 `FishingLeveler` 使用 `PlayerFishEvent` 的 `MONITOR` 优先级，并读取当时的 ItemStack。
 - `.\gradle-8.5\bin\gradle.bat --no-daemon compileJava` 编译通过。
 - 仓库当前没有可构造 Paper 钓鱼事件、AuraSkills 和 MythicMobs 联动的自动化测试缝；真实服务器仍需验证普通鱼、海怪、三个宝藏档位和 fallback 分支的 XP 记录。
+
+## 2026-06-18 印记、套装与统一装备被动系统
+
+### 更新日志
+
+- `/sc acc` 新增独立“印记”槽、印记状态和被动总览入口；印记单独保存到玩家 PDC，不扩充原有四饰品数组。
+- 印记只启用明确声明的 `PASSIVE` 和套装部件身份，物品基础数值、重铸、宝石、附魔、武器模板属性与主动技能全部被屏蔽。
+- 印记支持 `accessory_type: IMPRINT` 或 `imprint_eligible: true`；没有已实现被动且没有有效套装身份的物品不能放入。
+- 印记死亡后保留原位，战斗中允许即时切换；换装、死亡、重登和服务器重启均不会刷新能力冷却。
+- 新增 `equipment_sets.yml`：支持 `set_id`、`set_piece_id`、部件去重、`CUMULATIVE` / `HIGHEST_ONLY` 阈值和每阈值多个被动。
+- 新增 `passive_abilities.yml`、`PassiveAbilityRegistry`、`PassiveSnapshotService` 和 `AbilityCooldownService`，把武器、盔甲、普通饰品、护符、印记与套装统一到同一被动快照。
+- 首版实现 `stat_bonus`、`damage_reduction`、`outgoing_multiplier`、`on_hit_damage`、`revive` 五种处理器；被动追加伤害默认通过内部伤害链防止递归触发。
+- 主动物品能力和凤凰核心附魔迁移到玩家 PDC 持久冷却；致死时最多触发一个可用复活效果。
+- 护符包现在只接受已注册 `TALISMAN`，每格一个，相同 `item_id` 不可重复；同 `talisman_family` 只启用稀有度最高、优先级最高的版本。
+- 战斗属性、五维属性、护甲、攻速、暴击伤害和钓鱼属性均改为只扫描有效护符；低稀有度同系列护符的数值和被动一起停用。
+- 饰品和护符界面改为专用 `InventoryHolder` 与即时保存，封堵 Shift、数字键、双击和拖拽旁路。
+- 新增 `/sc debug passive [玩家]`、`/sc debug set [玩家]`、`/sc debug imprint [玩家]`，并提供管理员测试印记、护符和三件测试套装。
+- 新增 `docs/equipment-system-status.md`，记录当前实现、设计约定、配置格式、限制与测试服验收清单。
+
+### 第一版限制
+
+- 周期调度、状态持久化、取下时取消限时效果等扩展位已经明确，但首版尚无对应复杂处理器。
+- 当前只有五种通用被动处理器；正式套装的专属状态机和正式内容仍需逐个实现。
+- 仓库没有 Paper 事件自动化测试环境，GUI 原子交换、死亡保留、重启后冷却和多人战斗切换仍需测试服验证。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon compileJava` 编译通过。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 完整打包通过。
+- 既有 `EntityRemoveEvent` 与铁砧 repair cost API 过时警告不属于本次回归。

@@ -439,7 +439,7 @@ public class ClassManager {
             for (ItemStack accessory : accessoryManager.loadAccessories(player)) {
                 critDamage += pdc.getStat(accessory, pdc.KEY_CRIT_DAMAGE);
             }
-            for (ItemStack talisman : accessoryManager.loadTalismanBag(player, 54)) {
+            for (ItemStack talisman : accessoryManager.loadActiveTalismans(player)) {
                 critDamage += pdc.getStat(talisman, pdc.KEY_CRIT_DAMAGE);
             }
         }

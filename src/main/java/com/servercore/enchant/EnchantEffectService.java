@@ -13,6 +13,7 @@ import com.servercore.combat.status.StunController;
 import com.servercore.manager.ClassManager;
 import com.servercore.manager.EnchantManager;
 import com.servercore.manager.PDCManager;
+import com.servercore.passive.AbilityCooldownService;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
@@ -49,7 +50,6 @@ public final class EnchantEffectService implements Listener {
     private final ServerCorePlugin plugin;
     private final Map<UUID, Long> perfectGuardCooldownUntil = new HashMap<>();
     private final Map<UUID, ApexState> apexStates = new HashMap<>();
-    private final Map<UUID, Long> phoenixCooldownUntil = new HashMap<>();
     private final Map<String, Long> firstStrikeLastHit = new HashMap<>();
     private final Map<UUID, TripleStrikeState> tripleStrikeStates = new HashMap<>();
     private final Map<UUID, Long> thunderCooldownUntil = new HashMap<>();
@@ -114,7 +114,7 @@ public final class EnchantEffectService implements Listener {
     }
 
     public boolean tryPreventFatalDamage(Player player, EntityDamageEvent event, double finalDamage) {
-        if (player == null || event == null || finalDamage <= 0.0 || EnchantDamageContext.isSecondaryDamage()) {
+        if (player == null || finalDamage <= 0.0 || EnchantDamageContext.isSecondaryDamage()) {
             return false;
         }
         if (player.getHealth() - finalDamage > 0.0) {
@@ -127,16 +127,20 @@ public final class EnchantEffectService implements Listener {
             return false;
         }
 
-        long now = System.currentTimeMillis();
-        long until = phoenixCooldownUntil.getOrDefault(player.getUniqueId(), 0L);
-        if (until > now) {
+        AbilityCooldownService cooldownService = AbilityCooldownService.getInstance();
+        String cooldownKey = "shared:phoenix_core";
+        if (cooldownService != null && !cooldownService.isReady(player, cooldownKey)) {
             return false;
         }
 
         double cooldownSeconds = phoenix.effect().param("cooldown_seconds", phoenix.level(), 180.0);
         double remainHealth = phoenix.effect().param("remain_health", phoenix.level(), 1.0);
-        phoenixCooldownUntil.put(player.getUniqueId(), now + Math.round(cooldownSeconds * 1000.0));
-        event.setCancelled(true);
+        if (cooldownService != null) {
+            cooldownService.start(player, cooldownKey, Math.round(cooldownSeconds * 1000.0));
+        }
+        if (event != null) {
+            event.setCancelled(true);
+        }
         player.setHealth(Math.max(1.0, Math.min(maxHealth(player), remainHealth)));
         if (phoenix.effect().booleanParam("clear_negative_effects", true)) {
             clearNegativeEffects(player);

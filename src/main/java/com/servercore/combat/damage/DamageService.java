@@ -2,9 +2,11 @@ package com.servercore.combat.damage;
 
 import com.servercore.ServerCorePlugin;
 import com.servercore.combat.resistance.ResistanceResolver;
+import com.servercore.enchant.EnchantEffectService;
 import com.servercore.manager.AttributeManager;
 import com.servercore.manager.PDCManager;
 import com.servercore.manager.PowerLevelManager;
+import com.servercore.passive.PassiveSnapshotService;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
@@ -61,6 +63,19 @@ public final class DamageService {
             return new DamageResult(false, false, packet.baseDamage(), categoryDamage, 0.0, packet.debugReason());
         }
 
+        if (target instanceof Player player) {
+            PassiveSnapshotService passives = PassiveSnapshotService.getInstance();
+            if (passives != null && passives.tryPreventFatalDamage(player, null, finalDamage)) {
+                return new DamageResult(true, false, packet.baseDamage(), categoryDamage, 0.0,
+                        packet.debugReason() + ":revived");
+            }
+            EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
+            if (enchantEffects != null && enchantEffects.tryPreventFatalDamage(player, null, finalDamage)) {
+                return new DamageResult(true, false, packet.baseDamage(), categoryDamage, 0.0,
+                        packet.debugReason() + ":phoenix");
+            }
+        }
+
         applyInternalBukkitDamage(packet, finalDamage);
         return new DamageResult(true, false, packet.baseDamage(), categoryDamage, finalDamage, packet.debugReason());
     }
@@ -88,6 +103,10 @@ public final class DamageService {
                         result *= Math.max(0.0, 1.0 - magicReduction);
                     }
                 }
+            }
+            PassiveSnapshotService passives = PassiveSnapshotService.getInstance();
+            if (passives != null) {
+                result = passives.modifyIncomingDamage(player, result);
             }
             return result;
         }

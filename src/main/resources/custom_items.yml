@@ -474,3 +474,90 @@ items:
           - "右键触发随机封禁效果。"
     story_lore:
       - "看上去很美。"
+
+  test_warden_helmet:
+    material: DIAMOND_HELMET
+    name: "测试·守望头盔"
+    rarity: EPIC
+    imprint_eligible: true
+    set_id: test_warden
+    set_piece_id: helmet
+    stats:
+      base_armor: 999
+    abilities:
+      test_vitality:
+        trigger: PASSIVE
+        stat: attr_toughness
+        amount: 5
+    story_lore:
+      - "管理员测试物品，不进入正式掉落。"
+
+  test_warden_chestplate:
+    material: DIAMOND_CHESTPLATE
+    name: "测试·守望胸甲"
+    rarity: EPIC
+    imprint_eligible: true
+    set_id: test_warden
+    set_piece_id: chestplate
+    abilities:
+      test_guard:
+        trigger: PASSIVE
+        amount: 0.05
+    story_lore:
+      - "管理员测试物品，不进入正式掉落。"
+
+  test_warden_sword:
+    material: DIAMOND_SWORD
+    name: "测试·守望长剑"
+    rarity: EPIC
+    imprint_eligible: true
+    set_id: test_warden
+    set_piece_id: weapon
+    weapon_template: ONE_HANDED_SWORD
+    hand_rule: MAIN_HAND_ONLY
+    stats:
+      damage: 999
+    abilities:
+      test_echo_strike:
+        trigger: PASSIVE
+        cooldown: 2
+        amount: 4
+    story_lore:
+      - "管理员测试物品，不进入正式掉落。"
+
+  test_revival_imprint:
+    material: ECHO_SHARD
+    name: "测试·不灭印记"
+    rarity: MYTHIC
+    accessory_type: IMPRINT
+    abilities:
+      test_revival:
+        trigger: PASSIVE
+        cooldown: 180
+        cooldown_scope: SHARED
+        health: 4
+        clear_negative_effects: true
+    story_lore:
+      - "管理员测试物品，不进入正式掉落。"
+
+  test_luck_talisman_rare:
+    material: RABBIT_FOOT
+    name: "测试·幸运护符"
+    rarity: RARE
+    accessory_type: TALISMAN
+    talisman_family: test_luck_talisman
+    stats:
+      attr_luck: 3
+    story_lore:
+      - "管理员测试物品，不进入正式掉落。"
+
+  test_luck_talisman_epic:
+    material: RABBIT_FOOT
+    name: "测试·璀璨幸运护符"
+    rarity: EPIC
+    accessory_type: TALISMAN
+    talisman_family: test_luck_talisman
+    stats:
+      attr_luck: 8
+    story_lore:
+      - "同系列中只有最高稀有度版本生效。"

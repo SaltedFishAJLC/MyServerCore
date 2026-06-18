@@ -1,0 +1,16 @@
+# Equipment set definitions. Items declare set_id and set_piece_id in custom_items.yml.
+sets:
+  test_warden:
+    name: "测试守望者套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          test_guard:
+            trigger: PASSIVE
+            amount: 0.10
+      3:
+        abilities:
+          test_set_fury:
+            trigger: PASSIVE
+            amount: 0.15

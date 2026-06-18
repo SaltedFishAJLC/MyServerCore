@@ -218,9 +218,15 @@ public class PowerLevelManager {
             for (org.bukkit.inventory.ItemStack item : accessoryManager.loadAccessories(player)) {
                 armor += pdc.getStat(item, pdc.KEY_BASE_ARMOR);
             }
-            for (org.bukkit.inventory.ItemStack item : accessoryManager.loadTalismanBag(player, 54)) {
+            for (org.bukkit.inventory.ItemStack item : accessoryManager.loadActiveTalismans(player)) {
                 armor += pdc.getStat(item, pdc.KEY_BASE_ARMOR);
             }
+        }
+
+        com.servercore.passive.PassiveSnapshotService passiveService =
+                com.servercore.passive.PassiveSnapshotService.getInstance();
+        if (passiveService != null) {
+            armor += passiveService.getStatBonus(player, pdc.KEY_BASE_ARMOR.getKey());
         }
 
         AttributeManager attributeManager = AttributeManager.getInstance();

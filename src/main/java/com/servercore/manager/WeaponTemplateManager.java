@@ -556,9 +556,14 @@ public class WeaponTemplateManager implements Listener {
                 for (ItemStack accessory : accessoryManager.loadAccessories(player)) {
                     bonus += pdc.getStat(accessory, pdc.KEY_ATTACK_SPEED_BONUS);
                 }
-                for (ItemStack talisman : accessoryManager.loadTalismanBag(player, 54)) {
+                for (ItemStack talisman : accessoryManager.loadActiveTalismans(player)) {
                     bonus += pdc.getStat(talisman, pdc.KEY_ATTACK_SPEED_BONUS);
                 }
+            }
+            com.servercore.passive.PassiveSnapshotService passiveService =
+                    com.servercore.passive.PassiveSnapshotService.getInstance();
+            if (passiveService != null) {
+                bonus += passiveService.getStatBonus(player, pdc.KEY_ATTACK_SPEED_BONUS.getKey());
             }
         }
 

@@ -2,6 +2,7 @@ package com.servercore.manager;
 
 import com.servercore.enchant.EnchantStatBundle;
 import com.servercore.enchant.EnchantStatResolver;
+import com.servercore.passive.PassiveSnapshotService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -88,7 +89,7 @@ public record CombatStats(
             }
             
             // 默认容量 54 格护符包
-            for (ItemStack tal : accManager.loadTalismanBag(player, 54)) {
+            for (ItemStack tal : accManager.loadActiveTalismans(player)) {
                 if (tal != null) {
                     totalBaseDamage += pdc.getStat(tal, pdc.KEY_BASE_DAMAGE);
                     totalBaseMultiplier += pdc.getStat(tal, pdc.KEY_BASE_MULTIPLIER);
@@ -107,6 +108,17 @@ public record CombatStats(
                     totalArmorPen += enchantStats.armorPen();
                 }
             }
+        }
+
+        PassiveSnapshotService passiveService = PassiveSnapshotService.getInstance();
+        if (passiveService != null) {
+            totalBaseDamage += passiveService.getStatBonus(player, pdc.KEY_BASE_DAMAGE.getKey());
+            totalBaseMultiplier += passiveService.getStatBonus(player, pdc.KEY_BASE_MULTIPLIER.getKey());
+            totalCritChance += passiveService.getStatBonus(player, pdc.KEY_CRIT_CHANCE.getKey());
+            totalCritDamage += passiveService.getStatBonus(player, pdc.KEY_CRIT_DAMAGE.getKey());
+            totalBrutality += passiveService.getStatBonus(player, pdc.KEY_BRUTALITY.getKey());
+            totalLifesteal += passiveService.getStatBonus(player, pdc.KEY_LIFESTEAL.getKey());
+            totalArmorPen += passiveService.getStatBonus(player, pdc.KEY_ARMOR_PEN.getKey());
         }
 
         AttributeManager attributeManager = AttributeManager.getInstance();

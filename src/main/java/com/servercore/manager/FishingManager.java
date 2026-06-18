@@ -439,7 +439,17 @@ public class FishingManager implements Listener {
         FishingStatContribution talismanBag = FishingStatContribution.empty();
         if (accessoryManager != null) {
             accessories = sumFishingStats(accessoryManager.loadAccessories(player), pdc);
-            talismanBag = sumFishingStats(accessoryManager.loadTalismanBag(player, 54), pdc);
+            talismanBag = sumFishingStats(accessoryManager.loadActiveTalismans(player), pdc);
+        }
+
+        com.servercore.passive.PassiveSnapshotService passiveService =
+                com.servercore.passive.PassiveSnapshotService.getInstance();
+        if (passiveService != null) {
+            talismanBag = talismanBag.plus(new FishingStatContribution(
+                    passiveService.getStatBonus(player, pdc.KEY_FISHING_SPEED.getKey()),
+                    passiveService.getStatBonus(player, pdc.KEY_SEA_CREATURE_CHANCE.getKey()),
+                    passiveService.getStatBonus(player, pdc.KEY_TREASURE_CHANCE.getKey())
+            ));
         }
 
         return new FishingStatSnapshot(mainHand, armor, accessories, talismanBag);

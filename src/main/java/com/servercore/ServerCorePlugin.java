@@ -1,6 +1,7 @@
 package com.servercore;
 
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.Component;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
@@ -68,6 +69,10 @@ import com.servercore.manager.UniqueMobSpawnManager;
 import com.servercore.manager.VanillaItemOverrideManager;
 import com.servercore.manager.WeaponAbilityManager;
 import com.servercore.manager.WeaponTemplateManager;
+import com.servercore.passive.AbilityCooldownService;
+import com.servercore.passive.EquipmentSetRegistry;
+import com.servercore.passive.PassiveAbilityRegistry;
+import com.servercore.passive.PassiveSnapshotService;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -112,6 +117,10 @@ public final class ServerCorePlugin extends JavaPlugin {
     private StatusService statusService;
     private FrostService frostService;
     private StunController stunController;
+    private PassiveAbilityRegistry passiveAbilityRegistry;
+    private EquipmentSetRegistry equipmentSetRegistry;
+    private AbilityCooldownService abilityCooldownService;
+    private PassiveSnapshotService passiveSnapshotService;
     private int banFlowerDeliveryTaskId = -1;
 
     @Override
@@ -176,6 +185,10 @@ public final class ServerCorePlugin extends JavaPlugin {
         new RangedEmpowermentManager(this);
         this.recycleManager = new RecycleManager(this, economyManager);
         this.customItemRegistry = new CustomItemRegistry(this);
+        this.passiveAbilityRegistry = new PassiveAbilityRegistry(this);
+        this.equipmentSetRegistry = new EquipmentSetRegistry(this);
+        this.abilityCooldownService = new AbilityCooldownService(this);
+        this.passiveSnapshotService = new PassiveSnapshotService(this);
         this.enchantAcquisitionManager = new EnchantAcquisitionManager(this);
         this.vanillaItemOverrideManager = new VanillaItemOverrideManager(this);
         new ItemStandardizer(this);
@@ -472,12 +485,43 @@ public final class ServerCorePlugin extends JavaPlugin {
                     }
 
                     customItemRegistry.reloadItems();
+                    if (passiveAbilityRegistry != null) {
+                        passiveAbilityRegistry.reload();
+                    }
+                    if (equipmentSetRegistry != null) {
+                        equipmentSetRegistry.reload();
+                    }
+                    if (passiveSnapshotService != null) {
+                        passiveSnapshotService.validateRegistryConfiguration();
+                        passiveSnapshotService.refreshAll();
+                    }
                     if (vanillaItemOverrideManager != null) {
                         vanillaItemOverrideManager.reload();
                         vanillaItemOverrideManager.applyInventory(player);
                     }
                     itemFormatManager.formatInventory(player.getInventory());
                     player.sendMessage(MINI_MESSAGE.deserialize("<green>Custom item templates reloaded: " + customItemRegistry.getItemCount() + "</green>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("passives") || args[1].equalsIgnoreCase("equipment"))
+                        && args[2].equalsIgnoreCase("reload")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+                    customItemRegistry.reloadItems();
+                    boolean passiveOk = passiveAbilityRegistry != null && passiveAbilityRegistry.reload();
+                    boolean setOk = equipmentSetRegistry != null && equipmentSetRegistry.reload();
+                    if (passiveSnapshotService != null) {
+                        passiveSnapshotService.validateRegistryConfiguration();
+                        passiveSnapshotService.refreshAll();
+                    }
+                    player.sendMessage(MINI_MESSAGE.deserialize(
+                            passiveOk && setOk
+                                    ? "<green>装备、套装与被动配置已重载。</green>"
+                                    : "<red>装备被动配置重载失败，已保留可用注册表。</red>"
+                    ));
                     return true;
                 } else if (args.length == 3
                         && args[0].equalsIgnoreCase("admin")
@@ -803,6 +847,46 @@ public final class ServerCorePlugin extends JavaPlugin {
                         return true;
                     }
 
+                    if (debugType.equals("passive") || debugType.equals("set") || debugType.equals("imprint")) {
+                        Player target = player;
+                        if (args.length >= 3) {
+                            Player found = Bukkit.getPlayer(args[2]);
+                            if (found == null) {
+                                player.sendMessage(MINI_MESSAGE.deserialize("<red>玩家不在线: " + args[2] + "</red>"));
+                                return true;
+                            }
+                            target = found;
+                        }
+                        PassiveSnapshotService service = PassiveSnapshotService.getInstance();
+                        if (service == null) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<red>被动系统尚未初始化。</red>"));
+                            return true;
+                        }
+                        PassiveSnapshotService.PassiveSnapshot snapshot = service.getSnapshot(target);
+                        if (debugType.equals("passive")) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<gold>Passive Debug: " + target.getName() + "</gold>"));
+                            for (String line : service.describe(target, true)) {
+                                player.sendMessage(Component.text(line));
+                            }
+                        } else if (debugType.equals("set")) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<gold>Set Debug: " + target.getName() + "</gold>"));
+                            if (snapshot.sets().isEmpty()) {
+                                player.sendMessage(MINI_MESSAGE.deserialize("<gray>没有有效套装部件。</gray>"));
+                            }
+                            snapshot.sets().forEach((id, state) ->
+                                    player.sendMessage(Component.text(id + ": " + state.pieces()
+                                            + "件, 部件=" + state.pieceIds()
+                                            + ", 阈值=" + state.activeThresholds())));
+                        } else {
+                            ItemStack imprint = AccessoryManager.getInstance().loadImprint(target);
+                            String itemId = imprint == null ? "EMPTY" : customItemRegistry.getItemId(imprint);
+                            boolean eligible = imprint != null && AccessoryManager.getInstance().isImprintEligible(imprint);
+                            player.sendMessage(MINI_MESSAGE.deserialize("<gold>Imprint Debug: " + target.getName() + "</gold>"));
+                            player.sendMessage(Component.text("item=" + itemId + ", eligible=" + eligible));
+                        }
+                        return true;
+                    }
+
                     if (debugType.equals("moblevel")) {
                         if (args.length < 3) {
                             player.sendMessage(MINI_MESSAGE.deserialize("<red>Usage: /sc debug moblevel <mobRuleId></red>"));
@@ -819,7 +903,7 @@ public final class ServerCorePlugin extends JavaPlugin {
                         return true;
                     }
 
-                    player.sendMessage(MINI_MESSAGE.deserialize("<yellow>可用调试: /sc debug power, weapon, shield, damage, moblevel <id></yellow>"));
+                    player.sendMessage(MINI_MESSAGE.deserialize("<yellow>可用调试: /sc debug power, weapon, shield, damage, passive [玩家], set [玩家], imprint [玩家], moblevel <id></yellow>"));
                     return true;
                 } else if (args.length >= 3 && args[0].equalsIgnoreCase("item")) {
                     if (!player.hasPermission("servercore.admin")) {
@@ -1017,6 +1101,12 @@ public final class ServerCorePlugin extends JavaPlugin {
 
         if (attributeManager != null) {
             attributeManager.stop();
+        }
+
+        if (passiveSnapshotService != null) {
+            passiveSnapshotService.stop();
+        } else if (abilityCooldownService != null) {
+            abilityCooldownService.saveAll();
         }
 
         if (globalStatManager != null) {
