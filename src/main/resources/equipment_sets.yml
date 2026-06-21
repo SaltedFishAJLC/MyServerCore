@@ -14,3 +14,25 @@ sets:
           test_set_fury:
             trigger: PASSIVE
             amount: 0.15
+
+  crimson_inferno:
+    name: "绯红炼狱套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          crimson_inferno_bloodied_force:
+            trigger: PASSIVE
+            stat: base_damage
+            set_id: crimson_inferno
+            per_missing_percent: 0.003
+      4:
+        abilities:
+          crimson_inferno_dominus:
+            trigger: PASSIVE
+            max_stacks: 10
+            decay_delay_seconds: 5
+            chance_per_stack: 0.10
+            range: 8
+            width: 1.5
+            damage_ratio: 0.75

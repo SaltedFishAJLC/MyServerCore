@@ -137,19 +137,22 @@ public class EnchantManager {
         if (!definition.enabled()) {
             return EnchantTableMerge.fail("该附魔当前已禁用。");
         }
+        if (!definition.obtainableFromEnchantTable()) {
+            return EnchantTableMerge.fail("该附魔不能从普通附魔台获得。");
+        }
         if (!isBook(item) && !EnchantSlotMatcher.matches(item, definition.slots())) {
             return EnchantTableMerge.fail("该附魔不能应用到这件物品。");
         }
 
-        int rolled = Math.max(1, Math.min(rolledLevel, definition.softMaxLevel()));
+        int rolled = Math.max(1, Math.min(rolledLevel, definition.tableMaxLevel()));
         int existing = getCustomEnchantLevel(item, definition.id());
         int next = existing <= 0
                 ? rolled
                 : existing == rolled ? existing + 1 : Math.max(existing, rolled);
-        next = Math.min(next, definition.softMaxLevel());
+        next = Math.min(next, definition.tableMaxLevel());
 
-        if (existing >= definition.softMaxLevel()) {
-            return EnchantTableMerge.fail(definition.display() + " 已达到附魔台软上限 " + definition.softMaxLevel() + "。");
+        if (existing >= definition.tableMaxLevel()) {
+            return EnchantTableMerge.fail(definition.display() + " 已达到附魔台上限 " + definition.tableMaxLevel() + "。");
         }
         if (next <= existing) {
             return EnchantTableMerge.fail("本次附魔不会提升 " + definition.display() + "。");
@@ -342,7 +345,8 @@ public class EnchantManager {
     }
 
     private static String normalize(String value) {
-        return EnchantRegistry.normalize(value);
+        String normalized = EnchantRegistry.normalize(value);
+        return normalized.equals("protection") ? "fortify" : normalized;
     }
 
     public record CustomEnchant(String id, String displayName, int maxLevel, String description) {

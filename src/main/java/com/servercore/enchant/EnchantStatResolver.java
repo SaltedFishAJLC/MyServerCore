@@ -22,7 +22,21 @@ public final class EnchantStatResolver {
     }
 
     public EnchantStatBundle resolveCombatStats(ItemStack item, Player player, EquipmentSlot slot) {
-        Map<String, Double> numeric = resolveNumeric(item);
+        java.util.Map<String, Double> numeric = new java.util.LinkedHashMap<>(resolveNumeric(item));
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        PDCManager pdc = PDCManager.getInstance();
+        if (equipmentEnchants != null && pdc != null && player != null) {
+            Map<String, Double> chimera = equipmentEnchants.getChimeraBonuses(player, item);
+            mergeChimera(numeric, "base_damage", chimera.getOrDefault(pdc.KEY_BASE_DAMAGE.getKey(), 0.0));
+            mergeChimera(numeric, "base_multiplier", chimera.getOrDefault(pdc.KEY_BASE_MULTIPLIER.getKey(), 0.0));
+            mergeChimera(numeric, "crit_chance", chimera.getOrDefault(pdc.KEY_CRIT_CHANCE.getKey(), 0.0));
+            mergeChimera(numeric, "crit_damage", chimera.getOrDefault(pdc.KEY_CRIT_DAMAGE.getKey(), 0.0));
+            mergeChimera(numeric, "brutality", chimera.getOrDefault(pdc.KEY_BRUTALITY.getKey(), 0.0));
+            mergeChimera(numeric, "lifesteal", chimera.getOrDefault(pdc.KEY_LIFESTEAL.getKey(), 0.0));
+            mergeChimera(numeric, "armor_pen", chimera.getOrDefault(pdc.KEY_ARMOR_PEN.getKey(), 0.0));
+            mergeChimera(numeric, "base_armor", chimera.getOrDefault(pdc.KEY_BASE_ARMOR.getKey(), 0.0));
+            mergeChimera(numeric, "attack_speed_bonus", chimera.getOrDefault(pdc.KEY_ATTACK_SPEED_BONUS.getKey(), 0.0));
+        }
         double baseDamage = numeric.getOrDefault("base_damage", 0.0);
         EnchantEffectService effects = EnchantEffectService.getInstance();
         if (effects != null) {
@@ -85,5 +99,11 @@ public final class EnchantStatResolver {
 
     private String normalize(String raw) {
         return raw == null ? "" : raw.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private void mergeChimera(java.util.Map<String, Double> values, String key, double value) {
+        if (Math.abs(value) > 0.0001) {
+            values.merge(key, value, Double::sum);
+        }
     }
 }

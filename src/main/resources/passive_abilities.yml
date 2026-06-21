@@ -37,3 +37,33 @@ abilities:
     description:
       - "造成的伤害提高 {amount}。"
     allowed_sources: [SET_BONUS]
+
+  elder_crown_blood_thirst:
+    handler: bleed_lifesteal
+    name: "鲜血渴望"
+    description:
+      - "每秒将你实际造成的流血伤害转化为吸血恢复。"
+      - "每秒最多恢复最大生命值的 15%，且不受血魔翻倍。"
+    allowed_sources: [ARMOR, IMPRINT]
+
+  crimson_inferno_bloodied_force:
+    handler: missing_health_set_stat
+    name: "绯红炼狱·浴血"
+    description:
+      - "每损失 1% 生命，已穿戴的绯红炼狱部件所提供的面板攻击力提高 0.3%。"
+    allowed_sources: [SET_BONUS]
+
+  crimson_inferno_dominus:
+    handler: dominus_sword_aura
+    name: "肃杀之气"
+    description:
+      - "击杀敌对生物获得 Dominus，最高 10 层；停杀 5 秒后每 5 秒失去 1 层。"
+      - "近战命中时，每层提供 10% 剑气概率；剑气对前方 8 格目标造成本次伤害的 75%。"
+    allowed_sources: [SET_BONUS]
+
+  crimson_conquest_bleed:
+    handler: bleed_on_hit
+    name: "猩红征伐"
+    description:
+      - "近战命中有 30% 概率使目标流血，在 10 秒内均匀失去 400 点生命。"
+    allowed_sources: [MAIN_HAND]

@@ -280,6 +280,7 @@ public class VanillaItemOverrideManager implements Listener {
             case "lifesteal" -> pdc.KEY_LIFESTEAL;
             case "armor_pen" -> pdc.KEY_ARMOR_PEN;
             case "base_armor" -> pdc.KEY_BASE_ARMOR;
+            case "max_health" -> pdc.KEY_MAX_HEALTH;
             case "attack_speed_bonus" -> pdc.KEY_ATTACK_SPEED_BONUS;
             case "shield_block_threshold" -> pdc.KEY_SHIELD_BLOCK_THRESHOLD;
             case "shield_effective_block" -> pdc.KEY_SHIELD_EFFECTIVE_BLOCK;
@@ -325,6 +326,7 @@ public class VanillaItemOverrideManager implements Listener {
             case "lifesteal", "life_steal", "vampirism", "vamp" -> "lifesteal";
             case "armorpen", "armor_pen" -> "armor_pen";
             case "armor", "base_armor" -> "base_armor";
+            case "hp", "health", "maxhp", "max_health" -> "max_health";
             case "attackspeed", "attack_speed", "attack_speed_bonus", "aspeed" -> "attack_speed_bonus";
             case "shieldthreshold", "shield_threshold", "block_threshold", "shield_block_threshold" -> "shield_block_threshold";
             case "effectiveblock", "effective_block", "shield_effective_block" -> "shield_effective_block";

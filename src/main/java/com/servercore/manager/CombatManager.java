@@ -1,7 +1,12 @@
 package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
+import com.servercore.combat.damage.DamageCategory;
+import com.servercore.combat.damage.DamagePacket;
+import com.servercore.combat.damage.DamageResult;
 import com.servercore.combat.damage.DamageService;
+import com.servercore.combat.damage.DamageSourceKind;
+import com.servercore.combat.damage.DamageTag;
 import com.servercore.combat.integration.EnchantTargetMatcher;
 import com.servercore.enchant.EnchantDamageContext;
 import com.servercore.enchant.EnchantEffectService;
@@ -21,10 +26,19 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.Particle;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class CombatManager implements Listener {
 
     private final AuraSkillsApi auraSkills;
+    private final Map<EntityDamageEvent, AttackContext> attackContexts = new IdentityHashMap<>();
 
     public CombatManager(ServerCorePlugin plugin) {
         this.auraSkills = AuraSkillsApi.get();
@@ -77,13 +91,14 @@ public class CombatManager implements Listener {
         CombatStats stats = getCombatStats(player);
         ClassManager classManager = ClassManager.getInstance();
         ClassPassiveManager passiveManager = ClassPassiveManager.getInstance();
+        ItemStack weaponSnapshot = player.getInventory().getItemInMainHand().clone();
         
         double finalDamage = 0.0;
         boolean isMagic = event.getCause() == DamageCause.MAGIC;
         boolean spellbladeMelee = classManager != null && classManager.usesSpellbladeMeleeDamage(player, isRanged, isMagic);
         boolean usesMagicDamage = isMagic || spellbladeMelee;
-        double lifestealEffectiveDamage = 0.0;
         boolean isCrit = false;
+        List<Runnable> successfulHitCommits = new ArrayList<>();
         
         // 1. 获取纯净的基础面板伤害
         double baseDamage;
@@ -96,12 +111,6 @@ public class CombatManager implements Listener {
             // 不能再通过 event.getDamage() / vanillaMax 来反推蓄力比例。
             float cooldownRatio = player.getAttackCooldown();
             
-            // 剥离原版跳劈检测（用于阻止原版暴击，我们自己管理暴击）
-            boolean isVanillaCrit = player.getFallDistance() > 0.0F && 
-                                    !player.isOnGround() && 
-                                    !player.hasPotionEffect(org.bukkit.potion.PotionEffectType.BLINDNESS) && 
-                                    player.getVehicle() == null && 
-                                    !player.isSprinting();
             // 注意：原版暴击已经不影响伤害了，因为 event.getDamage() 基于我们归零后的 1.0 计算
             // 暴击完全由我们的 CombatStats.critChance/critDamage 接管
             
@@ -140,14 +149,18 @@ public class CombatManager implements Listener {
             if (spellbladeMelee) {
                 double brutalityMultiplier = rollBrutalityMultiplier(stats.brutality());
                 finalDamage *= brutalityMultiplier;
-                lifestealEffectiveDamage = baseDamage * magicMultiplier * skillMultiplier * brutalityMultiplier;
             }
             
         } else {
             // 【物理流派（近战/远程）】: 面板 * 暴击 * 乘区 * (破甲/残暴)
-            isCrit = passiveManager == null
-                    ? Math.random() < stats.critChance()
-                    : passiveManager.rollCritical(player, stats.critChance());
+            if (passiveManager == null) {
+                isCrit = Math.random() < stats.critChance();
+            } else {
+                ClassPassiveManager.CriticalRollPlan criticalPlan =
+                        passiveManager.previewCritical(player, stats.critChance());
+                isCrit = criticalPlan.critical();
+                successfulHitCommits.add(criticalPlan.commit());
+            }
             double critMult = isCrit ? stats.critDamage() : 1.0;
             double skillMultiplier = getSkillMultiplier(player, isRanged ? "archery" : "fighting");
             double reaperMultiplier = event.getEntity() instanceof LivingEntity target && passiveManager != null
@@ -155,97 +168,93 @@ public class CombatManager implements Listener {
                     : 1.0;
             double multiplierDamage = baseDamage * stats.baseMultiplier() * skillMultiplier * reaperMultiplier;
             
-            if (isCrit && event.getEntity() instanceof LivingEntity target) {
-                target.getWorld().spawnParticle(Particle.CRIT, target.getLocation().add(0, 1, 0), 15, 0.5, 0.5, 0.5, 0.1);
-            }
-
             if (isRanged) {
                 // 远程伤害
-                double armorPenMult = 1.0 + (stats.armorPen() / 100.0); // 暂定基础倍率，未来可根据怪物护甲微调
+                double armorPenMult = 1.0 + clamp(stats.armorPen() / 100.0, 0.0, 1.0);
                 double classRangedMultiplier = classManager == null ? 1.0 : classManager.getPhysicalRangedDamageMultiplier(player);
                 finalDamage = multiplierDamage * critMult * armorPenMult * classRangedMultiplier;
             } else {
                 // 近战伤害
                 double brutalityMultiplier = rollBrutalityMultiplier(stats.brutality());
                 finalDamage = multiplierDamage * critMult * brutalityMultiplier;
-                lifestealEffectiveDamage = multiplierDamage * brutalityMultiplier;
             }
         }
 
         if (event.getEntity() instanceof LivingEntity target) {
-            double targetMultiplier = EnchantTargetMatcher.resolveHighestMultiplier(player.getInventory().getItemInMainHand(), target);
+            double targetMultiplier = EnchantTargetMatcher.resolveHighestMultiplier(weaponSnapshot, target);
             finalDamage *= targetMultiplier;
-            lifestealEffectiveDamage *= targetMultiplier;
 
             EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
             if (enchantEffects != null) {
-                double beforeEffects = finalDamage;
                 RangedEmpowermentManager empowermentManager = RangedEmpowermentManager.getInstance();
                 if (empowermentManager != null) {
-                    finalDamage = empowermentManager.applyProjectileDamage(player, event.getDamager(), target, finalDamage);
+                    RangedEmpowermentManager.ProjectileDamagePlan empowermentPlan =
+                            empowermentManager.previewProjectileDamage(
+                                    player, event.getDamager(), target, weaponSnapshot, finalDamage);
+                    finalDamage = empowermentPlan.damage();
+                    successfulHitCommits.add(empowermentPlan.commit());
                 }
-                finalDamage = enchantEffects.applyOutgoingDamageModifiers(player, target, finalDamage, isRanged, usesMagicDamage, isCrit);
-                if (beforeEffects > 0.0) {
-                    lifestealEffectiveDamage *= finalDamage / beforeEffects;
-                }
+                EnchantEffectService.OutgoingDamagePlan enchantPlan =
+                        enchantEffects.previewOutgoingDamage(
+                                player, target, weaponSnapshot, finalDamage, isRanged, usesMagicDamage, isCrit);
+                finalDamage = enchantPlan.damage();
+                successfulHitCommits.add(enchantPlan.commit());
             }
             PassiveSnapshotService passiveService = PassiveSnapshotService.getInstance();
             if (passiveService != null) {
-                double beforePassive = finalDamage;
                 finalDamage = passiveService.modifyOutgoingDamage(player, target, finalDamage);
-                if (beforePassive > 0.0) {
-                    lifestealEffectiveDamage *= finalDamage / beforePassive;
-                }
             }
 
-            if (target instanceof Player targetPlayer) {
-                ShieldManager shieldManager = ShieldManager.getInstance();
-                if (shieldManager != null) {
-                    finalDamage = shieldManager.applyShieldBeforeReductions(targetPlayer, event, finalDamage);
-                }
+            DamageService damageService = DamageService.getInstance();
+            DamageCategory category = usesMagicDamage ? DamageCategory.MAGIC : DamageCategory.PHYSICAL;
+            Set<DamageTag> tags = EnumSet.noneOf(DamageTag.class);
+            if (isRanged) {
+                tags.add(DamageTag.PROJECTILE);
+            } else if (!usesMagicDamage || spellbladeMelee) {
+                tags.add(DamageTag.MELEE);
             }
-
-            PDCManager pdc = PDCManager.getInstance();
-            if (pdc != null) {
-                double reduction = target.getPersistentDataContainer()
-                        .getOrDefault(pdc.KEY_MOB_DAMAGE_REDUCTION, PersistentDataType.DOUBLE, 0.0);
-                if (reduction > 0.0) {
-                    finalDamage *= Math.max(0.0, 1.0 - Math.min(0.50, reduction));
-                }
-
-                if (usesMagicDamage) {
-                    double magicResist = target.getPersistentDataContainer()
-                            .getOrDefault(pdc.KEY_MOB_MAGIC_RESIST, PersistentDataType.DOUBLE, 0.0);
-                    if (magicResist > 0.0) {
-                        finalDamage *= Math.max(0.0, 1.0 - Math.min(0.30, magicResist));
-                    }
-                }
-            }
-        }
-
-        // 覆盖最终伤害
-        event.setDamage(finalDamage);
-
-        if (event.getEntity() instanceof LivingEntity target && finalDamage > 0.0) {
-            if (passiveManager != null) {
-                passiveManager.onPlayerDealtDamage(player, target);
-            }
+            DamageSourceKind sourceKind = isRanged
+                    ? DamageSourceKind.VANILLA_PROJECTILE
+                    : usesMagicDamage && !spellbladeMelee
+                            ? DamageSourceKind.CUSTOM_SKILL
+                            : DamageSourceKind.VANILLA_ATTACK;
+            double preHitHealth = damageService == null
+                    ? target.getHealth()
+                    : damageService.getEffectiveHealth(target);
             double lifestealRate = stats.lifesteal();
             if (classManager != null) {
                 lifestealRate *= classManager.getLifestealMultiplier(player);
             }
-            if (passiveManager != null) {
-                passiveManager.applyLifesteal(player, lifestealEffectiveDamage, lifestealRate, isRanged, usesMagicDamage, spellbladeMelee);
+            Runnable commit = combine(successfulHitCommits);
+            attackContexts.put(event, new AttackContext(
+                    player,
+                    target,
+                    weaponSnapshot,
+                    isRanged,
+                    usesMagicDamage,
+                    spellbladeMelee,
+                    isCrit,
+                    Math.max(0.0, lifestealRate),
+                    Math.max(0.0, preHitHealth),
+                    commit
+            ));
+            if (damageService != null) {
+                damageService.prepareEventDamage(event, new DamagePacket(
+                        player,
+                        target,
+                        finalDamage,
+                        category,
+                        tags,
+                        sourceKind,
+                        "player_attack"
+                ));
+            } else {
+                event.setDamage(finalDamage);
             }
-            EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
-            if (enchantEffects != null) {
-                enchantEffects.afterPlayerAttack(event, player, target, finalDamage, isRanged, usesMagicDamage, isCrit);
-            }
-            PassiveSnapshotService passiveService = PassiveSnapshotService.getInstance();
-            if (passiveService != null) {
-                passiveService.afterPlayerAttack(player, target, finalDamage);
-            }
+            return;
         }
+
+        event.setDamage(finalDamage);
     }
 
     /**
@@ -288,58 +297,154 @@ public class CombatManager implements Listener {
             if (byEntityEvent.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player) return;
         }
 
-        double finalDamage = event.getDamage();
+        double incomingDamage = event.getDamage();
         PDCManager pdc = PDCManager.getInstance();
+        LivingEntity attacker = MobDamageSourceResolver.resolveMobAttacker(event);
 
         if (pdc != null) {
-            LivingEntity attacker = MobDamageSourceResolver.resolveMobAttacker(event);
             if (attacker != null) {
                 double mobAttackDamage = attacker.getPersistentDataContainer()
                         .getOrDefault(pdc.KEY_MOB_ATTACK_DAMAGE, PersistentDataType.DOUBLE, 0.0);
                 if (mobAttackDamage > 0.0) {
-                    finalDamage = mobAttackDamage;
+                    incomingDamage = mobAttackDamage;
                 }
             }
         }
 
-        ShieldManager shieldManager = ShieldManager.getInstance();
-        if (shieldManager != null) {
-            finalDamage = shieldManager.applyShieldBeforeReductions(player, event, finalDamage);
-        }
-
-        PowerLevelManager powerLevelManager = PowerLevelManager.getInstance();
-        if (powerLevelManager != null) {
-            double reduction = powerLevelManager.calculateDamageReduction(player);
-            if (reduction > 0.0) {
-                finalDamage *= Math.max(0.0, 1.0 - reduction);
-            }
-        }
-
         AttributeManager attributeManager = AttributeManager.getInstance();
-        if (attributeManager != null && attributeManager.isMagicDamageCause(event.getCause())) {
-            double magicReduction = attributeManager.getMagicDamageReduction(player);
-            if (magicReduction > 0.0) {
-                finalDamage *= Math.max(0.0, 1.0 - magicReduction);
-            }
+        boolean magic = attributeManager != null && attributeManager.isMagicDamageCause(event.getCause());
+        DamageCategory category = magic ? DamageCategory.MAGIC : DamageCategory.PHYSICAL;
+        Set<DamageTag> tags = tagsFor(event);
+        DamageSourceKind sourceKind = sourceKindFor(event);
+        DamageService damageService = DamageService.getInstance();
+        if (damageService != null) {
+            damageService.prepareEventDamage(event, new DamagePacket(
+                    attacker,
+                    player,
+                    incomingDamage,
+                    category,
+                    tags,
+                    sourceKind,
+                    "native_incoming:" + event.getCause().name().toLowerCase(java.util.Locale.ROOT)
+            ));
         }
+    }
 
-        EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
-        if (enchantEffects != null) {
-            finalDamage = enchantEffects.applyIncomingDamageModifiers(player, finalDamage);
-        }
-
-        PassiveSnapshotService passiveService = PassiveSnapshotService.getInstance();
-        if (passiveService != null) {
-            finalDamage = passiveService.modifyIncomingDamage(player, finalDamage);
-            if (passiveService.tryPreventFatalDamage(player, event, finalDamage)) {
-                return;
-            }
-        }
-
-        if (enchantEffects != null && enchantEffects.tryPreventFatalDamage(player, event, finalDamage)) {
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerAttackMonitor(EntityDamageByEntityEvent event) {
+        AttackContext context = attackContexts.remove(event);
+        if (context == null) {
             return;
         }
 
-        event.setDamage(finalDamage);
+        DamageService damageService = DamageService.getInstance();
+        DamageResult result = damageService == null
+                ? null
+                : damageService.finalizeEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
+
+        double observedDamage = result == null
+                ? Math.max(0.0, event.getFinalDamage())
+                : Math.max(0.0, result.actualDamage());
+        double actualDamage = Math.min(observedDamage, context.preHitEffectiveHealth());
+        if (actualDamage <= 0.0) {
+            return;
+        }
+
+        context.successfulHitCommit().run();
+        if (context.critical()) {
+            context.target().getWorld().spawnParticle(
+                    Particle.CRIT,
+                    context.target().getLocation().add(0, 1, 0),
+                    15, 0.5, 0.5, 0.5, 0.1
+            );
+        }
+        ClassPassiveManager passiveManager = ClassPassiveManager.getInstance();
+        if (passiveManager != null) {
+            passiveManager.onPlayerDealtDamage(context.player(), context.target());
+            passiveManager.applyLifesteal(
+                    context.player(),
+                    actualDamage,
+                    context.lifestealRate(),
+                    context.ranged(),
+                    context.magic(),
+                    context.spellbladeMelee()
+            );
+        }
+        EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
+        if (enchantEffects != null) {
+            enchantEffects.afterPlayerAttack(
+                    event,
+                    context.player(),
+                    context.target(),
+                    context.weapon(),
+                    actualDamage,
+                    context.ranged(),
+                    context.magic(),
+                    context.critical()
+            );
+        }
+        PassiveSnapshotService passiveService = PassiveSnapshotService.getInstance();
+        if (passiveService != null) {
+            passiveService.afterPlayerAttack(
+                    context.player(),
+                    context.target(),
+                    actualDamage,
+                    !context.ranged() && (!context.magic() || context.spellbladeMelee())
+            );
+        }
+    }
+
+    private Set<DamageTag> tagsFor(EntityDamageEvent event) {
+        EnumSet<DamageTag> tags = EnumSet.noneOf(DamageTag.class);
+        if (event instanceof EntityDamageByEntityEvent byEntityEvent) {
+            if (byEntityEvent.getDamager() instanceof Projectile) {
+                tags.add(DamageTag.PROJECTILE);
+            } else {
+                tags.add(DamageTag.MELEE);
+            }
+        }
+        if (event.getCause() == DamageCause.ENTITY_EXPLOSION
+                || event.getCause() == DamageCause.BLOCK_EXPLOSION) {
+            tags.add(DamageTag.EXPLOSION);
+            tags.add(DamageTag.AOE);
+        }
+        return tags;
+    }
+
+    private DamageSourceKind sourceKindFor(EntityDamageEvent event) {
+        if (event instanceof EntityDamageByEntityEvent byEntityEvent
+                && byEntityEvent.getDamager() instanceof Projectile) {
+            return DamageSourceKind.VANILLA_PROJECTILE;
+        }
+        if (event instanceof EntityDamageByEntityEvent) {
+            return DamageSourceKind.VANILLA_ATTACK;
+        }
+        return DamageSourceKind.VANILLA_ENVIRONMENT;
+    }
+
+    private Runnable combine(List<Runnable> actions) {
+        List<Runnable> snapshot = List.copyOf(actions);
+        return () -> snapshot.forEach(Runnable::run);
+    }
+
+    private double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private record AttackContext(
+            Player player,
+            LivingEntity target,
+            ItemStack weapon,
+            boolean ranged,
+            boolean magic,
+            boolean spellbladeMelee,
+            boolean critical,
+            double lifestealRate,
+            double preHitEffectiveHealth,
+            Runnable successfulHitCommit
+    ) {
     }
 }

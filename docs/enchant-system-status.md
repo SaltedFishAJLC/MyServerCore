@@ -1,6 +1,6 @@
 # 附魔体系实现状态、设计约定与后续任务
 
-更新时间：2026-06-18
+更新时间：2026-06-19
 
 本文以当前仓库代码为准，并结合本对话中已经确认的玩法目标，记录 ServerCore 自定义附魔体系的实际实现状态、稳定设计约定、已知偏差和后续任务。
 
@@ -11,13 +11,15 @@
 附魔体系的基础框架和经济循环已经形成：
 
 - 自定义附魔通过 PDC 保存，配置由 `enchants.yml` 和 `enchant_pools.yml` 驱动。
-- 当前共有 65 个附魔定义，其中 64 个启用，`ultimate_apex_slayer` 当前禁用。
+- 当前共有 104 个附魔定义，其中 103 个启用，`ultimate_apex_slayer` 当前禁用。
 - 普通附魔台、定向附魔台、轮换附魔书、怪物掉落书、自定义装备预置附魔、铁砧和砂轮均已有代码入口。
 - 软上限与硬上限已经分离，特殊来源可以产出高于软上限但不超过硬上限的附魔。
 - 物品面板可以用蓝色括号显示可归入基础属性的附魔加成。
 - Magic Dust 已有正式自定义物品、配方、回收价格和消耗路径。
 - 吸血已收束为统一数值；Vampirism、职业吸血和其他装备来源会进入同一统计。
 - 赋能射击和 Rend 已形成第一版远程主动技能链路。
+- 新增 `EquipmentEnchantService`，统一承载防具附魔的耗魔窗口、临时护甲、延迟治疗、移动环境状态、受伤后触发和 Chimera 印记继承。
+- Protection、Projectile Protection、Growth、Big Brain、Rejuvenate 等基础数值已经进入实际护甲、生命、魔力、五维和面板链路，不再只是 lore。
 
 当前成熟度应定义为：
 
@@ -27,7 +29,7 @@
 
 - `MAGIC_WEAPON` 和 `ACCESSORY` 槽位匹配尚未实现。
 - 命令版定向附魔可以指定到硬上限，和“特殊附魔台不得超过软上限”的最终约定不一致。
-- 多个新附魔在 Java 中重复硬编码数值，没有真正读取 YAML 曲线。
+- 旧武器附魔仍有一部分在 Java 中重复硬编码数值；2026-06-19 新增的武器/防具附魔统一读取 YAML 曲线。
 - 一批复杂远程附魔只有配置、槽位和互斥，没有弹道或状态机。
 - 没有 `src/test`，附魔体系目前完全依赖构建和人工服内验证。
 
@@ -62,6 +64,7 @@
 战斗和主动技能：
 
 - `src/main/java/com/servercore/enchant/EnchantEffectService.java`
+- `src/main/java/com/servercore/enchant/EquipmentEnchantService.java`
 - `src/main/java/com/servercore/enchant/RangedEmpowermentManager.java`
 - `src/main/java/com/servercore/enchant/ManaAccess.java`
 - `src/main/java/com/servercore/combat/integration/EnchantTargetMatcher.java`
@@ -86,6 +89,9 @@
 - `plugins/ServerCore/custom_mobs.yml`
 
 资源目录中的默认 YAML 只会在运行时文件不存在时复制。更新 jar 不会自动合并新增附魔、物品、配方或掉落条目。
+
+2026-06-19 本仓库检出中不存在 `plugins/ServerCore/enchants.yml`，因此本批实现以
+`src/main/resources/enchants.yml` 为可交付配置真相；部署到已有服务器时仍需人工合并到运行时文件。
 
 ## 3. 稳定设计约定
 
@@ -123,6 +129,14 @@ critical:4;vampirism:2
 
 - `soft_max_level`：常规成长上限。
 - `max_level`：任何来源都不能超过的硬上限。
+
+普通附魔台还支持两个独立约束：
+
+- `table_max_level`：仅限制普通附魔台的最高等级，不改变软上限。
+- `table_obtainable: false`：完全禁止从普通附魔台抽取，但不影响附魔书、掉落或管理员来源。
+
+当前 Feather Falling 使用软/硬上限 10、普通附魔台上限 5；Frost Walker、Soul Speed 和
+Walk Thru Fire 使用 `table_obtainable: false`。
 
 当前约定是：
 
@@ -544,6 +558,31 @@ Shift + 左键
 - disabled 时不会进入 active 附魔，也不会正常从掉落书产出。
 - 若未来启用，应先重新验证 Boss 标签、叠层刷新和与其他终极附魔的关系。
 
+### 5.5 2026-06-19 武器与防具附魔扩展
+
+本批新增 39 个定义，主要机制均已接入实际运行链路：
+
+| 分组 | 附魔 | 当前实现 |
+| --- | --- | --- |
+| 武器继承 | Chimera | 动态读取玩家印记物品的 PDC 面板与 numeric 附魔数值，按等级继承到持有武器；不会把印记本身的主动技能或被动复制到武器。 |
+| 头盔 | Aqua Affinity、Big Brain、Meditation、Hunter's Sense、Respiration | 分别接入水下挖掘属性、最大魔力、4 秒脱战/停耗魔回蓝、仅观察者客户端发光轮廓、氧气下降概率取消。 |
+| 通用防具数值 | Protection、Projectile Protection、Growth、Rejuvenate、Respite、Smarty Pants、Sugar Rush、Lightweight | 已进入护甲、弹射物护甲、最大生命、意志、脱战回复、最大魔力、移动速度和跳跃属性。 |
+| 受击触发 | Thorns、Reflection、Counter Strike、Emergency Reserve | 使用实际结算伤害触发返伤、临时护甲和阈值回蓝；secondary damage 不会递归返伤。 |
+| 靴子环境 | Swift Sneak、Feather Falling、Depth Strider、Frost Walker、Soul Speed、Walk Thru Fire、Nimble Evasion | 使用 1.21 玩家属性、原版 Frost Walker/Soul Speed 同步和环境伤害入口；Frost Walker、Soul Speed、Walk Thru Fire 不进入普通附魔台。 |
+| 耗魔窗口 | Refrigerate、Ferocious Mana、Mana Rebound | 统一记录 AuraSkills 能力和 ServerCore 主动耗魔；过去 10 秒耗魔分别转化为护甲、暴击伤害或 10 秒均匀治疗。 |
+| 死亡与低血量 | Bank、Last Stand、No Pain No Gain | Bank 可叠加减少死亡金币损失并保留该防具；Last Stand 放大单件装备护甲；No Pain No Gain 按件削减自然回复并产生 3 秒延迟治疗。 |
+| 群体与资源状态 | Legion、Coolheaded、Insights、Mind Fortress | Legion 按 30 格玩家数放大单件战斗面板但不放大五维；Coolheaded 按敌人数加护甲；Insights 按经验等级增加现有“智慧”属性；Mind Fortress 使用 50%/25% 魔力阈值和 5 秒冷却。 |
+| 胸甲/护腿/靴子终极 | Metallicize、Arcane Buffer、Emergency Treatment、Adaptive Plating、Shade Step | 已接入每 5 ticks 累积护甲、耗魔抵伤、低血治疗放大、伤害转延迟治疗、连续移动相位减伤与短时移速。 |
+
+兼容约定：
+
+- Protection 的玩家显示名和命令别名已经更新，但底层 PDC 仍规范化为旧 id `fortify`，避免历史装备失效。
+- Insights 的 `Wis` 映射到当前五维体系已有的“智慧”槽位；代码内部枚举名仍为 `INTELLIGENCE`。
+- Frost Walker 和 Soul Speed 会把对应原版附魔同步到装备并隐藏原版 tooltip，从而复用原版移动、结冰和耐久行为；移除自定义附魔后会清除由 ServerCore 同步的原版附魔。
+- Hunter's Sense 使用 `Player#sendPotionEffectChange`，发光轮廓只发送给受击玩家，对服务端真实隐身状态不做修改。
+- Emergency Treatment 覆盖 Bukkit `EntityRegainHealthEvent`、ServerCore 自然回复、吸血和本批延迟治疗；绕过事件并直接修改生命值的第三方插件仍需单独适配。
+- 本批机制已编译和配置解析通过，但移动手感、客户端轮廓、多人 Legion/Bank 和复杂受击顺序仍需要测试服实测。
+
 ## 6. 命令与运维
 
 玩家入口：
@@ -590,10 +629,9 @@ Shift + 左键
 1. 修正 `/sc enchant special`，不得绕过 `soft_max_level`；或者改为管理员权限并明确其特殊来源身份。
 2. 实现 `MAGIC_WEAPON` 的可靠判定，至少覆盖带主动耗魔能力的自定义武器。
 3. 让 Ultimate Wise 接入统一能力耗魔接口，而不只影响赋能射击。
-4. 把 Fortify 的 `base_armor` 真正接入护甲统计和减伤结算。
-5. 将新附魔 Java 硬编码数组改为读取 `EnchantDefinition.numericBonuses()` 或 `effect.params`。
-6. 为 CustomItemRegistry 的预置附魔增加存在、槽位、冲突、终极数量和硬上限警告。
-7. 明确 clear-all 是否应继续允许无催化剂清除终极附魔；当前行为兼容旧设计，但会绕过单拆的特殊材料门槛。
+4. 将旧武器附魔的 Java 硬编码数组改为读取 `EnchantDefinition.numericBonuses()` 或 `effect.params`。
+5. 为 CustomItemRegistry 的预置附魔增加存在、槽位、冲突、终极数量和硬上限警告。
+6. 明确 clear-all 是否应继续允许无催化剂清除终极附魔；当前行为兼容旧设计，但会绕过单拆的特殊材料门槛。
 
 ### P1：补完已有简化实现
 
@@ -680,22 +718,21 @@ Shift + 左键
 
 ## 9. 验证基线
 
-本次状态整理基于 2026-06-18 当前干净工作树，HEAD 为：
+2026-06-19 本批实现完成后执行：
 
 ```text
-358a3fd Add config-driven enchant effect services
-```
-
-本次文档整理完成后执行：
-
-```text
+.\gradle-8.5\bin\gradle.bat --no-daemon compileJava
 .\gradle-8.5\bin\gradle.bat --no-daemon build
 ```
 
 结果：
 
 ```text
-BUILD SUCCESSFUL in 20s
+compileJava: BUILD SUCCESSFUL in 22s
+build: BUILD SUCCESSFUL in 27s
 ```
 
-当前没有测试源码，Gradle 输出 `compileTestJava NO-SOURCE` 和 `test NO-SOURCE`。
+另使用 SnakeYAML 2.2 实际解析 `src/main/resources/enchants.yml`，确认 104 个定义可被加载。
+
+当前没有测试源码，Gradle 输出 `compileTestJava NO-SOURCE` 和 `test NO-SOURCE`。`git diff --check`
+未发现空白错误，仅报告仓库现有的 LF/CRLF 转换提示。

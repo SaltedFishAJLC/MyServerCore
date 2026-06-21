@@ -50,22 +50,34 @@ public class ShieldManager implements Listener {
     }
 
     public double applyShieldBeforeReductions(Player defender, EntityDamageEvent event, double incomingDamage) {
-        return resolveShieldBlock(defender, event, incomingDamage).remainingDamage();
+        ShieldBlockPlan plan = previewShieldBlock(defender, event, incomingDamage);
+        plan.commit().run();
+        return plan.result().remainingDamage();
     }
 
     public ShieldBlockResult resolveShieldBlock(Player defender, EntityDamageEvent event, double incomingDamage) {
-        if (defender == null || event == null || incomingDamage <= 0.0 || !defender.isBlocking()) {
-            return ShieldBlockResult.none(incomingDamage);
+        ShieldBlockPlan plan = previewShieldBlock(defender, event, incomingDamage);
+        plan.commit().run();
+        return plan.result();
+    }
+
+    public ShieldBlockPlan previewShieldBlock(Player defender, EntityDamageEvent event, double incomingDamage) {
+        return previewShieldBlock(defender, event == null ? null : findAttacker(event), incomingDamage);
+    }
+
+    public ShieldBlockPlan previewShieldBlock(Player defender, Entity attacker, double incomingDamage) {
+        if (defender == null || incomingDamage <= 0.0 || !defender.isBlocking()) {
+            return ShieldBlockPlan.none(incomingDamage);
         }
 
         ItemStack shield = defender.getInventory().getItemInOffHand();
         if (!isShield(shield) || defender.hasCooldown(shield.getType())) {
-            return ShieldBlockResult.none(incomingDamage);
+            return ShieldBlockPlan.none(incomingDamage);
         }
 
         PDCManager pdc = PDCManager.getInstance();
         if (pdc == null) {
-            return ShieldBlockResult.none(incomingDamage);
+            return ShieldBlockPlan.none(incomingDamage);
         }
 
         double threshold = readStatOrDefault(pdc, shield, pdc.KEY_SHIELD_BLOCK_THRESHOLD, DEFAULT_BLOCK_THRESHOLD);
@@ -78,21 +90,31 @@ public class ShieldManager implements Listener {
         cooldownSeconds = Math.max(0.0, cooldownSeconds + enchantStats.shieldCooldownSeconds());
 
         EnchantEffectService enchantEffects = EnchantEffectService.getInstance();
+        EnchantEffectService.PerfectGuardPlan perfectGuardPlan = null;
         if (enchantEffects != null) {
             long now = System.currentTimeMillis();
             long raisedAt = shieldRaisedAt.getOrDefault(defender.getUniqueId(), now);
-            EnchantEffectService.ShieldAdjustment adjustment = enchantEffects.applyPerfectGuard(defender, shield, threshold, cooldownSeconds, raisedAt, now);
+            perfectGuardPlan = enchantEffects.previewPerfectGuard(
+                    defender, shield, threshold, cooldownSeconds, raisedAt, now);
+            EnchantEffectService.ShieldAdjustment adjustment = perfectGuardPlan.adjustment();
             threshold = adjustment.threshold();
             cooldownSeconds = adjustment.cooldownSeconds();
         }
 
         if (threshold <= 0.0) {
-            return ShieldBlockResult.none(incomingDamage);
+            return ShieldBlockPlan.none(incomingDamage);
         }
 
+        Runnable perfectGuardCommit = perfectGuardPlan == null ? () -> {
+        } : perfectGuardPlan.commit();
         if (incomingDamage <= threshold) {
-            defender.getWorld().playSound(defender.getLocation(), Sound.ITEM_SHIELD_BLOCK, 0.85f, 1.15f);
-            return new ShieldBlockResult(ShieldBlockType.FULL_BLOCK, incomingDamage, 0.0, 0.0, false);
+            ShieldBlockResult result = new ShieldBlockResult(
+                    ShieldBlockType.FULL_BLOCK, incomingDamage, 0.0, 0.0, false);
+            Runnable commit = () -> {
+                perfectGuardCommit.run();
+                defender.getWorld().playSound(defender.getLocation(), Sound.ITEM_SHIELD_BLOCK, 0.85f, 1.15f);
+            };
+            return new ShieldBlockPlan(result, commit);
         }
 
         boolean shieldBreak = incomingDamage > threshold * SHIELD_BREAK_MULTIPLIER;
@@ -100,16 +122,21 @@ public class ShieldManager implements Listener {
         double blockedDamage = threshold * effectiveBlock;
         double remainingDamage = Math.max(0.0, incomingDamage - blockedDamage);
         double appliedCooldownSeconds = cooldownSeconds * (shieldBreak ? SHIELD_BREAK_MULTIPLIER : 1.0);
-        int cooldownTicks = (int) Math.round(appliedCooldownSeconds * 20.0);
-        if (cooldownTicks > 0) {
-            defender.setCooldown(shield.getType(), cooldownTicks);
-        }
-
-        Entity attacker = findAttacker(event);
-        knockBackBoth(defender, attacker);
-        defender.getWorld().playSound(defender.getLocation(), shieldBreak ? Sound.ITEM_SHIELD_BREAK : Sound.ITEM_SHIELD_BLOCK, 1.0f, shieldBreak ? 0.75f : 0.9f);
-        defender.sendActionBar(Component.text(shieldBreak ? "盾牌崩裂!" : "格挡被突破!"));
-        return new ShieldBlockResult(type, blockedDamage, remainingDamage, appliedCooldownSeconds, true);
+        ShieldBlockResult result = new ShieldBlockResult(
+                type, blockedDamage, remainingDamage, appliedCooldownSeconds, true);
+        Runnable commit = () -> {
+            perfectGuardCommit.run();
+            int cooldownTicks = (int) Math.round(appliedCooldownSeconds * 20.0);
+            if (cooldownTicks > 0) {
+                defender.setCooldown(shield.getType(), cooldownTicks);
+            }
+            knockBackBoth(defender, attacker);
+            defender.getWorld().playSound(defender.getLocation(),
+                    shieldBreak ? Sound.ITEM_SHIELD_BREAK : Sound.ITEM_SHIELD_BLOCK,
+                    1.0f, shieldBreak ? 0.75f : 0.9f);
+            defender.sendActionBar(Component.text(shieldBreak ? "盾牌崩裂!" : "格挡被突破!"));
+        };
+        return new ShieldBlockPlan(result, commit);
     }
 
     public double estimateShieldValuePerSecond(Player player, double maxHealth) {
@@ -229,6 +256,13 @@ public class ShieldManager implements Listener {
     ) {
         static ShieldBlockResult none(double incomingDamage) {
             return new ShieldBlockResult(ShieldBlockType.NONE, 0.0, Math.max(0.0, incomingDamage), 0.0, false);
+        }
+    }
+
+    public record ShieldBlockPlan(ShieldBlockResult result, Runnable commit) {
+        static ShieldBlockPlan none(double incomingDamage) {
+            return new ShieldBlockPlan(ShieldBlockResult.none(incomingDamage), () -> {
+            });
         }
     }
 }

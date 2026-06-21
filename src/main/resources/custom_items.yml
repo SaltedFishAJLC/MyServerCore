@@ -475,6 +475,177 @@ items:
     story_lore:
       - "看上去很美。"
 
+  elder_crown:
+    material: NETHERITE_HELMET
+    name: "上古之冠"
+    rarity: MYTHIC
+    equipment_tier: 6
+    imprint_eligible: true
+    appearance:
+      trim:
+        material: minecraft:gold
+        pattern: minecraft:flow
+    stats:
+      max_health: 250
+      attack_speed_bonus: 10
+      attr_agility: 30
+      attr_intelligence: 40
+      attr_willpower: 30
+    abilities:
+      elder_crown_blood_thirst:
+        trigger: PASSIVE
+        max_health_cap_per_second: 0.15
+    story_lore:
+      - "T6 特殊防具。古老冠冕仍记得每一道由你撕开的伤口。"
+
+  crimson_inferno_helmet:
+    material: LEATHER_HELMET
+    name: "绯红炼狱头盔"
+    rarity: LEGENDARY
+    equipment_tier: 6
+    unbreakable: true
+    set_id: crimson_inferno
+    set_piece_id: helmet
+    appearance:
+      leather_color: "#D94A24"
+      trim:
+        material: minecraft:redstone
+        pattern: minecraft:eye
+    stats:
+      max_health: 160
+      damage: 35
+      base_armor: 150
+      crit_damage: 0.20
+      crit_chance: 0.08
+      brutality: 10
+      attr_toughness: 50
+      attr_agility: 20
+      attr_willpower: 15
+    enchants:
+      hunters_sense: 3
+    ability_lore:
+      - "2 件：每损失 1% 生命，套装部件攻击力提高 0.3%。"
+      - "4 件·肃杀之气：积累 Dominus，并以剑气横扫前方。"
+    story_lore:
+      - "T6 绯红炼狱套装。眼眸纹饰凝视着尚未倒下的猎物。"
+
+  crimson_inferno_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "绯红炼狱胸甲"
+    rarity: LEGENDARY
+    equipment_tier: 6
+    unbreakable: true
+    set_id: crimson_inferno
+    set_piece_id: chestplate
+    appearance:
+      leather_color: "#D94A24"
+      trim:
+        material: minecraft:redstone
+        pattern: minecraft:eye
+    stats:
+      max_health: 230
+      damage: 55
+      base_armor: 280
+      crit_damage: 0.20
+      crit_chance: 0.08
+      brutality: 10
+      attr_toughness: 70
+      attr_willpower: 35
+    ability_lore:
+      - "2 件：每损失 1% 生命，套装部件攻击力提高 0.3%。"
+      - "4 件·肃杀之气：积累 Dominus，并以剑气横扫前方。"
+    story_lore:
+      - "T6 绯红炼狱套装。余烬沿甲片缝隙缓慢呼吸。"
+
+  crimson_inferno_leggings:
+    material: LEATHER_LEGGINGS
+    name: "绯红炼狱护腿"
+    rarity: LEGENDARY
+    equipment_tier: 6
+    unbreakable: true
+    set_id: crimson_inferno
+    set_piece_id: leggings
+    appearance:
+      leather_color: "#D94A24"
+      trim:
+        material: minecraft:redstone
+        pattern: minecraft:eye
+    stats:
+      max_health: 205
+      damage: 50
+      base_armor: 220
+      crit_damage: 0.20
+      crit_chance: 0.08
+      brutality: 10
+      attr_toughness: 60
+      attr_agility: 20
+      attr_willpower: 25
+    ability_lore:
+      - "2 件：每损失 1% 生命，套装部件攻击力提高 0.3%。"
+      - "4 件·肃杀之气：积累 Dominus，并以剑气横扫前方。"
+    story_lore:
+      - "T6 绯红炼狱套装。每一步都把灰烬踩回火中。"
+
+  crimson_inferno_boots:
+    material: LEATHER_BOOTS
+    name: "绯红炼狱战靴"
+    rarity: LEGENDARY
+    equipment_tier: 6
+    unbreakable: true
+    set_id: crimson_inferno
+    set_piece_id: boots
+    appearance:
+      leather_color: "#D94A24"
+      trim:
+        material: minecraft:redstone
+        pattern: minecraft:eye
+    stats:
+      max_health: 130
+      damage: 35
+      base_armor: 220
+      crit_damage: 0.20
+      crit_chance: 0.08
+      brutality: 10
+      attr_toughness: 40
+      attr_agility: 40
+      attr_luck: 15
+    enchants:
+      walk_thru_fire: 1
+      soul_speed: 3
+    ability_lore:
+      - "2 件：每损失 1% 生命，套装部件攻击力提高 0.3%。"
+      - "4 件·肃杀之气：积累 Dominus，并以剑气横扫前方。"
+    story_lore:
+      - "T6 绯红炼狱套装。火焰与灵魂沙都无法拖慢征伐。"
+
+  crimson_conquest_greatsword:
+    material: NETHERITE_SWORD
+    name: "猩红征伐巨剑"
+    rarity: MYTHIC
+    equipment_tier: 6
+    weapon_template: TWO_HANDED_SWORD
+    hand_rule: TWO_HANDED
+    stats:
+      damage: 400
+      crit_chance: 0.25
+      crit_damage: 0.45
+      brutality: 25
+    sockets:
+      - UNIVERSAL
+      - UNIVERSAL
+      - UNIVERSAL
+    enchants:
+      humanoid_slayer: 10
+      drain: 5
+    abilities:
+      crimson_conquest_bleed:
+        trigger: PASSIVE
+        chance: 0.30
+        duration_seconds: 10
+        total_damage: 400
+    story_lore:
+      - "T6 神话双手剑。刀身留下的伤口会继续替持剑者征伐。"
+
   test_warden_helmet:
     material: DIAMOND_HELMET
     name: "测试·守望头盔"

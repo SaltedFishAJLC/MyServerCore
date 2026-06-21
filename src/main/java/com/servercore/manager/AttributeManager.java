@@ -2,6 +2,8 @@ package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
 import com.servercore.combat.damage.DamageService;
+import com.servercore.enchant.EnchantStatResolver;
+import com.servercore.enchant.EquipmentEnchantService;
 import com.servercore.passive.PassiveSnapshotService;
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.trait.TraitModifier;
@@ -132,24 +134,24 @@ public class AttributeManager implements Listener {
         }
 
         for (ItemStack armor : player.getInventory().getArmorContents()) {
-            addItemAttributes(totals, armor);
+            addItemAttributes(totals, player, armor);
         }
 
         WeaponTemplateManager weaponTemplateManager = WeaponTemplateManager.getInstance();
         ItemStack mainHand = player.getInventory().getItemInMainHand();
         ItemStack offHand = player.getInventory().getItemInOffHand();
-        addItemAttributes(totals, mainHand, weaponTemplateManager == null ? 1.0
+        addItemAttributes(totals, player, mainHand, weaponTemplateManager == null ? 1.0
                 : weaponTemplateManager.getEquipmentStatMultiplier(player, mainHand, EquipmentSlot.HAND));
-        addItemAttributes(totals, offHand, weaponTemplateManager == null ? 0.0
+        addItemAttributes(totals, player, offHand, weaponTemplateManager == null ? 0.0
                 : weaponTemplateManager.getEquipmentStatMultiplier(player, offHand, EquipmentSlot.OFF_HAND));
 
         AccessoryManager accessoryManager = AccessoryManager.getInstance();
         if (accessoryManager != null) {
             for (ItemStack accessory : accessoryManager.loadAccessories(player)) {
-                addItemAttributes(totals, accessory);
+                addItemAttributes(totals, player, accessory);
             }
             for (ItemStack talisman : accessoryManager.loadActiveTalismans(player)) {
-                addItemAttributes(totals, talisman);
+                addItemAttributes(totals, player, talisman);
             }
         }
 
@@ -177,6 +179,12 @@ public class AttributeManager implements Listener {
             totals.merge(CoreAttribute.LUCK, (double) auraSkillsBridge.getLuckBonus(player), Double::sum);
         }
 
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        if (equipmentEnchants != null) {
+            totals.merge(CoreAttribute.INTELLIGENCE,
+                    (double) equipmentEnchants.getInsightsWisdomBonus(player), Double::sum);
+        }
+
         return new AttributeSnapshot(
                 roundAttribute(totals.get(CoreAttribute.TOUGHNESS)),
                 roundAttribute(totals.get(CoreAttribute.AGILITY)),
@@ -198,7 +206,7 @@ public class AttributeManager implements Listener {
     }
 
     public double getHealthBonus(Player player) {
-        return getToughness(player) * TOUGHNESS_HEALTH_PER_POINT;
+        return getToughness(player) * TOUGHNESS_HEALTH_PER_POINT + getEquipmentMaxHealthBonus(player);
     }
 
     public double getArmorBonus(Player player) {
@@ -217,7 +225,9 @@ public class AttributeManager implements Listener {
     public double getMaxManaBonus(Player player, AttributeSnapshot snapshot) {
         ClassManager classManager = ClassManager.getInstance();
         double classMana = classManager == null ? 0.0 : classManager.getBonusMana(player);
-        return snapshot.intelligence() * INTELLIGENCE_MANA_PER_POINT + classMana;
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        double enchantMana = equipmentEnchants == null ? 0.0 : equipmentEnchants.getMaxManaBonus(player);
+        return snapshot.intelligence() * INTELLIGENCE_MANA_PER_POINT + classMana + enchantMana;
     }
 
     public double getEffectiveMaxMana(Player player) {
@@ -227,6 +237,12 @@ public class AttributeManager implements Listener {
     }
 
     public double getHealthRegenPerSecond(Player player) {
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        double base = getBaseHealthRegenPerSecond(player);
+        return equipmentEnchants == null ? base : equipmentEnchants.modifyNaturalRegen(player, base);
+    }
+
+    public double getBaseHealthRegenPerSecond(Player player) {
         ClassManager classManager = ClassManager.getInstance();
         double classRegen = classManager == null ? 0.0 : classManager.getBonusRegen(player);
         return getWillpower(player) * WILLPOWER_REGEN_PER_POINT + classRegen;
@@ -254,19 +270,27 @@ public class AttributeManager implements Listener {
      * 由 EntityDamageEvent 触发，如果成功闪避，返回 true，并产生特效。
      */
     public boolean processDodge(Player player) {
+        DodgePlan plan = previewDodge(player);
+        plan.commit().run();
+        return plan.dodged();
+    }
+
+    public DodgePlan previewDodge(Player player) {
         double chance = getDodgeChance(player);
         if (chance <= 0.0 || ThreadLocalRandom.current().nextDouble() >= chance) {
-            return false;
+            return DodgePlan.notDodged();
         }
-
-        player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation().add(0.0, 1.0, 0.0), 16, 0.35, 0.45, 0.35, 0.02);
-        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.45f, 1.65f);
-        player.sendActionBar(Component.text("闪避!"));
-        ClassPassiveManager classPassiveManager = ClassPassiveManager.getInstance();
-        if (classPassiveManager != null) {
-            classPassiveManager.onPlayerDodged(player);
-        }
-        return true;
+        Runnable commit = () -> {
+            player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation().add(0.0, 1.0, 0.0),
+                    16, 0.35, 0.45, 0.35, 0.02);
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.45f, 1.65f);
+            player.sendActionBar(Component.text("闪避!"));
+            ClassPassiveManager classPassiveManager = ClassPassiveManager.getInstance();
+            if (classPassiveManager != null) {
+                classPassiveManager.onPlayerDodged(player);
+            }
+        };
+        return new DodgePlan(true, commit);
     }
 
     /**
@@ -295,7 +319,12 @@ public class AttributeManager implements Listener {
             double multiplier = getRegenMultiplier(player, now);
             double healed = regen * multiplier;
             if (healed > 0.0) {
-                player.setHealth(Math.min(maxHealth, player.getHealth() + healed));
+                EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+                if (equipmentEnchants != null) {
+                    equipmentEnchants.heal(player, healed);
+                } else {
+                    player.setHealth(Math.min(maxHealth, player.getHealth() + healed));
+                }
             }
         }
     }
@@ -307,11 +336,11 @@ public class AttributeManager implements Listener {
         };
     }
 
-    private void addItemAttributes(EnumMap<CoreAttribute, Double> totals, ItemStack item) {
-        addItemAttributes(totals, item, 1.0);
+    private void addItemAttributes(EnumMap<CoreAttribute, Double> totals, Player player, ItemStack item) {
+        addItemAttributes(totals, player, item, 1.0);
     }
 
-    private void addItemAttributes(EnumMap<CoreAttribute, Double> totals, ItemStack item, double multiplier) {
+    private void addItemAttributes(EnumMap<CoreAttribute, Double> totals, Player player, ItemStack item, double multiplier) {
         if (item == null || item.getType().isAir() || !item.hasItemMeta()) {
             return;
         }
@@ -324,10 +353,19 @@ public class AttributeManager implements Listener {
             return;
         }
 
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        Map<String, Double> chimera = equipmentEnchants == null
+                ? Map.of()
+                : equipmentEnchants.getChimeraBonuses(player, item);
         for (CoreAttribute attribute : CoreAttribute.values()) {
             NamespacedKey key = attribute.key(pdc);
             double value = item.getItemMeta().getPersistentDataContainer()
                     .getOrDefault(key, PersistentDataType.DOUBLE, 0.0);
+            EnchantStatResolver resolver = EnchantStatResolver.getInstance();
+            if (resolver != null) {
+                value += resolver.resolveNumeric(item, key.getKey());
+            }
+            value += chimera.getOrDefault(key.getKey(), 0.0);
             totals.merge(attribute, value * multiplier, Double::sum);
         }
     }
@@ -339,7 +377,11 @@ public class AttributeManager implements Listener {
         }
 
         double baseHealth = maxHealthAttribute.getBaseValue();
-        double modifierAmount = snapshot.toughness() * TOUGHNESS_HEALTH_PER_POINT;
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        double enchantHealth = equipmentEnchants == null ? 0.0 : equipmentEnchants.getMaxHealthBonus(player);
+        double modifierAmount = snapshot.toughness() * TOUGHNESS_HEALTH_PER_POINT
+                + getEquipmentMaxHealthBonus(player)
+                + enchantHealth;
         double healthBeforePenalty = baseHealth + modifierAmount;
         double penaltyRate = classManager == null ? 0.0 : classManager.getMaxHealthPenaltyRate(player);
         if (penaltyRate > 0.0) {
@@ -353,6 +395,42 @@ public class AttributeManager implements Listener {
         if (player.getHealth() > maxHealth) {
             player.setHealth(maxHealth);
         }
+    }
+
+    private double getEquipmentMaxHealthBonus(Player player) {
+        PDCManager pdc = PDCManager.getInstance();
+        if (pdc == null || player == null) {
+            return 0.0;
+        }
+
+        double bonus = 0.0;
+        for (ItemStack armor : player.getInventory().getArmorContents()) {
+            bonus += pdc.getStat(armor, pdc.KEY_MAX_HEALTH);
+        }
+
+        WeaponTemplateManager weapons = WeaponTemplateManager.getInstance();
+        ItemStack mainHand = player.getInventory().getItemInMainHand();
+        ItemStack offHand = player.getInventory().getItemInOffHand();
+        bonus += pdc.getStat(mainHand, pdc.KEY_MAX_HEALTH)
+                * (weapons == null ? 1.0 : weapons.getEquipmentStatMultiplier(player, mainHand, EquipmentSlot.HAND));
+        bonus += pdc.getStat(offHand, pdc.KEY_MAX_HEALTH)
+                * (weapons == null ? 0.0 : weapons.getEquipmentStatMultiplier(player, offHand, EquipmentSlot.OFF_HAND));
+
+        AccessoryManager accessories = AccessoryManager.getInstance();
+        if (accessories != null) {
+            for (ItemStack accessory : accessories.loadAccessories(player)) {
+                bonus += pdc.getStat(accessory, pdc.KEY_MAX_HEALTH);
+            }
+            for (ItemStack talisman : accessories.loadActiveTalismans(player)) {
+                bonus += pdc.getStat(talisman, pdc.KEY_MAX_HEALTH);
+            }
+        }
+
+        PassiveSnapshotService passives = PassiveSnapshotService.getInstance();
+        if (passives != null) {
+            bonus += passives.getStatBonus(player, pdc.KEY_MAX_HEALTH.getKey());
+        }
+        return bonus;
     }
 
     private void applyClassSpeedModifiers(Player player, ClassManager classManager) {
@@ -431,25 +509,13 @@ public class AttributeManager implements Listener {
         return Math.max(min, Math.min(max, value));
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onIncomingDamage(EntityDamageEvent event) {
-        if (DamageService.isInternalDamageActive()) {
-            return;
-        }
-
-        if (!(event.getEntity() instanceof Player player)) {
-            return;
-        }
-
-        if (processDodge(player)) {
-            event.setCancelled(true);
-            event.setDamage(0.0);
-        }
-    }
-
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDamageMonitor(EntityDamageEvent event) {
-        if (event.getEntity() instanceof Player player && event.getFinalDamage() > 0.0) {
+        DamageService damageService = DamageService.getInstance();
+        com.servercore.combat.damage.DamageResult result =
+                damageService == null ? null : damageService.getFinalizedResult(event);
+        double actualDamage = result == null ? event.getFinalDamage() : result.actualDamage();
+        if (event.getEntity() instanceof Player player && actualDamage > 0.0) {
             lastDamageAt.put(player.getUniqueId(), System.currentTimeMillis());
         }
     }
@@ -585,6 +651,13 @@ public class AttributeManager implements Listener {
                 case WILLPOWER -> willpower;
                 case LUCK -> luck;
             };
+        }
+    }
+
+    public record DodgePlan(boolean dodged, Runnable commit) {
+        static DodgePlan notDodged() {
+            return new DodgePlan(false, () -> {
+            });
         }
     }
 }

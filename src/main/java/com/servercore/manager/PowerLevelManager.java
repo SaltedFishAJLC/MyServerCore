@@ -1,6 +1,10 @@
 package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
+import com.servercore.enchant.EnchantStatResolver;
+import com.servercore.enchant.EquipmentEnchantService;
+import com.servercore.enchant.EnchantSlot;
+import com.servercore.enchant.EnchantSlotMatcher;
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -70,13 +74,13 @@ public class PowerLevelManager {
 
         double maxHealth = getMaxHealth(player);
         double armor = calculateEffectiveArmorValue(player);
-        double damageReduction = armor <= 0.0 ? 0.0 : armor / (armor + 100.0);
+        double damageReduction = armor <= 0.0 ? 0.0 : clamp(armor / (armor + 100.0), 0.0, 0.95);
         double effectiveHealth = maxHealth / Math.max(0.05, 1.0 - damageReduction);
 
         double lifestealRate = getEffectiveLifestealRate(player, stats);
         double lifestealPerSecond = calculateLifestealEffectiveDps(player, stats) * lifestealRate;
         double regenPerSecond = getRegenPerSecond(player);
-        double shieldValuePerSecond = estimateShieldValuePerSecond(player, maxHealth);
+        double shieldValuePerSecond = estimateShieldValuePerSecond(player, maxHealth) * shieldWeight();
         double sustainPerSecond = lifestealPerSecond + regenPerSecond + shieldValuePerSecond;
         double maxSustainFactor = plugin.getConfig().getDouble("power.sustain.max_sustain_factor", 0.50);
         double sustainFactor = clamp(sustainPerSecond / Math.max(1.0, maxHealth), 0.0, maxSustainFactor);
@@ -189,13 +193,14 @@ public class PowerLevelManager {
             }
         }
 
-        baseMagicDamage *= 1.0 + Math.max(0.0, maxMana - 100.0) / 800.0;
+        double magicMultiplier = Math.max(0.1, stats.baseMultiplier())
+                + Math.max(0.0, maxMana - 100.0) / 400.0;
         ClassManager classManager = ClassManager.getInstance();
         if (classManager != null) {
-            baseMagicDamage *= 1.0 + Math.max(0.0, classManager.getMagicMultiplierBonus(player));
+            magicMultiplier += Math.max(0.0, classManager.getMagicMultiplierBonus(player));
         }
 
-        return baseMagicDamage * Math.max(0.1, stats.baseMultiplier()) * getSkillMultiplier(player, "sorcery");
+        return baseMagicDamage * magicMultiplier * getSkillMultiplier(player, "sorcery");
     }
 
     public double calculateEffectiveHealth(Player player) {
@@ -210,16 +215,34 @@ public class PowerLevelManager {
 
         double armor = 0.0;
         for (org.bukkit.inventory.ItemStack item : player.getInventory().getArmorContents()) {
-            armor += pdc.getStat(item, pdc.KEY_BASE_ARMOR);
+            double itemArmor = pdc.getStat(item, pdc.KEY_BASE_ARMOR);
+            EnchantStatResolver resolver = EnchantStatResolver.getInstance();
+            if (resolver != null) {
+                itemArmor += resolver.resolveNumeric(item, pdc.KEY_BASE_ARMOR.getKey());
+            }
+            EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+            armor += equipmentEnchants == null
+                    ? itemArmor
+                    : equipmentEnchants.modifyArmorProvided(player, item, itemArmor);
+        }
+        ItemStack offHand = player.getInventory().getItemInOffHand();
+        if (EnchantSlotMatcher.matches(offHand, EnchantSlot.SHIELD)) {
+            armor += pdc.getStat(offHand, pdc.KEY_BASE_ARMOR);
+            EnchantStatResolver resolver = EnchantStatResolver.getInstance();
+            armor += resolver == null ? 0.0 : resolver.resolveNumeric(offHand, pdc.KEY_BASE_ARMOR.getKey());
         }
 
         AccessoryManager accessoryManager = AccessoryManager.getInstance();
         if (accessoryManager != null) {
             for (org.bukkit.inventory.ItemStack item : accessoryManager.loadAccessories(player)) {
                 armor += pdc.getStat(item, pdc.KEY_BASE_ARMOR);
+                EnchantStatResolver resolver = EnchantStatResolver.getInstance();
+                armor += resolver == null ? 0.0 : resolver.resolveNumeric(item, pdc.KEY_BASE_ARMOR.getKey());
             }
             for (org.bukkit.inventory.ItemStack item : accessoryManager.loadActiveTalismans(player)) {
                 armor += pdc.getStat(item, pdc.KEY_BASE_ARMOR);
+                EnchantStatResolver resolver = EnchantStatResolver.getInstance();
+                armor += resolver == null ? 0.0 : resolver.resolveNumeric(item, pdc.KEY_BASE_ARMOR.getKey());
             }
         }
 
@@ -232,6 +255,11 @@ public class PowerLevelManager {
         AttributeManager attributeManager = AttributeManager.getInstance();
         if (attributeManager != null) {
             armor += attributeManager.getArmorBonus(player);
+        }
+
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        if (equipmentEnchants != null) {
+            armor += equipmentEnchants.getDynamicArmor(player);
         }
 
         return Math.max(0.0, armor);
@@ -249,8 +277,18 @@ public class PowerLevelManager {
     }
 
     public double calculateDamageReduction(Player player) {
+        return calculateDamageReduction(player, 0.0);
+    }
+
+    public double calculateDamageReduction(Player player, double additionalArmor) {
         double armor = calculateEffectiveArmorValue(player);
-        return armor <= 0.0 ? 0.0 : armor / (armor + 100.0);
+        ClassManager classManager = ClassManager.getInstance();
+        double adjustedAdditional = Math.max(0.0, additionalArmor);
+        if (classManager != null) {
+            adjustedAdditional *= Math.max(0.0, 1.0 - classManager.getArmorPenaltyRate(player));
+        }
+        armor += adjustedAdditional;
+        return armor <= 0.0 ? 0.0 : clamp(armor / (armor + 100.0), 0.0, 0.95);
     }
 
     public double getSpawnPower(Player player) {
@@ -381,6 +419,13 @@ public class PowerLevelManager {
     private double estimateShieldValuePerSecond(Player player, double maxHealth) {
         ShieldManager shieldManager = ShieldManager.getInstance();
         return shieldManager == null ? 0.0 : shieldManager.estimateShieldValuePerSecond(player, maxHealth);
+    }
+
+    private double shieldWeight() {
+        if (plugin.getConfig().contains("power.sustain.shield_weight")) {
+            return clamp(plugin.getConfig().getDouble("power.sustain.shield_weight", 0.50), 0.0, 1.0);
+        }
+        return clamp(plugin.getConfig().getDouble("power.sustain.shield_spawn_weight", 0.50), 0.0, 1.0);
     }
 
     private double getMaxHealth(Player player) {

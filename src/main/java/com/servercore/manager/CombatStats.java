@@ -2,6 +2,7 @@ package com.servercore.manager;
 
 import com.servercore.enchant.EnchantStatBundle;
 import com.servercore.enchant.EnchantStatResolver;
+import com.servercore.enchant.EquipmentEnchantService;
 import com.servercore.passive.PassiveSnapshotService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
@@ -207,6 +208,33 @@ public record CombatStats(
         totalBrutality += offEnchantStats.brutality() * offMultiplier;
         totalLifesteal += offEnchantStats.lifesteal() * offMultiplier;
         totalArmorPen += offEnchantStats.armorPen() * offMultiplier;
+
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        if (equipmentEnchants != null) {
+            for (ItemStack armor : player.getInventory().getArmorContents()) {
+                if (armor == null || armor.getType().isAir()) {
+                    continue;
+                }
+                double extraMultiplier = equipmentEnchants.getLegionPanelMultiplier(player, armor) - 1.0;
+                if (extraMultiplier <= 0.0) {
+                    continue;
+                }
+                EnchantStatBundle armorEnchants = resolveEnchantStats(armor, player, null);
+                totalBaseDamage += (pdc.getStat(armor, pdc.KEY_BASE_DAMAGE) + armorEnchants.baseDamage()) * extraMultiplier;
+                totalBaseMultiplier += (pdc.getStat(armor, pdc.KEY_BASE_MULTIPLIER) + armorEnchants.baseMultiplier()) * extraMultiplier;
+                totalCritChance += (pdc.getStat(armor, pdc.KEY_CRIT_CHANCE) + armorEnchants.critChance()) * extraMultiplier;
+                totalCritDamage += (pdc.getStat(armor, pdc.KEY_CRIT_DAMAGE) + armorEnchants.critDamage()) * extraMultiplier;
+                totalBrutality += (pdc.getStat(armor, pdc.KEY_BRUTALITY) + armorEnchants.brutality()) * extraMultiplier;
+                totalLifesteal += (pdc.getStat(armor, pdc.KEY_LIFESTEAL) + armorEnchants.lifesteal()) * extraMultiplier;
+                totalArmorPen += (pdc.getStat(armor, pdc.KEY_ARMOR_PEN) + armorEnchants.armorPen()) * extraMultiplier;
+            }
+            totalCritDamage += equipmentEnchants.getFerociousManaCritDamage(player);
+        }
+
+        PassiveSnapshotService passiveService = PassiveSnapshotService.getInstance();
+        if (passiveService != null) {
+            totalBaseDamage += passiveService.getDynamicStatBonus(player, pdc.KEY_BASE_DAMAGE.getKey());
+        }
 
         ClassManager classManager = ClassManager.getInstance();
         if (classManager != null && classManager.suppressesCriticalHits(player)) {

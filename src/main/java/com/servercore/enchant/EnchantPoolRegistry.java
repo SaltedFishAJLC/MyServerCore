@@ -186,6 +186,7 @@ public final class EnchantPoolRegistry {
         List<EnchantDefinition> candidates = registry.getEnabledDefinitions().stream()
                 .filter(definition -> selectedRarities.contains(definition.rarity()))
                 .filter(definition -> !vanillaBlockedRarities.contains(definition.rarity()))
+                .filter(EnchantDefinition::obtainableFromEnchantTable)
                 .filter(definition -> EnchantSlotMatcher.matches(item, definition.slots()))
                 .toList();
         if (candidates.isEmpty()) {
@@ -198,7 +199,7 @@ public final class EnchantPoolRegistry {
         if (definition == null) {
             return 1;
         }
-        int reachable = Math.max(1, Math.min(definition.softMaxLevel(), 1 + Math.max(0, power) / 10));
+        int reachable = Math.max(1, Math.min(definition.tableMaxLevel(), 1 + Math.max(0, power) / 10));
         return ThreadLocalRandom.current().nextInt(1, reachable + 1);
     }
 

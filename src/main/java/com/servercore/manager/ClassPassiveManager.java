@@ -7,6 +7,7 @@ import com.servercore.combat.damage.DamageCategory;
 import com.servercore.combat.damage.DamagePacket;
 import com.servercore.combat.damage.DamageService;
 import com.servercore.combat.damage.DamageSourceKind;
+import com.servercore.enchant.EquipmentEnchantService;
 import dev.aurelium.auraskills.api.event.mana.ManaAbilityActivateEvent;
 import dev.aurelium.auraskills.api.user.SkillsUser;
 import org.bukkit.Bukkit;
@@ -100,16 +101,25 @@ public class ClassPassiveManager implements Listener {
     }
 
     public boolean rollCritical(Player player, double critChance) {
+        CriticalRollPlan plan = previewCritical(player, critChance);
+        plan.commit().run();
+        return plan.critical();
+    }
+
+    public CriticalRollPlan previewCritical(Player player, double critChance) {
         double chance = clamp(critChance, 0.0, 1.0);
-        if (consumeAssassinAmbush(player)) {
-            return true;
+        if (hasActiveAssassinAmbush(player)) {
+            return new CriticalRollPlan(true, () -> consumeAssassinAmbush(player));
         }
 
         boolean firstRoll = ThreadLocalRandom.current().nextDouble() < chance;
         if (!hasClass(player, ClassManager.PlayerClass.GAMBLER)) {
-            return firstRoll;
+            return new CriticalRollPlan(firstRoll, () -> {
+            });
         }
-        return firstRoll || ThreadLocalRandom.current().nextDouble() < chance;
+        boolean critical = firstRoll || ThreadLocalRandom.current().nextDouble() < chance;
+        return new CriticalRollPlan(critical, () -> {
+        });
     }
 
     public void onPlayerDealtDamage(Player player, LivingEntity target) {
@@ -150,7 +160,12 @@ public class ClassPassiveManager implements Listener {
             return;
         }
         lifestealCooldownUntil.put(player.getUniqueId(), now + 750L);
-        player.setHealth(Math.min(maxHealth, player.getHealth() + heal));
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        if (equipmentEnchants != null) {
+            equipmentEnchants.heal(player, heal);
+        } else {
+            player.setHealth(Math.min(maxHealth, player.getHealth() + heal));
+        }
     }
 
     private double maxLifestealPerHit(Player player) {
@@ -211,54 +226,57 @@ public class ClassPassiveManager implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onIncomingDamageBeforeReduction(EntityDamageEvent event) {
-        if (DamageService.isInternalDamageActive() || !(event.getEntity() instanceof Player player)) {
-            return;
-        }
-        if (!hasClass(player, ClassManager.PlayerClass.CALAMITY_FAMILIAR)) {
-            return;
+    public CalamityAbsorptionPlan previewCalamityAbsorption(Player player, double damage,
+                                                            DamageCategory category,
+                                                            DamageSourceKind sourceKind) {
+        if (player == null || damage <= 0.0
+                || category == DamageCategory.TRUE
+                || sourceKind == DamageSourceKind.SYSTEM
+                || !hasClass(player, ClassManager.PlayerClass.CALAMITY_FAMILIAR)) {
+            return CalamityAbsorptionPlan.noop(damage);
         }
 
         UUID id = player.getUniqueId();
-        double pool = calamityBloodPool.getOrDefault(id, 0.0);
-        double damage = Math.max(0.0, event.getDamage());
-        if (pool <= 0.0 || damage <= 0.0) {
-            return;
+        double pool = Math.max(0.0, calamityBloodPool.getOrDefault(id, 0.0));
+        if (pool <= 0.0) {
+            return CalamityAbsorptionPlan.noop(damage);
         }
 
         double absorbed = Math.min(pool / BLOOD_POOL_DAMAGE_ABSORB_PER_POINT, damage);
-        calamityBloodPool.put(id, Math.max(0.0, pool - absorbed * BLOOD_POOL_DAMAGE_ABSORB_PER_POINT));
-        event.setDamage(Math.max(0.0, damage - absorbed));
-        refreshPlayer(player);
+        Runnable commit = () -> {
+            double current = Math.max(0.0, calamityBloodPool.getOrDefault(id, 0.0));
+            calamityBloodPool.put(id, Math.max(0.0,
+                    current - absorbed * BLOOD_POOL_DAMAGE_ABSORB_PER_POINT));
+            refreshPlayer(player);
+        };
+        return new CalamityAbsorptionPlan(Math.max(0.0, damage - absorbed), absorbed, commit);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onIncomingDamageAfterReduction(EntityDamageEvent event) {
-        if (DamageService.isInternalDamageActive() || !(event.getEntity() instanceof Player player)) {
-            return;
-        }
-        if (hasClass(player, ClassManager.PlayerClass.GUARDIAN)) {
-            return;
-        }
-
-        double finalDamage = Math.max(0.0, event.getFinalDamage());
-        if (finalDamage <= 0.0) {
-            return;
+    public GuardianTransferResult applyGuardianTransfer(Player damagedPlayer, EntityDamageEvent event,
+                                                        double finalDamage, DamageSourceKind sourceKind) {
+        if (damagedPlayer == null || event == null || finalDamage <= 0.0
+                || sourceKind == DamageSourceKind.SYSTEM
+                || hasClass(damagedPlayer, ClassManager.PlayerClass.GUARDIAN)) {
+            return GuardianTransferResult.none(finalDamage);
         }
 
-        Player guardian = findNearestGuardian(player);
+        Player guardian = findNearestGuardian(damagedPlayer);
         if (guardian == null) {
-            return;
+            return GuardianTransferResult.none(finalDamage);
         }
 
-        double transfer = Math.min(finalDamage, player.getHealth()) * GUARDIAN_TRANSFER_RATE;
+        double effectiveHealth = Math.max(0.0,
+                damagedPlayer.getHealth() + damagedPlayer.getAbsorptionAmount());
+        double transfer = Math.min(finalDamage, effectiveHealth) * GUARDIAN_TRANSFER_RATE;
         if (transfer <= 0.0) {
-            return;
+            return GuardianTransferResult.none(finalDamage);
         }
 
-        event.setDamage(Math.max(0.0, event.getDamage() - transfer));
+        double remaining = Math.max(0.0, finalDamage - transfer);
+        double factor = finalDamage <= 0.0 ? 0.0 : remaining / finalDamage;
+        event.setDamage(Math.max(0.0, event.getDamage() * factor));
         applyGuardianTransferDamage(guardian, transfer, event);
+        return new GuardianTransferResult(remaining, transfer, guardian);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -320,6 +338,14 @@ public class ClassPassiveManager implements Listener {
         assassinAmbushUntil.remove(id);
         player.removePotionEffect(PotionEffectType.INVISIBILITY);
         return true;
+    }
+
+    private boolean hasActiveAssassinAmbush(Player player) {
+        if (!hasClass(player, ClassManager.PlayerClass.ASSASSIN)) {
+            return false;
+        }
+        Long until = assassinAmbushUntil.get(player.getUniqueId());
+        return until != null && until >= System.currentTimeMillis();
     }
 
     private void tickPassives() {
@@ -527,7 +553,12 @@ public class ClassPassiveManager implements Listener {
         AttributeInstance maxHealthAttribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         double maxHealth = maxHealthAttribute == null ? 20.0 : maxHealthAttribute.getValue();
         if (player.getHealth() < maxHealth) {
-            player.setHealth(Math.min(maxHealth, player.getHealth() + amount));
+            EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+            if (equipmentEnchants != null) {
+                equipmentEnchants.heal(player, amount);
+            } else {
+                player.setHealth(Math.min(maxHealth, player.getHealth() + amount));
+            }
         }
     }
 
@@ -588,5 +619,21 @@ public class ClassPassiveManager implements Listener {
 
     private double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    public record CalamityAbsorptionPlan(double damage, double absorbed, Runnable commit) {
+        static CalamityAbsorptionPlan noop(double damage) {
+            return new CalamityAbsorptionPlan(damage, 0.0, () -> {
+            });
+        }
+    }
+
+    public record GuardianTransferResult(double remainingDamage, double transferredDamage, Player guardian) {
+        static GuardianTransferResult none(double damage) {
+            return new GuardianTransferResult(damage, 0.0, null);
+        }
+    }
+
+    public record CriticalRollPlan(boolean critical, Runnable commit) {
     }
 }

@@ -11,7 +11,7 @@ power:
   sustain:
     max_sustain_factor: 0.50
     max_lifesteal_per_hit_ratio: 0.15
-    shield_spawn_weight: 0.50
+    shield_weight: 0.50
 
   spawn_power:
     mode: ASYMMETRIC_SMOOTHING

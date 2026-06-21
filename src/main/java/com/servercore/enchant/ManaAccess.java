@@ -44,6 +44,10 @@ final class ManaAccess {
             return 0.0;
         }
         setMana(player, current - consumed);
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        if (equipmentEnchants != null) {
+            equipmentEnchants.recordManaSpent(player, consumed);
+        }
         return consumed;
     }
 

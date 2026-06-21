@@ -164,6 +164,9 @@ public class CustomItemRegistry {
         container.set(pdc.KEY_ITEM_SCALE_VERSION, PersistentDataType.INTEGER, ItemStandardizer.VANILLA_SCALE_VERSION);
         container.set(pdc.KEY_ITEM_ORIGINAL_NAME, PersistentDataType.STRING, definition.displayName());
         container.set(pdc.KEY_ITEM_RARITY, PersistentDataType.STRING, definition.rarity().name());
+        if (definition.equipmentTier() > 0) {
+            container.set(pdc.KEY_ITEM_EQUIPMENT_TIER, PersistentDataType.INTEGER, definition.equipmentTier());
+        }
 
         if (definition.accessoryType() != null && !definition.accessoryType().isBlank()) {
             container.set(pdc.KEY_ACC_TYPE, PersistentDataType.STRING, definition.accessoryType());
@@ -505,6 +508,7 @@ public class CustomItemRegistry {
                 Math.max(1, section.getInt("amount", 1)),
                 displayName,
                 rarity,
+                Math.max(0, Math.min(7, section.getInt("equipment_tier", section.getInt("tier", 0)))),
                 stats,
                 sockets,
                 enchants,
@@ -716,6 +720,10 @@ public class CustomItemRegistry {
             rarity = formatManager == null ? ItemFormatManager.Rarity.COMMON.name() : formatManager.getRarity(item).name();
         }
         section.set("rarity", rarity.toUpperCase(Locale.ROOT));
+        int equipmentTier = container.getOrDefault(pdc.KEY_ITEM_EQUIPMENT_TIER, PersistentDataType.INTEGER, 0);
+        if (equipmentTier > 0) {
+            section.set("equipment_tier", equipmentTier);
+        }
 
         Map<String, Double> stats = readCurrentStats(container, pdc);
         subtractStats(stats, decodeStatString(container.get(pdc.KEY_ITEM_REFORGE_STATS, PersistentDataType.STRING)));
@@ -864,6 +872,7 @@ public class CustomItemRegistry {
         addCurrentStat(stats, container, pdc.KEY_LIFESTEAL, "lifesteal");
         addCurrentStat(stats, container, pdc.KEY_ARMOR_PEN, "armor_pen");
         addCurrentStat(stats, container, pdc.KEY_BASE_ARMOR, "base_armor");
+        addCurrentStat(stats, container, pdc.KEY_MAX_HEALTH, "max_health");
         addCurrentStat(stats, container, pdc.KEY_ATTACK_SPEED_BONUS, "attack_speed_bonus");
         addCurrentStat(stats, container, pdc.KEY_SHIELD_BLOCK_THRESHOLD, "shield_block_threshold");
         addCurrentStat(stats, container, pdc.KEY_SHIELD_EFFECTIVE_BLOCK, "shield_effective_block");
@@ -1311,6 +1320,7 @@ public class CustomItemRegistry {
             case "lifesteal" -> pdc.KEY_LIFESTEAL;
             case "armor_pen" -> pdc.KEY_ARMOR_PEN;
             case "base_armor" -> pdc.KEY_BASE_ARMOR;
+            case "max_health" -> pdc.KEY_MAX_HEALTH;
             case "attack_speed_bonus" -> pdc.KEY_ATTACK_SPEED_BONUS;
             case "shield_block_threshold" -> pdc.KEY_SHIELD_BLOCK_THRESHOLD;
             case "shield_effective_block" -> pdc.KEY_SHIELD_EFFECTIVE_BLOCK;
@@ -1359,6 +1369,7 @@ public class CustomItemRegistry {
             case "lifesteal", "life_steal", "vampirism", "vamp" -> "lifesteal";
             case "armorpen", "armor_pen" -> "armor_pen";
             case "armor", "base_armor" -> "base_armor";
+            case "hp", "health", "maxhp", "max_health" -> "max_health";
             case "attackspeed", "attack_speed", "attack_speed_bonus", "aspeed" -> "attack_speed_bonus";
             case "shieldthreshold", "shield_threshold", "block_threshold", "shield_block_threshold" -> "shield_block_threshold";
             case "effectiveblock", "effective_block", "shield_effective_block" -> "shield_effective_block";
@@ -1449,6 +1460,7 @@ public class CustomItemRegistry {
             int amount,
             String displayName,
             ItemFormatManager.Rarity rarity,
+            int equipmentTier,
             Map<String, Double> stats,
             List<GemstoneManager.SocketType> sockets,
             Map<String, Integer> enchants,

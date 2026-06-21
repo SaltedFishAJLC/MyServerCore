@@ -5,11 +5,13 @@ import com.servercore.combat.status.FrostService;
 import com.servercore.combat.status.StatusService;
 import com.servercore.combat.status.StatusType;
 import com.servercore.combat.status.StunController;
+import com.servercore.enchant.EquipmentEnchantService;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -43,6 +45,17 @@ public final class VanillaDamageAdapter implements Listener {
         }
 
         String cause = event.getCause().name();
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        if (target instanceof Player player
+                && equipmentEnchants != null
+                && equipmentEnchants.shouldIgnoreEnvironmentalDamage(player, cause)) {
+            event.setCancelled(true);
+            event.setDamage(0.0);
+            if (!cause.equals("LAVA")) {
+                player.setFireTicks(0);
+            }
+            return;
+        }
         LivingEntity source = resolveLivingSource(event);
         double damage = Math.max(0.0, event.getDamage());
 

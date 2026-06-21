@@ -20,6 +20,7 @@ import com.servercore.enchant.EnchantAcquisitionManager;
 import com.servercore.enchant.EnchantApplyResult;
 import com.servercore.enchant.EnchantDefinition;
 import com.servercore.enchant.EnchantEffectService;
+import com.servercore.enchant.EquipmentEnchantService;
 import com.servercore.enchant.EnchantGrindstoneListener;
 import com.servercore.enchant.EnchantRegistry;
 import com.servercore.enchant.EnchantStatResolver;
@@ -121,6 +122,7 @@ public final class ServerCorePlugin extends JavaPlugin {
     private EquipmentSetRegistry equipmentSetRegistry;
     private AbilityCooldownService abilityCooldownService;
     private PassiveSnapshotService passiveSnapshotService;
+    private EquipmentEnchantService equipmentEnchantService;
     private int banFlowerDeliveryTaskId = -1;
 
     @Override
@@ -179,6 +181,7 @@ public final class ServerCorePlugin extends JavaPlugin {
         this.gemstoneManager = new GemstoneManager(this);
         this.enchantManager = new EnchantManager(this);
         new EnchantEffectService(this);
+        this.equipmentEnchantService = new EquipmentEnchantService(this);
         new EnchantTableListener(this);
         new EnchantAnvilListener(this);
         new EnchantGrindstoneListener(this);
@@ -985,6 +988,7 @@ public final class ServerCorePlugin extends JavaPlugin {
                         case "lifesteal", "life_steal", "vampirism", "vamp" -> pdc.KEY_LIFESTEAL;
                         case "armorpen" -> pdc.KEY_ARMOR_PEN;
                         case "armor" -> pdc.KEY_BASE_ARMOR;
+                        case "hp", "health", "maxhp", "max_health" -> pdc.KEY_MAX_HEALTH;
                         case "attackspeed", "attack_speed", "attack_speed_bonus", "aspeed" -> pdc.KEY_ATTACK_SPEED_BONUS;
                         case "shieldthreshold", "shield_threshold", "block_threshold", "shield_block_threshold" -> pdc.KEY_SHIELD_BLOCK_THRESHOLD;
                         case "effectiveblock", "effective_block", "shield_effective_block" -> pdc.KEY_SHIELD_EFFECTIVE_BLOCK;
@@ -1101,6 +1105,10 @@ public final class ServerCorePlugin extends JavaPlugin {
 
         if (attributeManager != null) {
             attributeManager.stop();
+        }
+
+        if (equipmentEnchantService != null) {
+            equipmentEnchantService.stop();
         }
 
         if (passiveSnapshotService != null) {

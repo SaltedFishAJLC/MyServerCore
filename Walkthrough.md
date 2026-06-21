@@ -508,3 +508,92 @@
 - `.\gradle-8.5\bin\gradle.bat --no-daemon compileJava` 编译通过。
 - `.\gradle-8.5\bin\gradle.bat --no-daemon build` 完整打包通过。
 - 既有 `EntityRemoveEvent` 与铁砧 repair cost API 过时警告不属于本次回归。
+
+## 2026-06-19 武器与防具附魔扩展
+
+### 更新日志
+
+- `enchants.yml` 新增 39 个武器/防具附魔定义，附魔总数由 65 增加到 104；保留用户已有的 Protection 每级 10 护甲、Efficiency 显示名和两个禁用长弓终极附魔改动。
+- `Fortify / 坚固` 的玩家显示名更名为 `Protection / 保护`，并与 Projectile Protection 互斥；底层继续规范化为旧 id `fortify`，历史物品和命令别名 `protection` 均可读取。
+- 附魔定义新增 `table_max_level` 与 `table_obtainable`：Feather Falling 的软/硬上限保持 10，但普通附魔台最高 5；Frost Walker、Soul Speed、Walk Thru Fire 不会从普通附魔台抽取。
+- 新增 `EquipmentEnchantService`，统一处理 Chimera 印记属性继承、过去 10 秒耗魔窗口、临时护甲、延迟治疗、受击返伤、阈值回蓝、客户端轮廓、移动状态和环境效果。
+- Protection 的 `base_armor` 已正式进入 `PowerLevelManager` 护甲与减伤公式；Projectile Protection、Nimble Evasion 只在弹射物伤害结算时加入额外护甲。
+- Growth、Big Brain、Smarty Pants、Reflection、Rejuvenate、Respite、Sugar Rush、Lightweight 和 Insights 已进入最大生命、最大魔力、五维、自然回复与 1.21 玩家属性链路。
+- Meditation、Refrigerate、Ferocious Mana、Mana Rebound 与 Arcane Buffer 统一读取 AuraSkills 能力耗魔和 ServerCore 主动耗魔；所有实际数值从 `enchants.yml` 的曲线读取。
+- Thorns 与 Reflection 使用实际结算伤害生成 secondary damage，避免返伤递归；Counter Strike、Emergency Reserve、Adaptive Plating、Metallicize、Mind Fortress、Last Stand、No Pain No Gain 和 Shade Step 已接入受伤前后状态。
+- Hunter's Sense 使用玩家定向的客户端发光效果，只让受击玩家看到攻击者轮廓，对隐身目标同样发送。
+- Frost Walker 与 Soul Speed 会同步对应原版附魔并隐藏原版 tooltip；Depth Strider、Aqua Affinity、Swift Sneak、Feather Falling、Lightweight 等使用 Paper 1.21 原生 Attribute。
+- Bank 会按多件防具叠加降低死亡金币损失，并配合 `PlayerDeathEvent#setKeepInventory(true)` 只保留带 Bank 的防具，其余物品仍进入原有灵魂容器。
+- Legion 统计 30 格内玩家（含自己）并动态放大单件防具的战斗面板，不放大五维；Coolheaded、Refrigerate、Metallicize 和 Counter Strike 的临时护甲进入同一护甲公式。
+- Chimera 动态读取印记物品的 PDC 面板和 numeric 附魔数值；印记的主动技能、统一被动和套装身份不会被复制。
+- `docs/enchant-system-status.md` 已更新到 2026-06-19，记录本批实现、兼容约定、获取限制和仍需测试服验证的边界。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon compileJava` 编译通过。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 完整打包通过，最终复验为 `BUILD SUCCESSFUL in 27s`。
+- 使用 Gradle 缓存中的 SnakeYAML 2.2 实际解析 `src/main/resources/enchants.yml`，确认共有 104 个定义并包含 `shade_step` 等本批末尾条目。
+- 本仓库检出不存在 `plugins/ServerCore/enchants.yml`，因此没有运行时文件覆盖本批资源配置；已有服务器部署时仍需手动合并配置。
+- 仓库没有 Paper 玩家移动、AuraSkills 魔力、死亡容器和多人战斗的自动化测试夹具；完整打包后仍需在测试服验证水下属性、客户端轮廓、Bank 保留、Legion 层数与各类受击顺序。
+
+## 2026-06-21 数值体系 P0 统一
+
+### 更新日志
+
+- `CombatManager` 收束为攻击者侧计算器；护盾、护甲、魔抗、标签抗性、DOT 上限、承伤附魔、统一被动、灾厄血池、守护者代偿和致死保护统一交给 `DamageService`。
+- 原生攻击继续修改同一个 Bukkit 事件，状态、环境和 secondary damage 继续使用主动扣血入口；两种入口共用同一目标侧解析器。
+- 新增 `DamagePlan` 两阶段提交：伤害计算阶段只生成触发计划，`MONITOR` 确认事件未取消后才消耗护盾冷却、Perfect Guard、Arcane Buffer 魔力、Shade Step、灾厄血池和进攻附魔状态。
+- 攻击上下文会锁定武器、附魔、暴击、吸血率和目标受击前有效生命；First Strike、Triple Strike、Thunderbolt、Apex Slayer、刺客伏击和赋能射击不再因后续取消事件而提前消耗。
+- 吸血、Cleave、连锁闪电、Mana Steal、Rend 标记和统一被动追击移至成功命中的后置阶段，并以最终实际伤害为基数；过量伤害不计入，伤害吸收生命计入。
+- 实战与战力魔法公式统一为 `基础增伤 + (最大魔力 - 100) / 400 + 职业魔法加成`。
+- 实战与战力远程破甲统一封顶 100 点，最高形成 2 倍乘区；玩家护甲减伤统一封顶 95%。
+- 护盾仅拦截近战、弹射物、爆炸和直接法术，不处理真实、DOT、状态、环境或系统伤害。
+- 真实伤害跳过普通防御和承伤修正，但带 DOT 标签时仍受 DOT 上限，并允许被动复活或凤凰核心救下。
+- 闪避仅适用于近战、弹射物和直接法术，不再闪避爆炸、AOE、DOT、环境或系统伤害。
+- 灾厄血池改为在普通减伤后吸收剩余物理/魔法伤害；守护者随后转移队友 25% 最终实际伤害，转移伤害不会连锁，但守护者自身仍可复活。
+- 战力护盾价值正式乘以 `power.sustain.shield_weight`，默认 0.50，并兼容旧运行时键 `shield_spawn_weight`。
+- 核实神射手箭矢吸附已由 `RangedWeaponManager` 实现，并同步修正 `docs/numerical-systems-status.md` 的状态与 P0 清单。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon compileJava` 编译通过。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 完整构建通过，最终复验为 `BUILD SUCCESSFUL in 19s`。
+
+## 2026-06-21 T6 装备、绯红炼狱套装与通用流血
+
+### 更新日志
+
+- `custom_items.yml` 新增六件 T6 战斗测试装备：上古之冠、绯红炼狱头盔/胸甲/护腿/战靴和猩红征伐巨剑；完整写入用户指定的 HP、ATK、DEF、暴击、残暴、五维、自带附魔、宝石槽与双手剑模板。
+- 自定义装备新增 `equipment_tier: 1-7` 元数据，保存到 `item_equipment_tier` PDC，并在物品 Lore 显示装备阶段。
+- 新增装备基础 `max_health` PDC；正常装备、合法主副手、普通饰品、有效护符和 `stat_bonus` 可提供直接最大生命，印记仍严格屏蔽基础面板。
+- 上古之冠使用下界合金头盔、金色 Flow 纹饰并允许放入印记；“鲜血渴望”在正常穿戴或印记来源下均可启用。
+- 绯红炼狱四件使用橙红皮革、红石 Eye 纹饰和无限耐久；头盔自带 Hunter's Sense III，战靴自带 Walk Thru Fire I 与 Soul Speed III。
+- 绯红炼狱 2 件效果通过 `missing_health_set_stat` 动态计算，只放大当前正常穿戴的本套装部件攻击力，每损失 1% 生命提高 0.3%。
+- 绯红炼狱 4 件“肃杀之气”通过 `dominus_sword_aura` 管理 Dominus：敌对生物击杀叠至 10 层，停杀 5 秒后每 5 秒衰减；近战命中按每层 10% 概率释放 8 格剑气，以防递归真实次级伤害造成该次实际伤害的 75%。
+- 猩红征伐巨剑使用神话双手剑模板、400 ATK、25% 暴击、45% 暴伤、25 残暴、三个通用宝石槽，并自带行刑者 X 与饮血 V。
+- `StatusService` 新增统一 `tryApplyBleed(source, target, chance, totalDamage, durationTicks, reason)`；每次流血独立保存来源和伤害池，并发布可修改/取消的 `BleedApplyEvent` 与实际伤害 `BleedDamageEvent`。
+- 巨剑被动以 `30% / 10 秒 / 400 总伤害` 调用通用流血；鲜血渴望按实际流血伤害恢复，每秒最多最大生命 15%，经过普通治疗倍率但不调用血魔吸血翻倍。
+- `docs/equipment-system-status.md` 与 `docs/numerical-systems-status.md` 已同步 T6 内容、公式、调试命令和测试服验收项。
+
+### 验证记录
+
+- 三轮中间 `compileJava` 均通过，用于分别验证基础 HP/装备阶段、通用流血事件和复杂被动处理器接线。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 完整构建通过，产物为 `build/libs/ServerCore-1.0.0-SNAPSHOT.jar`。
+- 使用 Gradle 缓存中的 SnakeYAML 2.2 实际解析 `custom_items.yml`、`passive_abilities.yml` 和 `equipment_sets.yml`，三份配置均成功。
+- 配置断言确认六件装备均为 T6，四件套基础总计为 `725 HP / 175 ATK / 870 DEF`，巨剑为 400 ATK 双手剑。
+- 仓库没有可运行的 Paper 战斗自动化夹具；Dominus 概率/范围、流血实际节拍、印记鲜血渴望与纹饰外观仍需测试服按文档清单验证。
+
+## 2026-06-21 `/sc` 指令大全文档
+
+### 更新日志
+
+- 新增 `docs/servercore-command-reference.md`，从 `plugin.yml` 与 `ServerCorePlugin` 实际命令分支整理完整 `/sc` 命令面。
+- 文档覆盖根命令别名、玩家 GUI、配方查询、附魔书商店、管理员重载、怪物生成、唯一生成重置、自定义物品、稀有度、重铸、宝石、底层物品属性编辑、附魔管理和调试命令。
+- 单独记录 `/sc item` 支持的战斗、五维、盾牌、采集和钓鱼属性别名及数值单位。
+- 标明全部命令仅限玩家执行、管理员权限节点为 `servercore.admin`、当前没有 Tab 补全，以及运行时 YAML 不会自动同步资源模板。
+- 补充 T6 装备发放、套装调试、印记检查和临时测试物品的可复制命令示例。
+
+### 验证记录
+
+- 逐段核对唯一命令执行器中的参数长度、别名、权限判断和目标玩家处理逻辑。
+- 本次仅新增和更新 Markdown 文档，没有修改 Java 或 YAML 运行逻辑，因此未重复执行 Gradle 构建。

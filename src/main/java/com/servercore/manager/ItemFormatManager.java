@@ -385,6 +385,7 @@ public class ItemFormatManager implements Listener {
         addStat(lore, "吸血", pdc.getStat(item, pdc.KEY_LIFESTEAL), enchantBonus(enchantStats, pdc.KEY_LIFESTEAL), StatFormat.PERCENT, NamedTextColor.DARK_RED);
         addStat(lore, "破甲", pdc.getStat(item, pdc.KEY_ARMOR_PEN), enchantBonus(enchantStats, pdc.KEY_ARMOR_PEN), StatFormat.NUMBER, NamedTextColor.GREEN);
         addStat(lore, "护甲", pdc.getStat(item, pdc.KEY_BASE_ARMOR), enchantBonus(enchantStats, pdc.KEY_BASE_ARMOR), StatFormat.NUMBER, NamedTextColor.GREEN);
+        addStat(lore, "最大生命值", pdc.getStat(item, pdc.KEY_MAX_HEALTH), enchantStats.getOrDefault("max_health", 0.0), StatFormat.NUMBER, NamedTextColor.RED);
         addStat(lore, "攻速加成", pdc.getStat(item, pdc.KEY_ATTACK_SPEED_BONUS), enchantBonus(enchantStats, pdc.KEY_ATTACK_SPEED_BONUS), StatFormat.PERCENT_POINTS, NamedTextColor.AQUA);
         addStat(lore, "格挡阈值", pdc.getStat(item, pdc.KEY_SHIELD_BLOCK_THRESHOLD), enchantBonus(enchantStats, pdc.KEY_SHIELD_BLOCK_THRESHOLD), StatFormat.NUMBER, NamedTextColor.BLUE);
         addStat(lore, "有效格挡", pdc.getStat(item, pdc.KEY_SHIELD_EFFECTIVE_BLOCK), enchantBonus(enchantStats, pdc.KEY_SHIELD_EFFECTIVE_BLOCK), StatFormat.PERCENT, NamedTextColor.BLUE);
@@ -413,6 +414,11 @@ public class ItemFormatManager implements Listener {
         addStat(lore, "钓鱼速度", pdc.getStat(item, pdc.KEY_FISHING_SPEED), enchantBonus(enchantStats, pdc.KEY_FISHING_SPEED), StatFormat.NUMBER, NamedTextColor.BLUE);
         addStat(lore, "海怪概率", pdc.getStat(item, pdc.KEY_SEA_CREATURE_CHANCE), enchantBonus(enchantStats, pdc.KEY_SEA_CREATURE_CHANCE), StatFormat.PERCENT_POINTS, NamedTextColor.DARK_AQUA);
         addStat(lore, "宝藏概率", pdc.getStat(item, pdc.KEY_TREASURE_CHANCE), enchantBonus(enchantStats, pdc.KEY_TREASURE_CHANCE), StatFormat.PERCENT_POINTS, NamedTextColor.GOLD);
+        addStat(lore, "最大魔力", 0.0, enchantStats.getOrDefault("max_mana", 0.0), StatFormat.NUMBER, NamedTextColor.AQUA);
+        addStat(lore, "弹射物护甲", 0.0, enchantStats.getOrDefault("projectile_armor", 0.0), StatFormat.NUMBER, NamedTextColor.GREEN);
+        addStat(lore, "移动速度", 0.0, enchantStats.getOrDefault("movement_speed", 0.0), StatFormat.PERCENT_POINTS, NamedTextColor.WHITE);
+        addStat(lore, "跳跃高度", 0.0, enchantStats.getOrDefault("jump_height", 0.0), StatFormat.NUMBER, NamedTextColor.GREEN);
+        addStat(lore, "脱战生命回复", 0.0, enchantStats.getOrDefault("out_of_combat_regen", 0.0), StatFormat.NUMBER, NamedTextColor.RED);
     }
 
     private void addStat(List<Component> lore, String label, double value, StatFormat format, NamedTextColor color) {
@@ -622,6 +628,10 @@ public class ItemFormatManager implements Listener {
         if (definition == null) {
             return;
         }
+        if (definition.equipmentTier() > 0) {
+            lore.add(Component.text("装备阶段: T" + definition.equipmentTier(), NamedTextColor.GOLD)
+                    .decoration(TextDecoration.ITALIC, false));
+        }
         if (definition.imprintEligible() || definition.accessoryType().equalsIgnoreCase("IMPRINT")) {
             lore.add(Component.text("可作为印记：仅被动与套装身份生效", NamedTextColor.DARK_PURPLE)
                     .decoration(TextDecoration.ITALIC, false));
@@ -795,6 +805,7 @@ public class ItemFormatManager implements Listener {
                 || container.has(pdc.KEY_LIFESTEAL, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_ARMOR_PEN, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_BASE_ARMOR, PersistentDataType.DOUBLE)
+                || container.has(pdc.KEY_MAX_HEALTH, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_ATTACK_SPEED_BONUS, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_SHIELD_BLOCK_THRESHOLD, PersistentDataType.DOUBLE)
                 || container.has(pdc.KEY_SHIELD_EFFECTIVE_BLOCK, PersistentDataType.DOUBLE)

@@ -63,7 +63,18 @@ public final class EnchantRegistry {
     }
 
     public Optional<EnchantDefinition> get(String id) {
-        return Optional.ofNullable(definitions.get(normalize(id)));
+        String normalized = normalize(id);
+        EnchantDefinition direct = definitions.get(normalized);
+        if (direct != null) {
+            return Optional.of(direct);
+        }
+        if (normalized.equals("protection")) {
+            return Optional.ofNullable(definitions.get("fortify"));
+        }
+        if (normalized.equals("fortify")) {
+            return Optional.ofNullable(definitions.get("protection"));
+        }
+        return Optional.empty();
     }
 
     public boolean isEnabled(String id) {
@@ -96,6 +107,10 @@ public final class EnchantRegistry {
         int softMaxLevel = section.getInt("soft_max_level",
                 section.getInt("table_max_level",
                         section.getInt("enchant_table_max_level", maxLevel)));
+        int tableMaxLevel = section.getInt("table_max_level",
+                section.getInt("enchant_table_max_level", softMaxLevel));
+        boolean obtainableFromEnchantTable = section.getBoolean("enchant_table_obtainable",
+                section.getBoolean("table_obtainable", true));
         Set<EnchantSlot> slots = parseEnumSet(EnchantSlot.class, section.getStringList("slots"));
         String conflictGroup = normalize(section.getString("conflict_group", ""));
         Set<String> conflicts = section.getStringList("conflicts").stream()
@@ -131,6 +146,8 @@ public final class EnchantRegistry {
                 rarity,
                 maxLevel,
                 softMaxLevel,
+                tableMaxLevel,
+                obtainableFromEnchantTable,
                 slots,
                 conflictGroup,
                 conflicts,

@@ -79,23 +79,24 @@ enchants:
   # 效果：防具和盾牌基础护甲加成。
   fortify:
     enabled: true
-    display: "坚固"
+    display: "保护"
     rarity: COMMON
     max_level: 7
     soft_max_level: 4
     slots: [ARMOR, SHIELD]
+    conflicts: [projectile_protection]
     description:
       - "提高基础护甲。"
       - "当前总计 +{base_armor} 护甲。"
     numeric:
       base_armor:
         type: LINEAR
-        per_level: 8.0
+        per_level: 10.0
 
   # 效果：工具挖掘速度加成。
   efficiency_core:
     enabled: true
-    display: "效率核心"
+    display: "效率"
     rarity: COMMON
     max_level: 10
     soft_max_level: 5
@@ -1089,7 +1090,7 @@ enchants:
 
   # 效果：对高生命目标的满蓄力箭造成额外伤害；第一版先配置。
   judgement_string:
-    enabled: true
+    enabled: false
     display: "审判之弦"
     rarity: ULTIMATE
     max_level: 5
@@ -1108,7 +1109,7 @@ enchants:
 
   # 效果：满蓄力命中后召唤延迟落箭；第一版先配置。
   starfall_volley:
-    enabled: true
+    enabled: false
     display: "星坠箭雨"
     rarity: ULTIMATE
     max_level: 5
@@ -1140,3 +1141,610 @@ enchants:
       twilight_damage:
         type: PER_LEVEL
         values: [0.003, 0.005, 0.007, 0.009, 0.012]
+
+  # 效果：把印记物品的面板属性按比例添加到当前武器。
+  chimera:
+    enabled: true
+    display: "奇美拉"
+    rarity: ULTIMATE
+    max_level: 3
+    soft_max_level: 3
+    slots: [WEAPON]
+    description:
+      - "继承印记槽位物品的一部分面板属性。"
+      - "当前继承 {imprint_ratio_percent}% 面板属性。"
+    numeric:
+      imprint_ratio:
+        type: PER_LEVEL
+        values: [0.20, 0.40, 0.60]
+
+  # 效果：移除水下挖掘速度惩罚。
+  aqua_affinity:
+    enabled: true
+    display: "水下速掘"
+    rarity: RARE
+    max_level: 1
+    soft_max_level: 1
+    slots: [HELMET]
+    description:
+      - "移除水下挖掘速度惩罚。"
+
+  # 效果：每级增加 10 点最大魔力。
+  big_brain:
+    enabled: true
+    display: "大脑升级"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [HELMET]
+    description:
+      - "提高最大魔力。"
+      - "当前总计 +{max_mana} 最大魔力。"
+    numeric:
+      max_mana:
+        type: LINEAR
+        per_level: 10.0
+
+  # 效果：连续 4 秒未受伤且未消耗魔力后，每秒按最大魔力恢复。
+  meditation:
+    enabled: true
+    display: "冥想"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [HELMET]
+    description:
+      - "连续 4 秒未受伤且未消耗魔力后，每秒恢复魔力。"
+      - "当前每秒恢复最大魔力的 {mana_regen_ratio_percent}%。"
+    numeric:
+      mana_regen_ratio:
+        type: PER_LEVEL
+        values: [0.003, 0.006, 0.009, 0.012, 0.015]
+
+  # 效果：伤害玩家的敌人仅对该玩家显示发光轮廓。
+  hunters_sense:
+    enabled: true
+    display: "猎手直觉"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 3
+    slots: [HELMET]
+    description:
+      - "伤害你的敌人会只对你显示轮廓，对隐身目标也生效。"
+      - "当前持续 {reveal_seconds} 秒。"
+    numeric:
+      reveal_seconds:
+        type: PER_LEVEL
+        values: [3, 5, 8]
+
+  # 效果：氧气即将降低时，有 L/(L+1) 的概率阻止本次降低。
+  respiration:
+    enabled: true
+    display: "水下呼吸"
+    rarity: UNCOMMON
+    max_level: 4
+    soft_max_level: 3
+    slots: [HELMET]
+    description:
+      - "氧气即将降低时，有 L/(L+1) 的概率阻止本次降低。"
+
+  # 效果：每级增加 15 点针对弹射物的护甲。
+  projectile_protection:
+    enabled: true
+    display: "弹射物保护"
+    rarity: COMMON
+    max_level: 7
+    soft_max_level: 4
+    slots: [ARMOR]
+    conflicts: [fortify, protection]
+    description:
+      - "提高针对弹射物伤害的护甲。"
+      - "当前总计 +{projectile_armor} 弹射物护甲。"
+    numeric:
+      projectile_armor:
+        type: LINEAR
+        per_level: 15.0
+
+  # 效果：每级增加 5 点最大生命值。
+  growth:
+    enabled: true
+    display: "生长"
+    rarity: COMMON
+    max_level: 7
+    soft_max_level: 4
+    slots: [ARMOR]
+    description:
+      - "提高最大生命值。"
+      - "当前总计 +{max_health} 最大生命值。"
+    numeric:
+      max_health:
+        type: LINEAR
+        per_level: 5.0
+
+  # 效果：受到近战物理伤害时，50% 概率以魔法伤害返还部分实际伤害。
+  thorns:
+    enabled: true
+    display: "荆棘"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 3
+    slots: [ARMOR]
+    conflicts: [reflection]
+    description:
+      - "受到近战物理伤害时，有 50% 概率返还魔法伤害。"
+      - "当前返还本次实际伤害的 {return_ratio_percent}%。"
+    numeric:
+      return_ratio:
+        type: PER_LEVEL
+        values: [0.03, 0.06, 0.09]
+
+  # 效果：每级增加 5 点魔力；受到弹射物或魔法伤害时概率按原类型返还伤害。
+  reflection:
+    enabled: true
+    display: "折射"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 3
+    slots: [ARMOR]
+    conflicts: [thorns]
+    description:
+      - "提高最大魔力；受到弹射物或魔法伤害时有 50% 概率按原类型返还。"
+      - "当前 +{max_mana} 最大魔力，返还 {return_ratio_percent}% 实际伤害。"
+    numeric:
+      max_mana:
+        type: LINEAR
+        per_level: 5.0
+      return_ratio:
+        type: PER_LEVEL
+        values: [0.03, 0.06, 0.09]
+
+  # 效果：受伤时获得持续 7 秒的临时护甲，15 秒冷却。
+  counter_strike:
+    enabled: true
+    display: "迅速反应"
+    rarity: RARE
+    max_level: 5
+    soft_max_level: 5
+    slots: [CHESTPLATE]
+    description:
+      - "受伤时进入 15 秒冷却，并获得持续 7 秒的临时护甲。"
+      - "当前获得 {temporary_armor} 临时护甲。"
+    numeric:
+      temporary_armor:
+        type: PER_LEVEL
+        values: [15, 30, 45, 60, 75]
+
+  # 效果：每级增加 2 点意志。
+  rejuvenate:
+    enabled: true
+    display: "活力焕发"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [HELMET, CHESTPLATE]
+    conflicts: [respite]
+    description:
+      - "提高意志。"
+      - "当前总计 +{attr_willpower} 意志。"
+    numeric:
+      attr_willpower:
+        type: LINEAR
+        per_level: 2.0
+
+  # 效果：脱离战斗 5 秒后，每级增加 1 点自然生命回复。
+  respite:
+    enabled: true
+    display: "喘息"
+    rarity: UNCOMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [HELMET, CHESTPLATE]
+    conflicts: [rejuvenate]
+    description:
+      - "脱离战斗 5 秒后提高自然生命回复。"
+      - "当前总计 +{out_of_combat_regen} 脱战生命回复。"
+    numeric:
+      out_of_combat_regen:
+        type: LINEAR
+        per_level: 1.0
+
+  # 效果：生命首次跌破 40% 时恢复最大魔力，30 秒冷却。
+  emergency_reserve:
+    enabled: true
+    display: "应急储备"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 3
+    slots: [LEGGINGS]
+    description:
+      - "生命首次跌破 40% 时立即恢复魔力，冷却 30 秒。"
+      - "当前恢复最大魔力的 {mana_restore_ratio_percent}%。"
+    numeric:
+      mana_restore_ratio:
+        type: PER_LEVEL
+        values: [0.08, 0.14, 0.20]
+
+  # 效果：每级增加 5 点最大魔力。
+  smarty_pants:
+    enabled: true
+    display: "自作聪明"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 3
+    slots: [LEGGINGS]
+    description:
+      - "提高最大魔力。"
+      - "当前总计 +{max_mana} 最大魔力。"
+    numeric:
+      max_mana:
+        type: LINEAR
+        per_level: 5.0
+
+  # 效果：提高潜行和爬行速度至正常步行速度的一定比例。
+  swift_sneak:
+    enabled: true
+    display: "迅捷潜行"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 3
+    slots: [LEGGINGS]
+    description:
+      - "提高潜行和爬行移动速度。"
+      - "当前速度为正常步行的 {sneak_ratio_percent}%。"
+    numeric:
+      sneak_ratio:
+        type: PER_LEVEL
+        values: [0.45, 0.60, 0.75]
+
+  # 效果：每级增加 1 格安全摔落高度，并减少 5% 摔落伤害。
+  feather_falling:
+    enabled: true
+    display: "摔落缓冲"
+    rarity: COMMON
+    max_level: 10
+    soft_max_level: 10
+    table_max_level: 5
+    slots: [BOOTS]
+    description:
+      - "每级提高 1 格安全摔落高度，并减少 5% 摔落伤害。"
+
+  # 效果：每级减少三分之一水中减速，III 级时水陆同速。
+  depth_strider:
+    enabled: true
+    display: "深海探索者"
+    rarity: UNCOMMON
+    max_level: 3
+    soft_max_level: 3
+    slots: [BOOTS]
+    conflicts: [frost_walker]
+    description:
+      - "每级减少三分之一水中减速；III 级时水陆同速。"
+
+  # 效果：在脚下水面生成霜冰，并免疫岩浆块伤害；不能从附魔台获得。
+  frost_walker:
+    enabled: true
+    display: "冰霜行者"
+    rarity: RARE
+    max_level: 1
+    soft_max_level: 1
+    table_obtainable: false
+    slots: [BOOTS]
+    conflicts: [depth_strider, walk_thru_fire]
+    description:
+      - "在脚下水面生成霜冰，并免疫岩浆块伤害。"
+      - "不能从普通附魔台获得。"
+
+  # 效果：在灵魂沙与灵魂土上获得原版式移动加速；不能从附魔台获得。
+  soul_speed:
+    enabled: true
+    display: "灵魂疾行"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 3
+    table_obtainable: false
+    slots: [BOOTS]
+    description:
+      - "在灵魂沙与灵魂土上获得原版式移动加速。"
+      - "不能从普通附魔台获得。"
+
+  # 效果：站在火焰或岩浆块上不会着火或受伤，但岩浆中仍会。
+  walk_thru_fire:
+    enabled: true
+    display: "赴汤蹈火"
+    rarity: RARE
+    max_level: 1
+    soft_max_level: 1
+    table_obtainable: false
+    slots: [BOOTS]
+    conflicts: [frost_walker]
+    description:
+      - "站在火焰或岩浆块上不会着火或受伤；岩浆中仍会受伤。"
+      - "不能从普通附魔台获得。"
+
+  # 效果：每级增加 5 点移动速度。
+  sugar_rush:
+    enabled: true
+    display: "糖分冲击"
+    rarity: UNCOMMON
+    max_level: 4
+    soft_max_level: 3
+    slots: [BOOTS]
+    description:
+      - "提高移动速度。"
+      - "当前总计 +{movement_speed}% 移动速度。"
+    numeric:
+      movement_speed:
+        type: LINEAR
+        per_level: 5.0
+
+  # 效果：每级提高 0.2 格跳跃高度。
+  lightweight:
+    enabled: true
+    display: "轻盈"
+    rarity: COMMON
+    max_level: 5
+    soft_max_level: 3
+    slots: [BOOTS]
+    description:
+      - "提高跳跃高度。"
+      - "当前总计 +{jump_height} 格跳跃高度。"
+    numeric:
+      jump_height:
+        type: LINEAR
+        per_level: 0.2
+
+  # 效果：疾跑或滑翔时获得弹射物护甲，停止后保留 0.5 秒。
+  nimble_evasion:
+    enabled: true
+    display: "灵巧闪避"
+    rarity: RARE
+    max_level: 3
+    soft_max_level: 3
+    slots: [BOOTS]
+    description:
+      - "疾跑或滑翔时获得弹射物护甲，停止后保留 0.5 秒。"
+      - "当前获得 {projectile_armor} 弹射物护甲。"
+    numeric:
+      projectile_armor:
+        type: PER_LEVEL
+        values: [25, 40, 60]
+
+  # 效果：过去 10 秒耗魔按比例转化为护甲，所有防具共享 1000 上限。
+  refrigerate:
+    enabled: true
+    display: "渐近凝固"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [ARMOR]
+    description:
+      - "把过去 10 秒消耗的魔力转化为护甲，所有防具共享 1000 护甲上限。"
+      - "当前每点耗魔转化 {armor_per_mana} 护甲。"
+    numeric:
+      armor_per_mana:
+        type: PER_LEVEL
+        values: [0.05, 0.10, 0.15, 0.20, 0.25]
+
+  # 效果：过去 10 秒耗魔按比例转化为暴击伤害，共享 150% 上限。
+  ferocious_mana:
+    enabled: true
+    display: "魔力激涌"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [ARMOR]
+    description:
+      - "把过去 10 秒消耗的魔力转化为暴击伤害，所有防具共享 150% 上限。"
+      - "当前每点耗魔转化 {crit_damage_per_mana} 暴击伤害。"
+    numeric:
+      crit_damage_per_mana:
+        type: PER_LEVEL
+        values: [0.02, 0.04, 0.06, 0.08, 0.10]
+
+  # 效果：耗魔时按比例生成 10 秒均匀恢复的生命值。
+  mana_rebound:
+    enabled: true
+    display: "蓝烬生息"
+    rarity: ULTIMATE
+    max_level: 4
+    soft_max_level: 4
+    slots: [ARMOR]
+    description:
+      - "消耗魔力时，把部分耗魔转化为 10 秒内均匀恢复的生命值。"
+      - "当前转化 {healing_ratio_percent}%。"
+    numeric:
+      healing_ratio:
+        type: PER_LEVEL
+        values: [0.05, 0.10, 0.15, 0.20]
+
+  # 效果：减少死亡金币损失，且带有本附魔的防具死亡时保留。
+  bank:
+    enabled: true
+    display: "银行业"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [ARMOR]
+    description:
+      - "减少死亡金币损失，且这件防具死亡时不会进入灵魂容器。"
+      - "当前减少 {coin_loss_reduction_percent}% 金币损失，可叠加。"
+    numeric:
+      coin_loss_reduction:
+        type: PER_LEVEL
+        values: [0.10, 0.20, 0.30, 0.40, 0.50]
+
+  # 效果：生命低于 40% 时提高该装备提供的护甲。
+  last_stand:
+    enabled: true
+    display: "永不言弃"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [ARMOR]
+    description:
+      - "生命低于 40% 时，提高这件装备提供的护甲。"
+      - "当前提高 {armor_ratio_percent}%。"
+    numeric:
+      armor_ratio:
+        type: PER_LEVEL
+        values: [0.10, 0.15, 0.20, 0.25, 0.30]
+
+  # 效果：每件降低 25% 自然回复；受伤后按自然回复量生成 3 秒延迟治疗。
+  no_pain_no_gain:
+    enabled: true
+    display: "不劳无获"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [ARMOR]
+    description:
+      - "每件降低 25% 自然生命回复；受伤后在 3 秒内获得延迟治疗。"
+      - "当前治疗总量为每秒自然回复的 {damage_heal_ratio_percent}%。"
+    numeric:
+      damage_heal_ratio:
+        type: PER_LEVEL
+        values: [0.40, 0.55, 0.70, 0.85, 1.00]
+
+  # 效果：30 格内每名玩家提高该装备的战斗面板数值，最多 10 层，不提高五维。
+  legion:
+    enabled: true
+    display: "军团联结"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [ARMOR]
+    description:
+      - "30 格内每名玩家提高这件装备的战斗面板数值，最多 10 层。"
+      - "当前每名玩家提高 {panel_ratio_per_player_percent}%，不提高五维属性。"
+    numeric:
+      panel_ratio_per_player:
+        type: PER_LEVEL
+        values: [0.007, 0.012, 0.016, 0.020, 0.025]
+
+  # 效果：10 格内每个敌对单位提供护甲，最多 10 层。
+  coolheaded:
+    enabled: true
+    display: "冷静头脑"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [HELMET]
+    description:
+      - "10 格内每个敌对单位提供护甲，最多 10 层。"
+      - "当前每个敌人 +{armor_per_enemy} 护甲。"
+    numeric:
+      armor_per_enemy:
+        type: PER_LEVEL
+        values: [3, 6, 9, 12, 15]
+
+  # 效果：按经验等级获得智慧，上限 40 点。
+  insights:
+    enabled: true
+    display: "真知灼见"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [HELMET]
+    description:
+      - "按经验等级获得智慧，上限 40 点。"
+      - "当前每 {experience_levels_per_wisdom} 级经验获得 1 点智慧。"
+    numeric:
+      experience_levels_per_wisdom:
+        type: PER_LEVEL
+        values: [7, 6, 5, 4, 3]
+
+  # 效果：魔力充足时获得额外魔法减伤；魔力过低后进入 5 秒冷却。
+  mind_fortress:
+    enabled: true
+    display: "心灵堡垒"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [HELMET]
+    description:
+      - "魔力不低于 50% 时获得魔法减伤；低于 25% 时失效并冷却 5 秒。"
+      - "当前额外减少 {magic_reduction_percent}% 魔法伤害。"
+    numeric:
+      magic_reduction:
+        type: PER_LEVEL
+        values: [0.05, 0.08, 0.11, 0.13, 0.15]
+
+  # 效果：每 5 ticks 累积临时护甲，受伤清零，上限 300。
+  metallicize:
+    enabled: true
+    display: "金属化"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [CHESTPLATE]
+    description:
+      - "每 5 ticks 累积临时护甲，受到伤害时清零，上限 300。"
+      - "当前每次 +{armor_per_interval} 护甲。"
+    numeric:
+      armor_per_interval:
+        type: PER_LEVEL
+        values: [3, 4, 5, 7, 8]
+
+  # 效果：大额伤害时消耗部分最大魔力，1 点魔力抵消 1 点伤害。
+  arcane_buffer:
+    enabled: true
+    display: "奥术缓冲"
+    rarity: ULTIMATE
+    max_level: 3
+    soft_max_level: 3
+    slots: [CHESTPLATE]
+    description:
+      - "单次伤害超过最大生命 12% 时消耗魔力抵消伤害，冷却 4 秒。"
+      - "当前至多消耗最大魔力的 {max_mana_spend_ratio_percent}%。"
+    numeric:
+      max_mana_spend_ratio:
+        type: PER_LEVEL
+        values: [0.08, 0.12, 0.16]
+
+  # 效果：生命低于 30% 时提高所有治疗来源。
+  emergency_treatment:
+    enabled: true
+    display: "急救处置"
+    rarity: ULTIMATE
+    max_level: 3
+    soft_max_level: 3
+    slots: [CHESTPLATE]
+    description:
+      - "生命低于 30% 时提高所有治疗来源。"
+      - "当前提高 {healing_ratio_percent}%。"
+    numeric:
+      healing_ratio:
+        type: PER_LEVEL
+        values: [0.15, 0.25, 0.35]
+
+  # 效果：受伤后把部分实际伤害在 5 秒内转化为生命恢复，待恢复量上限 15% 最大生命。
+  adaptive_plating:
+    enabled: true
+    display: "适应性装甲"
+    rarity: ULTIMATE
+    max_level: 3
+    soft_max_level: 3
+    slots: [LEGGINGS]
+    description:
+      - "受伤后把部分实际伤害在 5 秒内转化为生命恢复。"
+      - "当前转化 {healing_ratio_percent}%，待恢复量上限为最大生命的 15%。"
+    numeric:
+      healing_ratio:
+        type: PER_LEVEL
+        values: [0.05, 0.07, 0.09]
+
+  # 效果：连续移动 2 秒进入相位，下一次直接伤害减半并短暂加速。
+  shade_step:
+    enabled: true
+    display: "影步"
+    rarity: ULTIMATE
+    max_level: 5
+    soft_max_level: 5
+    slots: [BOOTS]
+    description:
+      - "连续移动 2 秒后进入相位；下一次直接伤害减少 50%，随后获得 1 秒 40 移速。"
+      - "当前冷却 {cooldown_seconds} 秒。"
+    numeric:
+      cooldown_seconds:
+        type: PER_LEVEL
+        values: [14, 12, 10, 8, 6]

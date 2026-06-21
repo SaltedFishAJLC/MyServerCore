@@ -21,6 +21,7 @@ public class PDCManager {
     public final NamespacedKey KEY_LIFESTEAL;
     public final NamespacedKey KEY_ARMOR_PEN;
     public final NamespacedKey KEY_BASE_ARMOR;
+    public final NamespacedKey KEY_MAX_HEALTH;
     public final NamespacedKey KEY_ATTACK_SPEED_BONUS;
     public final NamespacedKey KEY_SHIELD_BLOCK_THRESHOLD;
     public final NamespacedKey KEY_SHIELD_EFFECTIVE_BLOCK;
@@ -59,6 +60,7 @@ public class PDCManager {
     public final NamespacedKey KEY_ITEM_ID;
     public final NamespacedKey KEY_ITEM_SCALE_VERSION;
     public final NamespacedKey KEY_ITEM_RARITY;
+    public final NamespacedKey KEY_ITEM_EQUIPMENT_TIER;
     public final NamespacedKey KEY_ITEM_ORIGINAL_NAME;
     public final NamespacedKey KEY_ITEM_REFORGE_ID;
     public final NamespacedKey KEY_ITEM_REFORGE_PREFIX;
@@ -114,6 +116,7 @@ public class PDCManager {
         this.KEY_LIFESTEAL = key("lifesteal");
         this.KEY_ARMOR_PEN = key("armor_pen");
         this.KEY_BASE_ARMOR = key("base_armor");
+        this.KEY_MAX_HEALTH = key("max_health");
         this.KEY_ATTACK_SPEED_BONUS = key("attack_speed_bonus");
         this.KEY_SHIELD_BLOCK_THRESHOLD = key("shield_block_threshold");
         this.KEY_SHIELD_EFFECTIVE_BLOCK = key("shield_effective_block");
@@ -149,6 +152,7 @@ public class PDCManager {
         this.KEY_ITEM_ID = key("item_id");
         this.KEY_ITEM_SCALE_VERSION = key("item_scale_version");
         this.KEY_ITEM_RARITY = key("item_rarity");
+        this.KEY_ITEM_EQUIPMENT_TIER = key("item_equipment_tier");
         this.KEY_ITEM_ORIGINAL_NAME = key("item_original_name");
         this.KEY_ITEM_REFORGE_ID = key("item_reforge_id");
         this.KEY_ITEM_REFORGE_PREFIX = key("item_reforge_prefix");

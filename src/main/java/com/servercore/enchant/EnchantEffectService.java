@@ -74,30 +74,42 @@ public final class EnchantEffectService implements Listener {
     }
 
     public double applyOutgoingDamageModifiers(Player player, LivingEntity target, double damage, boolean isRanged, boolean isMagic, boolean isCrit) {
+        OutgoingDamagePlan plan = previewOutgoingDamage(player, target,
+                player == null ? null : player.getInventory().getItemInMainHand(),
+                damage, isRanged, isMagic, isCrit);
+        plan.commit().run();
+        return plan.damage();
+    }
+
+    public OutgoingDamagePlan previewOutgoingDamage(Player player, LivingEntity target, ItemStack weapon,
+                                                    double damage, boolean isRanged, boolean isMagic,
+                                                    boolean isCrit) {
         if (player == null || target == null || damage <= 0.0 || EnchantDamageContext.isSecondaryDamage()) {
-            return damage;
+            return OutgoingDamagePlan.noop(damage);
         }
         double result = damage;
-        ItemStack mainHand = player.getInventory().getItemInMainHand();
-        ActiveEffect apex = activeEffect(mainHand, EnchantEffectType.APEX_SLAYER);
+        List<Runnable> commits = new ArrayList<>();
+        ActiveEffect apex = activeEffect(weapon, EnchantEffectType.APEX_SLAYER);
         if (apex != null && isBossOrSlayerTarget(target)) {
-            ApexState state = nextApexState(player.getUniqueId(), target.getUniqueId(), apex);
+            ApexState state = previewNextApexState(player.getUniqueId(), target.getUniqueId(), apex);
             result *= 1.0 + state.stacks() * apex.effect().param("damage_bonus_per_stack", apex.level(), 0.02);
+            commits.add(() -> apexStates.put(player.getUniqueId(), state));
         }
 
-        ActiveEffect berserker = activeEffect(mainHand, EnchantEffectType.BERSERKER_OATH);
+        ActiveEffect berserker = activeEffect(weapon, EnchantEffectType.BERSERKER_OATH);
         if (berserker != null && !isRanged && !isMagic && berserker.effect().booleanParam("require_no_shield", true)) {
             ItemStack offHand = player.getInventory().getItemInOffHand();
             if (offHand == null || offHand.getType().isAir() || offHand.getType() != org.bukkit.Material.SHIELD) {
                 result *= 1.0 + berserker.effect().param("damage_bonus", berserker.level(), 0.25);
             }
         }
-        result = applyIdBasedDamageModifiers(player, target, mainHand, result, isRanged, isMagic, isCrit);
-        return result;
+        IdDamagePlan idPlan = previewIdBasedDamageModifiers(player, target, weapon, result, isRanged, isMagic, isCrit);
+        commits.add(idPlan.commit());
+        return new OutgoingDamagePlan(idPlan.damage(), combine(commits));
     }
 
     public double applyIncomingDamageModifiers(Player player, double damage) {
-        if (player == null || damage <= 0.0 || EnchantDamageContext.isSecondaryDamage()) {
+        if (player == null || damage <= 0.0) {
             return damage;
         }
         ItemStack mainHand = player.getInventory().getItemInMainHand();
@@ -114,10 +126,10 @@ public final class EnchantEffectService implements Listener {
     }
 
     public boolean tryPreventFatalDamage(Player player, EntityDamageEvent event, double finalDamage) {
-        if (player == null || finalDamage <= 0.0 || EnchantDamageContext.isSecondaryDamage()) {
+        if (player == null || finalDamage <= 0.0) {
             return false;
         }
-        if (player.getHealth() - finalDamage > 0.0) {
+        if (player.getHealth() + player.getAbsorptionAmount() - finalDamage > 0.0) {
             return false;
         }
 
@@ -158,10 +170,20 @@ public final class EnchantEffectService implements Listener {
 
     public void afterPlayerAttack(EntityDamageEvent event, Player player, LivingEntity target, double finalDamage,
                                   boolean isRanged, boolean isMagic, boolean isCrit) {
+        afterPlayerAttack(event, player, target,
+                player == null ? null : player.getInventory().getItemInMainHand(),
+                finalDamage, isRanged, isMagic, isCrit);
+    }
+
+    public void afterPlayerAttack(EntityDamageEvent event, Player player, LivingEntity target, ItemStack weapon,
+                                  double finalDamage, boolean isRanged, boolean isMagic, boolean isCrit) {
         if (event == null || player == null || target == null || finalDamage <= 0.0 || EnchantDamageContext.isSecondaryDamage()) {
             return;
         }
-        ItemStack weapon = player.getInventory().getItemInMainHand();
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        if (equipmentEnchants != null) {
+            equipmentEnchants.recordCombatAction(player);
+        }
         if (!isRanged && !isMagic) {
             triggerCleave(player, target, weapon, finalDamage);
         }
@@ -170,32 +192,49 @@ public final class EnchantEffectService implements Listener {
 
     public ShieldAdjustment applyPerfectGuard(Player defender, ItemStack shield, double threshold, double cooldownSeconds,
                                              long shieldRaisedAtMs, long nowMs) {
+        PerfectGuardPlan plan = previewPerfectGuard(defender, shield, threshold, cooldownSeconds, shieldRaisedAtMs, nowMs);
+        plan.commit().run();
+        return plan.adjustment();
+    }
+
+    public PerfectGuardPlan previewPerfectGuard(Player defender, ItemStack shield, double threshold,
+                                                double cooldownSeconds, long shieldRaisedAtMs, long nowMs) {
         if (defender == null || shield == null || shield.getType().isAir()) {
-            return new ShieldAdjustment(threshold, cooldownSeconds, false);
+            return PerfectGuardPlan.noop(threshold, cooldownSeconds);
         }
         ActiveEffect effect = activeEffect(shield, EnchantEffectType.PERFECT_GUARD);
         if (effect == null) {
-            return new ShieldAdjustment(threshold, cooldownSeconds, false);
+            return PerfectGuardPlan.noop(threshold, cooldownSeconds);
         }
         long until = perfectGuardCooldownUntil.getOrDefault(defender.getUniqueId(), 0L);
         if (until > nowMs || shieldRaisedAtMs <= 0L) {
-            return new ShieldAdjustment(threshold, cooldownSeconds, false);
+            return PerfectGuardPlan.noop(threshold, cooldownSeconds);
         }
         double windowMs = effect.effect().param("timing_window_seconds", effect.level(), 0.35) * 1000.0;
         if (nowMs - shieldRaisedAtMs > windowMs) {
-            return new ShieldAdjustment(threshold, cooldownSeconds, false);
+            return PerfectGuardPlan.noop(threshold, cooldownSeconds);
         }
         double bonus = effect.effect().param("threshold_bonus", effect.level(), 0.0);
         double effectCooldown = effect.effect().param("cooldown_seconds", effect.level(), cooldownSeconds);
-        perfectGuardCooldownUntil.put(defender.getUniqueId(), nowMs + Math.round(effectCooldown * 1000.0));
-        defender.getWorld().spawnParticle(Particle.END_ROD, defender.getLocation().add(0.0, 1.0, 0.0), 16, 0.35, 0.45, 0.35, 0.02);
-        defender.getWorld().playSound(defender.getLocation(), Sound.ITEM_SHIELD_BLOCK, 0.95f, 1.45f);
-        return new ShieldAdjustment(threshold + bonus, Math.max(cooldownSeconds, effectCooldown), true);
+        ShieldAdjustment adjustment = new ShieldAdjustment(
+                threshold + bonus,
+                Math.max(cooldownSeconds, effectCooldown),
+                true
+        );
+        Runnable commit = () -> {
+            perfectGuardCooldownUntil.put(defender.getUniqueId(), nowMs + Math.round(effectCooldown * 1000.0));
+            defender.getWorld().spawnParticle(Particle.END_ROD, defender.getLocation().add(0.0, 1.0, 0.0),
+                    16, 0.35, 0.45, 0.35, 0.02);
+            defender.getWorld().playSound(defender.getLocation(), Sound.ITEM_SHIELD_BLOCK, 0.95f, 1.45f);
+        };
+        return new PerfectGuardPlan(adjustment, commit);
     }
 
-    private double applyIdBasedDamageModifiers(Player player, LivingEntity target, ItemStack weapon, double damage,
-                                               boolean isRanged, boolean isMagic, boolean isCrit) {
+    private IdDamagePlan previewIdBasedDamageModifiers(Player player, LivingEntity target, ItemStack weapon,
+                                                       double damage, boolean isRanged, boolean isMagic,
+                                                       boolean isCrit) {
         double result = damage;
+        List<Runnable> commits = new ArrayList<>();
 
         int power = activeLevel(weapon, "power");
         if (power > 0 && isRanged) {
@@ -219,7 +258,7 @@ public final class EnchantEffectService implements Listener {
             if (last <= 0L || now - last >= 20_000L) {
                 result *= 1.0 + firstStrike * 0.15;
             }
-            firstStrikeLastHit.put(key, now);
+            commits.add(() -> firstStrikeLastHit.put(key, now));
         }
 
         int tripleStrike = activeLevel(weapon, "triple_strike");
@@ -228,7 +267,8 @@ public final class EnchantEffectService implements Listener {
             int nextCount = previous != null && previous.targetId().equals(target.getUniqueId())
                     ? previous.count() + 1
                     : 1;
-            tripleStrikeStates.put(player.getUniqueId(), new TripleStrikeState(target.getUniqueId(), nextCount));
+            TripleStrikeState nextState = new TripleStrikeState(target.getUniqueId(), nextCount);
+            commits.add(() -> tripleStrikeStates.put(player.getUniqueId(), nextState));
             if (nextCount % 3 == 0) {
                 result *= 1.0 + tripleStrike * 0.08;
             }
@@ -241,12 +281,14 @@ public final class EnchantEffectService implements Listener {
             if (until <= now) {
                 double[] values = {0.10, 0.20, 0.30, 0.40};
                 result *= 1.0 + valueAt(values, thunderbolt);
-                thunderCooldownUntil.put(player.getUniqueId(), now + 4000L);
-                StunController stunController = StunController.getInstance();
-                if (stunController != null) {
-                    stunController.stun(target, 10);
-                }
-                target.getWorld().strikeLightningEffect(target.getLocation());
+                commits.add(() -> {
+                    thunderCooldownUntil.put(player.getUniqueId(), now + 4000L);
+                    StunController stunController = StunController.getInstance();
+                    if (stunController != null) {
+                        stunController.stun(target, 10);
+                    }
+                    target.getWorld().strikeLightningEffect(target.getLocation());
+                });
             }
         }
 
@@ -290,7 +332,7 @@ public final class EnchantEffectService implements Listener {
             result *= 1.0 + comboState.stacks() * valueAt(values, combo);
         }
 
-        return result;
+        return new IdDamagePlan(result, combine(commits));
     }
 
     private void triggerIdBasedAfterHit(EntityDamageEvent event, Player player, LivingEntity target, ItemStack weapon,
@@ -524,7 +566,12 @@ public final class EnchantEffectService implements Listener {
             return;
         }
         drainCooldownUntil.put(player.getUniqueId(), now + 750L);
-        player.setHealth(Math.min(maxHealth, player.getHealth() + heal));
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        if (equipmentEnchants != null) {
+            equipmentEnchants.heal(player, heal);
+        } else {
+            player.setHealth(Math.min(maxHealth, player.getHealth() + heal));
+        }
         player.getWorld().spawnParticle(Particle.HEART, player.getLocation().add(0.0, 1.0, 0.0), 3, 0.25, 0.25, 0.25, 0.01);
     }
 
@@ -674,7 +721,7 @@ public final class EnchantEffectService implements Listener {
         return null;
     }
 
-    private ApexState nextApexState(UUID playerId, UUID targetId, ActiveEffect effect) {
+    private ApexState previewNextApexState(UUID playerId, UUID targetId, ActiveEffect effect) {
         long now = System.currentTimeMillis();
         long expireMs = Math.round(effect.effect().param("expire_seconds", effect.level(), 5.0) * 1000.0);
         int maxStacks = Math.max(1, (int) Math.round(effect.effect().param("max_stacks", effect.level(), 10.0)));
@@ -683,9 +730,7 @@ public final class EnchantEffectService implements Listener {
         if (previous != null && previous.targetId().equals(targetId) && now - previous.lastHitAtMs() <= expireMs) {
             nextStacks = Math.min(maxStacks, previous.stacks() + 1);
         }
-        ApexState next = new ApexState(targetId, nextStacks, now);
-        apexStates.put(playerId, next);
-        return next;
+        return new ApexState(targetId, nextStacks, now);
     }
 
     private boolean isBossOrSlayerTarget(LivingEntity target) {
@@ -721,6 +766,23 @@ public final class EnchantEffectService implements Listener {
     public record ShieldAdjustment(double threshold, double cooldownSeconds, boolean triggered) {
     }
 
+    public record PerfectGuardPlan(ShieldAdjustment adjustment, Runnable commit) {
+        static PerfectGuardPlan noop(double threshold, double cooldownSeconds) {
+            return new PerfectGuardPlan(new ShieldAdjustment(threshold, cooldownSeconds, false), () -> {
+            });
+        }
+    }
+
+    public record OutgoingDamagePlan(double damage, Runnable commit) {
+        static OutgoingDamagePlan noop(double damage) {
+            return new OutgoingDamagePlan(damage, () -> {
+            });
+        }
+    }
+
+    private record IdDamagePlan(double damage, Runnable commit) {
+    }
+
     private record ActiveEffect(EnchantDefinition definition, int level) {
         EnchantEffectSpec effect() {
             return definition.effect();
@@ -737,5 +799,10 @@ public final class EnchantEffectService implements Listener {
     }
 
     private record SoulEaterState(int bestLevel, long expiresAtMs) {
+    }
+
+    private Runnable combine(List<Runnable> actions) {
+        List<Runnable> snapshot = List.copyOf(actions);
+        return () -> snapshot.forEach(Runnable::run);
     }
 }

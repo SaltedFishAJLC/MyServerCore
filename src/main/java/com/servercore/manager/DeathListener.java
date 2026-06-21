@@ -1,6 +1,7 @@
 package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
+import com.servercore.enchant.EquipmentEnchantService;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -78,6 +79,7 @@ public class DeathListener implements Listener {
 
         // 1. 清空原版掉落
         event.getDrops().clear();
+        event.setKeepInventory(true);
 
         // 2. 提取背包、装备栏、副手以及 4个饰品槽
         Map<Integer, ItemStack> savedItems = new HashMap<>();
@@ -87,6 +89,10 @@ public class DeathListener implements Listener {
         for (int i = 0; i < inv.getSize(); i++) {
             ItemStack item = inv.getItem(i);
             if (item != null && !item.getType().isAir()) {
+                EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+                if (i >= 36 && i <= 39 && equipmentEnchants != null && equipmentEnchants.keepsOnDeath(item)) {
+                    continue;
+                }
                 savedItems.put(i, item.clone());
                 inv.setItem(i, null);
             }
@@ -111,7 +117,11 @@ public class DeathListener implements Listener {
 
         // 4. 经济惩罚
         long balance = economyManager.getBalance(player.getUniqueId());
-        long penalty = balance / 2;
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        double basePenalty = balance / 2.0;
+        long penalty = Math.round(equipmentEnchants == null
+                ? basePenalty
+                : equipmentEnchants.reduceDeathPenalty(player, basePenalty));
         economyManager.removeBalance(player.getUniqueId(), penalty);
 
         player.sendMessage(ServerCorePlugin.getMiniMessage().deserialize("<red>⚠ 你死了！你的灵魂散落在坐标: " + smartLoc.getBlockX() + ", " + smartLoc.getBlockY() + ", " + smartLoc.getBlockZ() + "，你损失了 " + penalty + " 金币！</red>"));

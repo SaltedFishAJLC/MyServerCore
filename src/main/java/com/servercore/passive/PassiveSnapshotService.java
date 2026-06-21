@@ -6,8 +6,15 @@ import com.servercore.combat.damage.DamageCategory;
 import com.servercore.combat.damage.DamagePacket;
 import com.servercore.combat.damage.DamageService;
 import com.servercore.combat.damage.DamageSourceKind;
+import com.servercore.combat.damage.DamageTag;
+import com.servercore.combat.status.StatusService;
+import com.servercore.combat.status.event.BleedDamageEvent;
+import com.servercore.enchant.EnchantDamageContext;
+import com.servercore.enchant.EnchantStatResolver;
+import com.servercore.enchant.EquipmentEnchantService;
 import com.servercore.manager.AccessoryManager;
 import com.servercore.manager.CustomItemRegistry;
+import com.servercore.manager.PDCManager;
 import com.servercore.manager.PlayerStatCache;
 import com.servercore.manager.RequirementManager;
 import com.servercore.manager.WeaponTemplateManager;
@@ -18,11 +25,13 @@ import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Enemy;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -37,6 +46,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -50,6 +60,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class PassiveSnapshotService implements Listener {
 
@@ -58,6 +69,10 @@ public final class PassiveSnapshotService implements Listener {
             "damage_reduction",
             "outgoing_multiplier",
             "on_hit_damage",
+            "missing_health_set_stat",
+            "bleed_on_hit",
+            "bleed_lifesteal",
+            "dominus_sword_aura",
             "revive"
     );
 
@@ -66,6 +81,8 @@ public final class PassiveSnapshotService implements Listener {
     private final ServerCorePlugin plugin;
     private final Map<UUID, PassiveSnapshot> snapshots = new HashMap<>();
     private final Set<UUID> refreshQueued = new HashSet<>();
+    private final Map<UUID, DominusState> dominusStates = new HashMap<>();
+    private final Map<UUID, LifestealWindow> bleedLifestealWindows = new HashMap<>();
     private BukkitTask periodicTask;
     private BukkitTask requirementRefreshTask;
 
@@ -106,6 +123,8 @@ public final class PassiveSnapshotService implements Listener {
         }
         snapshots.clear();
         refreshQueued.clear();
+        dominusStates.clear();
+        bleedLifestealWindows.clear();
     }
 
     public void refreshAll() {
@@ -164,6 +183,20 @@ public final class PassiveSnapshotService implements Listener {
         return result;
     }
 
+    public double getDynamicStatBonus(Player player, String statKey) {
+        double result = 0.0;
+        for (PassiveAbilityInstance instance : getSnapshot(player).activeAbilities()) {
+            if (!instance.definition().handler().equals("missing_health_set_stat")) {
+                continue;
+            }
+            if (!stringOption(instance.options(), "stat", "").equalsIgnoreCase(statKey)) {
+                continue;
+            }
+            result += missingHealthSetStatBonus(player, instance, statKey);
+        }
+        return result;
+    }
+
     public double modifyOutgoingDamage(Player player, LivingEntity target, double damage) {
         double result = damage;
         for (PassiveAbilityInstance instance : getSnapshot(player).activeAbilities()) {
@@ -185,7 +218,7 @@ public final class PassiveSnapshotService implements Listener {
         return result;
     }
 
-    public void afterPlayerAttack(Player player, LivingEntity target, double finalDamage) {
+    public void afterPlayerAttack(Player player, LivingEntity target, double finalDamage, boolean melee) {
         DamageService damageService = DamageService.getInstance();
         if (damageService == null || player == null || target == null || finalDamage <= 0.0) {
             return;
@@ -214,10 +247,131 @@ public final class PassiveSnapshotService implements Listener {
             ));
             startCooldown(player, instance);
         }
+
+        if (!melee) {
+            return;
+        }
+
+        StatusService statuses = StatusService.getInstance();
+        for (PassiveAbilityInstance instance : getSnapshot(player).activeAbilities()) {
+            if (!instance.definition().handler().equals("bleed_on_hit")
+                    || statuses == null
+                    || !cooldownReady(player, instance)) {
+                continue;
+            }
+            double chance = clamp(doubleOption(instance.options(), "chance", 0.0), 0.0, 1.0);
+            double totalDamage = Math.max(0.0, doubleOption(instance.options(), "total_damage", 0.0));
+            int durationTicks = Math.max(1, (int) Math.round(
+                    doubleOption(instance.options(), "duration_seconds", 1.0) * 20.0
+            ));
+            if (statuses.tryApplyBleed(
+                    player,
+                    target,
+                    chance,
+                    totalDamage,
+                    durationTicks,
+                    "passive:" + instance.abilityId()
+            )) {
+                startCooldown(player, instance);
+            }
+        }
+
+        for (PassiveAbilityInstance instance : getSnapshot(player).activeAbilities()) {
+            if (!instance.definition().handler().equals("dominus_sword_aura")) {
+                continue;
+            }
+            DominusState state = dominusStates.get(player.getUniqueId());
+            if (state == null || state.stacks <= 0) {
+                continue;
+            }
+            double chancePerStack = clamp(doubleOption(instance.options(), "chance_per_stack", 0.10), 0.0, 1.0);
+            if (ThreadLocalRandom.current().nextDouble() < Math.min(1.0, state.stacks * chancePerStack)) {
+                releaseDominusSwordAura(player, target, finalDamage, instance);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onBleedDamage(BleedDamageEvent event) {
+        if (!(event.getSource() instanceof Player player) || event.getActualDamage() <= 0.0
+                || player.isDead() || !player.isOnline()) {
+            return;
+        }
+
+        PassiveAbilityInstance ability = getSnapshot(player).activeAbilities().stream()
+                .filter(instance -> instance.definition().handler().equals("bleed_lifesteal"))
+                .findFirst()
+                .orElse(null);
+        if (ability == null) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        LifestealWindow window = bleedLifestealWindows.computeIfAbsent(
+                player.getUniqueId(),
+                ignored -> new LifestealWindow(now, 0.0)
+        );
+        if (now - window.startedAt >= 1_000L) {
+            window.startedAt = now;
+            window.healed = 0.0;
+        }
+
+        double maxHealth = maxHealth(player);
+        double capRatio = clamp(doubleOption(ability.options(), "max_health_cap_per_second", 0.15), 0.0, 1.0);
+        double remainingCap = Math.max(0.0, maxHealth * capRatio - window.healed);
+        double missingHealth = Math.max(0.0, maxHealth - player.getHealth());
+        if (remainingCap <= 0.0 || missingHealth <= 0.0) {
+            return;
+        }
+
+        double recovery = event.getActualDamage();
+        EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
+        if (equipmentEnchants != null) {
+            recovery = equipmentEnchants.modifyHealingAmount(player, recovery);
+        }
+        recovery = Math.min(recovery, Math.min(remainingCap, missingHealth));
+        if (recovery <= 0.0) {
+            return;
+        }
+
+        player.setHealth(Math.min(maxHealth, player.getHealth() + recovery));
+        window.healed += recovery;
+        player.getWorld().spawnParticle(Particle.HEART, player.getLocation().add(0.0, 1.0, 0.0),
+                2, 0.2, 0.25, 0.2, 0.01);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onHostileDeath(EntityDeathEvent event) {
+        if (!(event.getEntity() instanceof Enemy)) {
+            return;
+        }
+        Player killer = event.getEntity().getKiller();
+        if (killer == null) {
+            return;
+        }
+
+        PassiveAbilityInstance ability = getSnapshot(killer).activeAbilities().stream()
+                .filter(instance -> instance.definition().handler().equals("dominus_sword_aura"))
+                .findFirst()
+                .orElse(null);
+        if (ability == null) {
+            return;
+        }
+
+        int maximum = Math.max(1, intOption(ability.options(), "max_stacks", 10));
+        long decayDelay = Math.max(1L, Math.round(
+                doubleOption(ability.options(), "decay_delay_seconds", 5.0) * 1_000.0
+        ));
+        DominusState state = dominusStates.computeIfAbsent(killer.getUniqueId(), ignored -> new DominusState());
+        state.stacks = Math.min(maximum, state.stacks + 1);
+        state.nextDecayAt = System.currentTimeMillis() + decayDelay;
+        killer.sendActionBar(ServerCorePlugin.getMiniMessage().deserialize(
+                "<dark_red>Dominus " + state.stacks + "/" + maximum + "</dark_red>"
+        ));
     }
 
     public boolean tryPreventFatalDamage(Player player, org.bukkit.event.entity.EntityDamageEvent event, double finalDamage) {
-        if (player == null || player.getHealth() - finalDamage > 0.0) {
+        if (player == null || player.getHealth() + player.getAbsorptionAmount() - finalDamage > 0.0) {
             return false;
         }
         List<PassiveAbilityInstance> candidates = getSnapshot(player).activeAbilities().stream()
@@ -624,6 +778,7 @@ public final class PassiveSnapshotService implements Listener {
             if (player.isDead() || player.getGameMode() == GameMode.SPECTATOR) {
                 continue;
             }
+            tickDominus(player);
             boolean hasPeriodic = getSnapshot(player).activeAbilities().stream()
                     .anyMatch(ability -> ability.definition().periodTicks() > 0
                             && booleanOption(ability.options(), "periodic", false));
@@ -632,6 +787,150 @@ public final class PassiveSnapshotService implements Listener {
             }
             // Periodic handlers are opt-in. The scheduler only visits players who actually own one.
         }
+    }
+
+    private void tickDominus(Player player) {
+        DominusState state = dominusStates.get(player.getUniqueId());
+        if (state == null) {
+            return;
+        }
+        PassiveAbilityInstance ability = getSnapshot(player).activeAbilities().stream()
+                .filter(instance -> instance.definition().handler().equals("dominus_sword_aura"))
+                .findFirst()
+                .orElse(null);
+        if (ability == null) {
+            dominusStates.remove(player.getUniqueId());
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        if (state.stacks <= 0 || now < state.nextDecayAt) {
+            return;
+        }
+        long decayDelay = Math.max(1L, Math.round(
+                doubleOption(ability.options(), "decay_delay_seconds", 5.0) * 1_000.0
+        ));
+        state.stacks = Math.max(0, state.stacks - 1);
+        state.nextDecayAt = now + decayDelay;
+        int maximum = Math.max(1, intOption(ability.options(), "max_stacks", 10));
+        player.sendActionBar(ServerCorePlugin.getMiniMessage().deserialize(
+                "<gray>Dominus " + state.stacks + "/" + maximum + "</gray>"
+        ));
+        if (state.stacks <= 0) {
+            dominusStates.remove(player.getUniqueId());
+        }
+    }
+
+    private double missingHealthSetStatBonus(Player player, PassiveAbilityInstance instance, String statKey) {
+        String setId = stringOption(instance.options(), "set_id", instance.itemId());
+        double perMissingPercent = Math.max(0.0,
+                doubleOption(instance.options(), "per_missing_percent", 0.0));
+        if (setId.isBlank() || perMissingPercent <= 0.0) {
+            return 0.0;
+        }
+
+        PDCManager pdc = PDCManager.getInstance();
+        CustomItemRegistry items = CustomItemRegistry.getInstance();
+        if (pdc == null || items == null) {
+            return 0.0;
+        }
+        org.bukkit.NamespacedKey statKeyObject = switch (statKey.toLowerCase(Locale.ROOT)) {
+            case "base_damage" -> pdc.KEY_BASE_DAMAGE;
+            default -> null;
+        };
+        if (statKeyObject == null) {
+            return 0.0;
+        }
+
+        double setStat = 0.0;
+        RequirementManager requirements = RequirementManager.getInstance();
+        EnchantStatResolver enchantStats = EnchantStatResolver.getInstance();
+        for (ItemStack armor : player.getInventory().getArmorContents()) {
+            CustomItemRegistry.CustomItemDefinition definition =
+                    items.getDefinition(items.getItemId(armor));
+            if (definition == null || !definition.setId().equalsIgnoreCase(setId)
+                    || (requirements != null && !requirements.meetsRequirement(player, armor))) {
+                continue;
+            }
+            setStat += pdc.getStat(armor, statKeyObject);
+            if (enchantStats != null) {
+                setStat += enchantStats.resolveNumeric(armor, statKeyObject.getKey());
+            }
+        }
+
+        double maxHealth = maxHealth(player);
+        double missingPercent = maxHealth <= 0.0
+                ? 0.0
+                : clamp((maxHealth - player.getHealth()) / maxHealth * 100.0, 0.0, 100.0);
+        return setStat * missingPercent * perMissingPercent;
+    }
+
+    private void releaseDominusSwordAura(Player player, LivingEntity primaryTarget, double finalDamage,
+                                         PassiveAbilityInstance instance) {
+        double range = Math.max(0.5, doubleOption(instance.options(), "range", 8.0));
+        double width = Math.max(0.25, doubleOption(instance.options(), "width", 1.5));
+        double damageRatio = Math.max(0.0, doubleOption(instance.options(), "damage_ratio", 0.75));
+        double damage = finalDamage * damageRatio;
+        if (damage <= 0.0) {
+            return;
+        }
+
+        Vector origin = player.getEyeLocation().toVector();
+        Vector direction = player.getEyeLocation().getDirection();
+        if (direction.lengthSquared() <= 0.0001) {
+            return;
+        }
+        direction.normalize();
+
+        LinkedHashSet<LivingEntity> targets = new LinkedHashSet<>();
+        for (org.bukkit.entity.Entity entity : player.getNearbyEntities(range, range, range)) {
+            if (!(entity instanceof LivingEntity living)
+                    || living.equals(player)
+                    || living instanceof Player
+                    || living.isDead()
+                    || !living.isValid()) {
+                continue;
+            }
+            Vector toTarget = living.getBoundingBox().getCenter().subtract(origin);
+            double projection = toTarget.dot(direction);
+            double perpendicularSquared = Math.max(0.0, toTarget.lengthSquared() - projection * projection);
+            if (projection > 0.0 && projection <= range && perpendicularSquared <= width * width) {
+                targets.add(living);
+            }
+        }
+        if (primaryTarget != null && !primaryTarget.equals(player) && !(primaryTarget instanceof Player)
+                && primaryTarget.isValid() && !primaryTarget.isDead()
+                && primaryTarget.getLocation().distanceSquared(player.getLocation()) <= range * range) {
+            targets.add(primaryTarget);
+        }
+
+        DamageService damageService = DamageService.getInstance();
+        for (LivingEntity target : targets) {
+            EnchantDamageContext.runAsSecondaryDamage(() -> {
+                if (damageService != null) {
+                    damageService.applyDamage(new DamagePacket(
+                            player,
+                            target,
+                            damage,
+                            DamageCategory.TRUE,
+                            EnumSet.of(DamageTag.AOE, DamageTag.MELEE),
+                            DamageSourceKind.CUSTOM_ITEM,
+                            "passive:" + instance.abilityId()
+                    ));
+                } else {
+                    target.damage(damage, player);
+                }
+                target.getWorld().spawnParticle(Particle.SWEEP_ATTACK,
+                        target.getLocation().add(0.0, 1.0, 0.0), 1);
+            });
+        }
+
+        for (double distance = 1.0; distance <= range; distance += 1.0) {
+            Vector point = origin.clone().add(direction.clone().multiply(distance));
+            player.getWorld().spawnParticle(Particle.SWEEP_ATTACK,
+                    point.getX(), point.getY(), point.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+        }
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 0.75f);
     }
 
     private double readStat(Map<String, Object> options, String statKey) {
@@ -725,6 +1024,8 @@ public final class PassiveSnapshotService implements Listener {
         }
         snapshots.remove(event.getPlayer().getUniqueId());
         refreshQueued.remove(event.getPlayer().getUniqueId());
+        dominusStates.remove(event.getPlayer().getUniqueId());
+        bleedLifestealWindows.remove(event.getPlayer().getUniqueId());
     }
 
     @EventHandler
@@ -734,6 +1035,8 @@ public final class PassiveSnapshotService implements Listener {
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
+        dominusStates.remove(event.getPlayer().getUniqueId());
+        bleedLifestealWindows.remove(event.getPlayer().getUniqueId());
         scheduleRefresh(event.getPlayer());
     }
 
@@ -808,6 +1111,21 @@ public final class PassiveSnapshotService implements Listener {
     ) {
         private static PassiveSnapshot empty() {
             return new PassiveSnapshot(List.of(), Map.of(), List.of());
+        }
+    }
+
+    private static final class DominusState {
+        private int stacks;
+        private long nextDecayAt;
+    }
+
+    private static final class LifestealWindow {
+        private long startedAt;
+        private double healed;
+
+        private LifestealWindow(long startedAt, double healed) {
+            this.startedAt = startedAt;
+            this.healed = healed;
         }
     }
 }
