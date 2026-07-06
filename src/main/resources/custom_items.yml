@@ -471,7 +471,7 @@ items:
     name: "化石心核"
     rarity: EPIC
     story_lore:
-      - "采掘装备用来储存耐久回声的材料。"
+      - "采掘装备用来储存采掘回声与工具共鸣的材料。"
 
   null_scarab:
     material: ECHO_SHARD
@@ -601,8 +601,12 @@ items:
     material: FISHING_ROD
     name: "唤潮钓竿"
     rarity: LEGENDARY
+    equipment_tier: 4
     req_skill: "fishing:45"
     hand_rule: MAIN_HAND_ONLY
+    fishing_rod: true
+    fishing_route: SPECIAL
+    fishing_power: 120
     unbreakable: true
     stats:
       fishing_speed: 180
@@ -616,6 +620,288 @@ items:
       - "钓鱼等级 45 后生效；同时拉高海怪与宝藏路线收益。"
     story_lore:
       - "潮汐之心会把深海宝藏推到钩尖附近。"
+
+  reed_rod:
+    material: FISHING_ROD
+    name: "芦苇钓竿"
+    rarity: UNCOMMON
+    equipment_tier: 1
+    req_skill: "fishing:1"
+    hand_rule: MAIN_HAND_ONLY
+    fishing_rod: true
+    fishing_route: MIXED
+    fishing_power: 10
+    growth_item: true
+    growth_line: mixed_rod
+    growth_stage: 1
+    unbreakable: true
+    stats:
+      fishing_speed: 35
+      sea_creature_chance: 2.0
+      treasure_chance: 0.5
+    sockets:
+      - TOOL
+    ability_lore:
+      - "通用钓竿 T1；用于进入海怪与宝藏路线。"
+      - "成长需求预留：基础钓鱼材料与少量低阶宝藏。"
+    story_lore:
+      - "芦苇纤维绕在竿节上，适合学习第一段潮汐节奏。"
+
+  ink_rod:
+    material: FISHING_ROD
+    name: "墨纹钓竿"
+    rarity: RARE
+    equipment_tier: 2
+    req_skill: "fishing:15"
+    hand_rule: MAIN_HAND_ONLY
+    fishing_rod: true
+    fishing_route: MIXED
+    fishing_power: 25
+    growth_item: true
+    growth_line: mixed_rod
+    growth_stage: 2
+    upgrade_from: reed_rod
+    unbreakable: true
+    stats:
+      fishing_speed: 80
+      sea_creature_chance: 4.0
+      treasure_chance: 1.5
+    sockets:
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "通用钓竿 T2；后续可分流为海怪线或宝藏线。"
+      - "成长需求预留：芦苇钓竿、墨囊材料与低阶宝藏。"
+    story_lore:
+      - "墨色纹路会在鱼线绷紧时微微发亮。"
+
+  inkbound_tidebinder_rod:
+    material: FISHING_ROD
+    name: "缚墨潮缰钓竿"
+    rarity: EPIC
+    equipment_tier: 3
+    req_skill: "fishing:30"
+    hand_rule: MAIN_HAND_ONLY
+    fishing_rod: true
+    fishing_route: SEA_CREATURE
+    fishing_power: 55
+    growth_item: true
+    growth_line: sea_creature_rod
+    growth_stage: 3
+    upgrade_from: ink_rod
+    unbreakable: true
+    stats:
+      fishing_speed: 110
+      sea_creature_chance: 6.0
+      treasure_chance: 1.0
+    sockets:
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "海怪钓竿 T3；偏向提高海怪概率。"
+      - "成长需求预留：墨纹钓竿、海怪材料与少量宝藏材料。"
+    story_lore:
+      - "墨线会像缰绳一样勒住深水里的回声。"
+
+  sharktooth_wavebreaker_rod:
+    material: FISHING_ROD
+    name: "鲨齿破浪钓竿"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    req_skill: "fishing:45"
+    hand_rule: MAIN_HAND_ONLY
+    fishing_rod: true
+    fishing_route: SEA_CREATURE
+    fishing_power: 120
+    growth_item: true
+    growth_line: sea_creature_rod
+    growth_stage: 4
+    upgrade_from: inkbound_tidebinder_rod
+    unbreakable: true
+    stats:
+      fishing_speed: 200
+      sea_creature_chance: 9.0
+      treasure_chance: 1.5
+    sockets:
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "海怪钓竿 T4；适合鲨齿与中阶海怪路线。"
+      - "成长需求预留：同阶海怪材料与少量远古贝壳。"
+    story_lore:
+      - "鲨齿沿握柄排开，像一排等待咬合的浪尖。"
+
+  riptide_kinghunter_rod:
+    material: FISHING_ROD
+    name: "激流猎王钓竿"
+    rarity: MYTHIC
+    equipment_tier: 5
+    req_skill: "fishing:60"
+    hand_rule: MAIN_HAND_ONLY
+    fishing_rod: true
+    fishing_route: SEA_CREATURE
+    fishing_power: 300
+    growth_item: true
+    growth_line: sea_creature_rod
+    growth_stage: 5
+    upgrade_from: sharktooth_wavebreaker_rod
+    unbreakable: true
+    stats:
+      fishing_speed: 300
+      sea_creature_chance: 12.0
+      treasure_chance: 2.0
+    sockets:
+      - TOOL
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "海怪钓竿 T5；服务激流套装的海怪目标。"
+      - "成长需求预留：约 1.2-1.5 件同阶防具价值的海怪材料。"
+    story_lore:
+      - "竿身会顺着激流震动，像在寻找更大的猎物。"
+
+  lord_seabond_rod:
+    material: FISHING_ROD
+    name: "领主缚海钓竿"
+    rarity: MYTHIC
+    equipment_tier: 6
+    req_skill: "fishing:75"
+    hand_rule: MAIN_HAND_ONLY
+    fishing_rod: true
+    fishing_route: SEA_CREATURE
+    fishing_power: 600
+    growth_item: true
+    growth_line: sea_creature_rod
+    growth_stage: 6
+    upgrade_from: riptide_kinghunter_rod
+    unbreakable: true
+    stats:
+      fishing_speed: 430
+      sea_creature_chance: 15.0
+      treasure_chance: 2.5
+    sockets:
+      - TOOL
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "海怪钓竿 T6；与领主套装组成海怪终局目标。"
+      - "成长需求预留：利维坦级海怪材料与少量终局宝藏材料。"
+    story_lore:
+      - "海面会短暂服从它，随后把更深处的东西推上来。"
+
+  pearl_depthfinder_rod:
+    material: FISHING_ROD
+    name: "珍珠测深钓竿"
+    rarity: EPIC
+    equipment_tier: 3
+    req_skill: "fishing:30"
+    hand_rule: MAIN_HAND_ONLY
+    fishing_rod: true
+    fishing_route: TREASURE
+    fishing_power: 55
+    growth_item: true
+    growth_line: treasure_rod
+    growth_stage: 3
+    upgrade_from: ink_rod
+    unbreakable: true
+    stats:
+      fishing_speed: 150
+      sea_creature_chance: 2.0
+      treasure_chance: 2.5
+    sockets:
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "宝藏钓竿 T3；偏向提高宝藏概率。"
+      - "成长需求预留：墨纹钓竿、珍珠簇与少量海怪材料。"
+    story_lore:
+      - "珍珠会在鱼线下沉时标出更安静的水层。"
+
+  diver_depthfinder_rod:
+    material: FISHING_ROD
+    name: "潜水员测深钓竿"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    req_skill: "fishing:45"
+    hand_rule: MAIN_HAND_ONLY
+    fishing_rod: true
+    fishing_route: TREASURE
+    fishing_power: 120
+    growth_item: true
+    growth_line: treasure_rod
+    growth_stage: 4
+    upgrade_from: pearl_depthfinder_rod
+    unbreakable: true
+    stats:
+      fishing_speed: 260
+      sea_creature_chance: 3.0
+      treasure_chance: 4.0
+    sockets:
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "宝藏钓竿 T4；适合潜水员套装和中阶宝藏。"
+      - "成长需求预留：同阶宝藏材料与少量鲨齿材料。"
+    story_lore:
+      - "铅坠会自己寻找沉船边缘的暗流。"
+
+  abyss_treasureseeker_rod:
+    material: FISHING_ROD
+    name: "深渊寻宝钓竿"
+    rarity: MYTHIC
+    equipment_tier: 5
+    req_skill: "fishing:60"
+    hand_rule: MAIN_HAND_ONLY
+    fishing_rod: true
+    fishing_route: TREASURE
+    fishing_power: 300
+    growth_item: true
+    growth_line: treasure_rod
+    growth_stage: 5
+    upgrade_from: diver_depthfinder_rod
+    unbreakable: true
+    stats:
+      fishing_speed: 390
+      sea_creature_chance: 4.0
+      treasure_chance: 5.0
+    sockets:
+      - TOOL
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "宝藏钓竿 T5；服务深渊套装的宝藏目标。"
+      - "成长需求预留：约 1.2-1.5 件同阶防具价值的宝藏材料。"
+    story_lore:
+      - "钩尖每次划过水面，都像在翻一页失落航图。"
+
+  tidevault_starhook_rod:
+    material: FISHING_ROD
+    name: "潮藏星钩钓竿"
+    rarity: MYTHIC
+    equipment_tier: 6
+    req_skill: "fishing:75"
+    hand_rule: MAIN_HAND_ONLY
+    fishing_rod: true
+    fishing_route: TREASURE
+    fishing_power: 600
+    growth_item: true
+    growth_line: treasure_rod
+    growth_stage: 6
+    upgrade_from: abyss_treasureseeker_rod
+    unbreakable: true
+    stats:
+      fishing_speed: 520
+      sea_creature_chance: 5.0
+      treasure_chance: 6.0
+    sockets:
+      - TOOL
+      - TOOL
+      - UNIVERSAL
+    ability_lore:
+      - "宝藏钓竿 T6；与潮藏套装组成宝藏终局目标。"
+      - "成长需求预留：王库级宝藏材料与少量终局海怪材料。"
+    story_lore:
+      - "星钩落水时没有声音，只有远处宝库开锁的错觉。"
 
   relic_spade:
     material: NETHERITE_SHOVEL
@@ -2615,8 +2901,8 @@ items:
     appearance:
       leather_color: "#1D5F7A"
     stats:
-      fishing_speed: 84
-      sea_creature_chance: 3.6
+      fishing_speed: 104
+      sea_creature_chance: 8.8
       treasure_chance: 1.0
       base_armor: 90
       max_health: 95
@@ -2641,8 +2927,8 @@ items:
     appearance:
       leather_color: "#174F68"
     stats:
-      fishing_speed: 126
-      sea_creature_chance: 5.4
+      fishing_speed: 156
+      sea_creature_chance: 13.2
       treasure_chance: 1.5
       base_armor: 155
       max_health: 145
@@ -2667,8 +2953,8 @@ items:
     appearance:
       leather_color: "#13465C"
     stats:
-      fishing_speed: 116
-      sea_creature_chance: 4.8
+      fishing_speed: 144
+      sea_creature_chance: 11.8
       treasure_chance: 1.3
       base_armor: 130
       max_health: 125
@@ -2693,8 +2979,8 @@ items:
     appearance:
       leather_color: "#0E394D"
     stats:
-      fishing_speed: 94
-      sea_creature_chance: 4.2
+      fishing_speed: 116
+      sea_creature_chance: 10.2
       treasure_chance: 1.2
       base_armor: 90
       max_health: 95
@@ -2722,9 +3008,9 @@ items:
         material: minecraft:amethyst
         pattern: minecraft:tide
     stats:
-      fishing_speed: 136
-      sea_creature_chance: 1.2
-      treasure_chance: 3.2
+      fishing_speed: 130
+      sea_creature_chance: 4.0
+      treasure_chance: 2.8
       base_armor: 70
       max_health: 72
       attr_luck: 14
@@ -2750,9 +3036,9 @@ items:
         material: minecraft:amethyst
         pattern: minecraft:tide
     stats:
-      fishing_speed: 204
-      sea_creature_chance: 1.8
-      treasure_chance: 4.8
+      fishing_speed: 195
+      sea_creature_chance: 6.0
+      treasure_chance: 4.2
       base_armor: 125
       max_health: 110
       attr_luck: 24
@@ -2778,9 +3064,9 @@ items:
         material: minecraft:amethyst
         pattern: minecraft:tide
     stats:
-      fishing_speed: 188
-      sea_creature_chance: 1.6
-      treasure_chance: 4.4
+      fishing_speed: 180
+      sea_creature_chance: 5.4
+      treasure_chance: 3.8
       base_armor: 105
       max_health: 96
       attr_luck: 20
@@ -2803,9 +3089,9 @@ items:
     appearance:
       leather_color: "#10172A"
     stats:
-      fishing_speed: 152
-      sea_creature_chance: 1.4
-      treasure_chance: 3.6
+      fishing_speed: 145
+      sea_creature_chance: 4.6
+      treasure_chance: 3.2
       base_armor: 70
       max_health: 72
       attr_agility: 16
@@ -2832,9 +3118,9 @@ items:
         material: minecraft:diamond
         pattern: minecraft:eye
     stats:
-      fishing_speed: 130
-      sea_creature_chance: 5.0
-      treasure_chance: 1.6
+      fishing_speed: 144
+      sea_creature_chance: 11.0
+      treasure_chance: 1.4
       base_armor: 150
       max_health: 150
       damage: 42
@@ -2861,9 +3147,9 @@ items:
         material: minecraft:diamond
         pattern: minecraft:eye
     stats:
-      fishing_speed: 195
-      sea_creature_chance: 7.5
-      treasure_chance: 2.4
+      fishing_speed: 216
+      sea_creature_chance: 16.5
+      treasure_chance: 2.1
       base_armor: 250
       max_health: 230
       damage: 70
@@ -2890,9 +3176,9 @@ items:
         material: minecraft:diamond
         pattern: minecraft:eye
     stats:
-      fishing_speed: 180
-      sea_creature_chance: 6.8
-      treasure_chance: 2.2
+      fishing_speed: 198
+      sea_creature_chance: 15.0
+      treasure_chance: 1.9
       base_armor: 210
       max_health: 200
       damage: 60
@@ -2916,9 +3202,9 @@ items:
     appearance:
       leather_color: "#06111B"
     stats:
-      fishing_speed: 145
-      sea_creature_chance: 5.7
-      treasure_chance: 1.8
+      fishing_speed: 162
+      sea_creature_chance: 12.5
+      treasure_chance: 1.6
       base_armor: 150
       max_health: 150
       damage: 42
@@ -2945,15 +3231,15 @@ items:
         material: minecraft:gold
         pattern: minecraft:flow
     stats:
-      fishing_speed: 208
-      sea_creature_chance: 1.6
-      treasure_chance: 5.0
+      fishing_speed: 156
+      sea_creature_chance: 5.2
+      treasure_chance: 4.0
       base_armor: 110
       max_health: 110
       attr_luck: 24
     story_lore:
       - "T6 宝藏终局套装。建议生态战斗等级: 500。"
-      - "100 级、唤潮钓竿和满套可触达 1500 有效 Fishing Speed。"
+      - "与潮藏星钩钓竿组成 1300 Fishing Speed 目标，未来增益触达上限。"
 
   tidevault_chestplate:
     material: LEATHER_CHESTPLATE
@@ -2973,9 +3259,9 @@ items:
         material: minecraft:gold
         pattern: minecraft:flow
     stats:
-      fishing_speed: 312
-      sea_creature_chance: 2.4
-      treasure_chance: 7.5
+      fishing_speed: 234
+      sea_creature_chance: 7.8
+      treasure_chance: 6.0
       base_armor: 190
       max_health: 170
       attr_luck: 40
@@ -3001,9 +3287,9 @@ items:
         material: minecraft:gold
         pattern: minecraft:flow
     stats:
-      fishing_speed: 286
-      sea_creature_chance: 2.2
-      treasure_chance: 6.8
+      fishing_speed: 215
+      sea_creature_chance: 7.0
+      treasure_chance: 5.4
       base_armor: 160
       max_health: 150
       attr_luck: 34
@@ -3026,9 +3312,9 @@ items:
     appearance:
       leather_color: "#142B3B"
     stats:
-      fishing_speed: 234
-      sea_creature_chance: 1.8
-      treasure_chance: 5.7
+      fishing_speed: 175
+      sea_creature_chance: 6.0
+      treasure_chance: 4.6
       base_armor: 110
       max_health: 110
       attr_agility: 24

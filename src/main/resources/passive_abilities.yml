@@ -289,47 +289,47 @@ abilities:
     handler: stat_bonus
     name: "激流套装·破潮"
     description:
-      - "4 件：提高钓鱼速度、海怪概率与伤害。"
+      - "4 件：进入满套海怪状态，提高钓鱼速度、海怪概率与伤害。"
     allowed_sources: [SET_BONUS]
 
   abyss_set_sonar:
     handler: stat_bonus
     name: "深渊套装·声呐"
     description:
-      - "2 件：提高钓鱼速度与宝藏概率。"
+      - "2 件：提高宝藏概率，但略微降低海怪概率。"
     allowed_sources: [SET_BONUS]
 
   abyss_set_lost_route:
     handler: stat_bonus
     name: "深渊套装·失落航线"
     description:
-      - "4 件：进一步提高钓鱼速度与宝藏概率。"
+      - "4 件：预留提高史诗与传说宝藏权重的效果。"
     allowed_sources: [SET_BONUS]
 
   lord_set_decree:
     handler: stat_bonus
     name: "领主套装·海令"
     description:
-      - "2 件：提高海怪概率与伤害。"
+      - "2 件：大幅提高海怪概率与伤害。"
     allowed_sources: [SET_BONUS]
 
   lord_set_leviathan_command:
     handler: stat_bonus
     name: "领主套装·利维坦号令"
     description:
-      - "4 件：提高钓鱼速度、海怪概率与伤害。"
+      - "4 件：提高对海怪的伤害；钓鱼速度与海怪概率来自装备主体和 2 件套。"
     allowed_sources: [SET_BONUS]
 
   tidevault_set_keyring:
     handler: stat_bonus
     name: "潮藏套装·钥环"
     description:
-      - "2 件：提高钓鱼速度与宝藏概率。"
+      - "2 件：提高宝藏概率。"
     allowed_sources: [SET_BONUS]
 
   tidevault_set_royal_cache:
     handler: stat_bonus
     name: "潮藏套装·王库"
     description:
-      - "4 件：大幅提高钓鱼速度与宝藏概率。"
+      - "4 件：预留提高史诗与传说宝藏权重的效果。"
     allowed_sources: [SET_BONUS]

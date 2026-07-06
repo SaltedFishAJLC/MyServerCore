@@ -24,6 +24,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +55,7 @@ public class FishingManager implements Listener {
     private static final int MAX_FISHING_LEVEL = 100;
     private static final double FISHING_SPEED_PER_LEVEL = 3.0;
     private static final double FULL_BUILD_FISHING_SPEED_TARGET = 1500.0;
+    private static final double FISHING_SPEED_CAP = FULL_BUILD_FISHING_SPEED_TARGET;
     private static final double MIN_WAIT_SPEED_SCALE = MIN_WAIT_FLOOR_TICKS * FULL_BUILD_FISHING_SPEED_TARGET / (BASE_MIN_WAIT_TICKS - MIN_WAIT_FLOOR_TICKS);
     private static final double MAX_WAIT_SPEED_SCALE = MAX_WAIT_FLOOR_TICKS * FULL_BUILD_FISHING_SPEED_TARGET / (BASE_MAX_WAIT_TICKS - MAX_WAIT_FLOOR_TICKS);
 
@@ -127,6 +130,7 @@ public class FishingManager implements Listener {
             if (seaCreature != null && spawnSeaCreature(player, hook.getLocation(), fishingLevel, seaCreature)) {
                 event.setExpToDrop(0);
                 queueCaughtItemRemoval(event.getCaught());
+                handleBaitConsumption(player, event, BaitConsumptionContext.SEA_CREATURE);
                 return;
             }
         }
@@ -143,6 +147,12 @@ public class FishingManager implements Listener {
             addFishingXp(player, treasure.xp());
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6f, 1.35f);
             player.sendActionBar(Component.text("Deep sea treasure surfaced: " + treasure.tier() + "."));
+            handleBaitConsumption(player, event, BaitConsumptionContext.TREASURE);
+            return;
+        }
+
+        if (event.getCaught() instanceof Item) {
+            handleBaitConsumption(player, event, BaitConsumptionContext.VANILLA);
         }
     }
 
@@ -184,12 +194,24 @@ public class FishingManager implements Listener {
         return safeLevel * FISHING_SPEED_PER_LEVEL;
     }
 
-    public static double getEffectiveFishingSpeed(int fishingLevel, double equipmentFishingSpeed) {
+    public static double getRawFishingSpeed(int fishingLevel, double equipmentFishingSpeed) {
         return getLevelFishingSpeed(fishingLevel) + Math.max(0.0, equipmentFishingSpeed);
     }
 
+    public static double getEffectiveFishingSpeed(int fishingLevel, double equipmentFishingSpeed) {
+        return capFishingSpeed(getRawFishingSpeed(fishingLevel, equipmentFishingSpeed));
+    }
+
+    public static double getFishingSpeedCap() {
+        return FISHING_SPEED_CAP;
+    }
+
+    public static double capFishingSpeed(double fishingSpeed) {
+        return Math.min(FISHING_SPEED_CAP, Math.max(0.0, fishingSpeed));
+    }
+
     public static FishingWaitWindow calculateWaitWindow(double fishingSpeed) {
-        double safeSpeed = Math.max(0.0, fishingSpeed);
+        double safeSpeed = capFishingSpeed(fishingSpeed);
         int minWait = Math.max(MIN_WAIT_FLOOR_TICKS, scaleWait(BASE_MIN_WAIT_TICKS, MIN_WAIT_SPEED_SCALE, safeSpeed));
         int maxWait = Math.max(MAX_WAIT_FLOOR_TICKS, scaleWait(BASE_MAX_WAIT_TICKS, MAX_WAIT_SPEED_SCALE, safeSpeed));
         return new FishingWaitWindow(minWait, Math.max(minWait, maxWait));
@@ -197,6 +219,41 @@ public class FishingManager implements Listener {
 
     private static int scaleWait(int baseTicks, double speedScale, double fishingSpeed) {
         return (int) Math.round(baseTicks * speedScale / (speedScale + fishingSpeed));
+    }
+
+    public boolean hasEnoughFishingPower(Player player, FishingPool pool) {
+        if (pool == null || pool.requiredFishingPower() <= 0) {
+            return true;
+        }
+        return player != null && getFishingPower(player) >= pool.requiredFishingPower();
+    }
+
+    public int getFishingPower(Player player) {
+        if (player == null) {
+            return 0;
+        }
+        return getFishingPower(player.getInventory().getItemInMainHand());
+    }
+
+    public int getFishingPower(ItemStack item) {
+        if (item == null || item.getType().isAir() || !item.hasItemMeta()) {
+            return 0;
+        }
+        PDCManager pdc = PDCManager.getInstance();
+        ItemMeta meta = item.getItemMeta();
+        if (pdc == null || meta == null) {
+            return 0;
+        }
+        return Math.max(0, meta.getPersistentDataContainer().getOrDefault(
+                pdc.KEY_ITEM_FISHING_POWER,
+                PersistentDataType.INTEGER,
+                0
+        ));
+    }
+
+    private void handleBaitConsumption(Player player, PlayerFishEvent event, BaitConsumptionContext context) {
+        // Bait items are not defined yet. Future bait rules should consume one
+        // matching inventory item here after a configured successful catch type.
     }
 
     private boolean spawnSeaCreature(Player player, Location hookLocation, int fishingLevel, SeaCreatureEntry entry) {
@@ -619,6 +676,19 @@ public class FishingManager implements Listener {
     }
 
     public record FishingWaitWindow(int minTicks, int maxTicks) {
+    }
+
+    public record FishingPool(String id, int requiredFishingPower) {
+        public FishingPool {
+            id = id == null ? "" : id.trim().toLowerCase(Locale.ROOT);
+            requiredFishingPower = Math.max(0, requiredFishingPower);
+        }
+    }
+
+    public enum BaitConsumptionContext {
+        SEA_CREATURE,
+        TREASURE,
+        VANILLA
     }
 
     public record FishingStatContribution(

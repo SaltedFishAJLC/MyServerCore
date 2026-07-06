@@ -132,12 +132,14 @@ public class NonCombatStatsMenu {
         double seaCreatureChance = Math.min(95.0, 5.0 + level * 0.2 + total.seaCreatureChance());
         double treasureChance = Math.min(95.0, 3.5 + level * 0.15 + total.treasureChance());
         double levelFishingSpeed = FishingManager.getLevelFishingSpeed(level);
+        double rawFishingSpeed = FishingManager.getRawFishingSpeed(level, total.fishingSpeed());
         double effectiveFishingSpeed = FishingManager.getEffectiveFishingSpeed(level, total.fishingSpeed());
-        FishingManager.FishingWaitWindow waitWindow = FishingManager.calculateWaitWindow(effectiveFishingSpeed);
+        FishingManager.FishingWaitWindow waitWindow = FishingManager.calculateWaitWindow(rawFishingSpeed);
 
         List<Component> lore = new ArrayList<>();
         lore.add(line("<gray>钓鱼等级: <aqua>" + level + "</aqua></gray>"));
         lore.add(line("<gray>装备钓鱼速度: <blue>" + number(total.fishingSpeed()) + "</blue> <dark_gray>+ 等级 " + number(levelFishingSpeed) + "</dark_gray></gray>"));
+        lore.add(line("<gray>有效钓鱼速度: <blue>" + number(effectiveFishingSpeed) + "</blue> <dark_gray>/ " + number(FishingManager.getFishingSpeedCap()) + "</dark_gray></gray>"));
         lore.add(line("<gray>海怪概率: <aqua>" + number(seaCreatureChance) + "%</aqua></gray>"));
         lore.add(line("<gray>宝藏概率: <gold>" + number(treasureChance) + "%</gold></gray>"));
         lore.add(line("<gray>咬钩窗口: <white>" + waitWindow.minTicks() + "-" + waitWindow.maxTicks() + " ticks</white></gray>"));

@@ -22,8 +22,11 @@
 
 - 第一批 T1-T6 钓鱼装备、材料来源、宝藏交叉掉落和海怪击杀掉落已进入默认配置。
 - 当前公式满配目标为有效 Fishing Speed `1500` 时达到 `15-60 ticks`。
-- T6 宝藏线 `tidevault_set` + `tidecaller_rod` + 100 级 Fishing 可触达该等待下限；海怪线更偏 `Sea Creature Chance` 和战斗属性。
+- Fishing Speed 现在区分原始值与有效值；公式入口会把有效值封顶到 `1500`，超过上限不会继续缩短等待。
+- 第一批 T1-T6 钓竿已进入默认配置，并写入 `fishing_rod`、`fishing_route`、`fishing_power`、`growth_line`、`growth_stage` 等 PDC/lore 字段。
+- 当前 T6 装备侧目标按“套装 + 对应钓竿 + 固定套装效果”计算：海怪线 `lord_set + lord_seabond_rod + gatherers_compass` 约为 `1150 Fishing Speed / 78% SCC / 11.5% TC`；宝藏线 `tidevault_set + tidevault_starhook_rod + gatherers_compass` 约为 `1300 Fishing Speed / 31% SCC / 31% TC`。实际等待公式仍会额外叠加 Fishing 等级速度，并在 1500 封顶。
 - 钓鱼属性当前聚合主手、护甲、4 个饰品槽和护符袋；副手不生效。
+- 收杆成功后已预留鱼饵消耗接口；当前没有默认鱼饵道具，也不会实际消耗背包物品。
 - 海怪已经通过 MobSpawnManager 专用入口统一接入减伤、虚拟血池和全息链路。
 - 缺少钓鱼系统自动化测试。
 
@@ -86,6 +89,7 @@ FishingManager 监听 `PlayerFishEvent`，当前流程如下：
    - 宝藏成功：按等级筛选档位，再按权重选择档位和条目。
    - AuraSkills 在 `MONITOR` 阶段读取原始渔获并发放常规 Fishing XP。
    - ServerCore 随后在同一 `MONITOR` 阶段移除海怪分支的原渔获，或把宝藏分支的原渔获替换成自定义宝藏。
+   - 成功海怪、宝藏或普通渔获分支都会经过预留的鱼饵消耗钩子；当前钩子为空实现。
    - 两者都失败：保留原版渔获。
 
 优先级约定：
@@ -100,16 +104,24 @@ Sea Creature > Treasure > Vanilla Catch
 
 ### 4.1 属性来源
 
-当前有效速度由等级和装备聚合组成：
+当前原始速度由等级和装备聚合组成：
 
 ```text
-Effective Fishing Speed
+Raw Fishing Speed
 = Level Fishing Speed
 + Main-hand Fishing Speed
 + Armor Fishing Speed
 + Accessory Slot Fishing Speed
 + Talisman Bag Fishing Speed
 ```
+
+实际进入等待公式前会再应用硬上限：
+
+```text
+Effective Fishing Speed = min(Raw Fishing Speed, 1500)
+```
+
+面板应保留原始/有效两层信息，避免玩家堆到 1500 以上后误以为等待仍会继续缩短。
 
 每个装备来源都包含物品基础 PDC 与 `EnchantStatResolver` 返回的 active 附魔临时加成。副手不参与钓鱼属性聚合。
 
@@ -141,7 +153,7 @@ fishing_speed
 - 满配有效 Fishing Speed 达到 1500 时：`15-60 ticks`。
 - 最低边界固定为 `15-60 ticks`，不会继续缩短。
 
-有效速度记作 `S`。
+原始速度先封顶为有效速度 `S = min(Raw Fishing Speed, 1500)`。
 
 最短等待：
 
@@ -175,33 +187,62 @@ MaxWait = max(60, round(300 × MaxScale / (MaxScale + S)))
 | 1100 | 20-76 ticks |
 | 1400 | 16-63 ticks |
 | 1500 | 15-60 ticks |
+| 1600 | 15-60 ticks |
 
-### 4.3 当前平衡缺口
+### 4.3 钓竿阶段与终局预算
 
-默认终局钓竿 `tidecaller_rod` 提供：
+`tidecaller_rod` 保留为旧版特殊兼容钓竿：
 
 ```yaml
-fishing_speed: 180
+tidecaller_rod:
+  fishing_speed: 180
+  sea_creature_chance: 4.0
+  treasure_chance: 5.0
+  fishing_route: SPECIAL
+  fishing_power: 120
 ```
 
 100 级玩家使用该钓竿时：
 
 ```text
-Effective Fishing Speed = 300 + 180 = 480
+Raw Fishing Speed = 300 + 180 = 480
 等待窗口约为 39-132 ticks
 ```
 
-第一批钓鱼套装补齐后，默认内容已有可触达下限的路线：
+第一批钓竿阶段：
 
 ```text
-100 级 Fishing = 300 Fishing Speed
-tidecaller_rod = 180 Fishing Speed
-tidevault_set 四件基础 = 1040 Fishing Speed
-合计 = 1520 Fishing Speed
-等待窗口 = 15-60 ticks
+T1 reed_rod                   MIXED        35 FS / 2.0 SCC / 0.5 TC / Power 10
+T2 ink_rod                    MIXED        80 FS / 4.0 SCC / 1.5 TC / Power 25
+T3 inkbound_tidebinder_rod    SEA_CREATURE 110 FS / 6.0 SCC / 1.0 TC / Power 55
+T4 sharktooth_wavebreaker_rod SEA_CREATURE 200 FS / 9.0 SCC / 1.5 TC / Power 120
+T5 riptide_kinghunter_rod     SEA_CREATURE 300 FS / 12.0 SCC / 2.0 TC / Power 300
+T6 lord_seabond_rod           SEA_CREATURE 430 FS / 15.0 SCC / 2.5 TC / Power 600
+T3 pearl_depthfinder_rod      TREASURE     150 FS / 2.0 SCC / 2.5 TC / Power 55
+T4 diver_depthfinder_rod      TREASURE     260 FS / 3.0 SCC / 4.0 TC / Power 120
+T5 abyss_treasureseeker_rod   TREASURE     390 FS / 4.0 SCC / 5.0 TC / Power 300
+T6 tidevault_starhook_rod     TREASURE     520 FS / 5.0 SCC / 6.0 TC / Power 600
 ```
 
-`tidevault_set` 的 2 件与 4 件套装被动还会额外提供 Fishing Speed，因此宝藏线是当前默认配置中最容易压到等待下限的路线。`lord_set` 作为 T6 海怪线终局套装，Fishing Speed 预算较低，但提供更高 Sea Creature Chance 和战斗属性。
+终局预算按“装备与套装目标”先不计等级：
+
+```text
+Sea route:
+lord_set 四件基础 = 720 FS / 55 SCC / 7 TC
+lord_seabond_rod = 430 FS / 15 SCC / 2.5 TC
+lord_set 2 件 = 8 SCC
+合计 = 1150 FS / 78 SCC / 9.5 TC
+带 gatherers_compass 后 TC 约 11.5
+
+Treasure route:
+tidevault_set 四件基础 = 780 FS / 26 SCC / 20 TC
+tidevault_starhook_rod = 520 FS / 5 SCC / 6 TC
+tidevault_set 2 件 = 3 TC
+gatherers_compass = 2 TC
+合计 = 1300 FS / 31 SCC / 31 TC
+```
+
+如果把 100 级 Fishing 的 300 速度加入 raw 值，宝藏线会超过 1500，但公式有效值仍封顶到 1500；装备侧的后续增益预算仍应按上表谨慎分配，尤其避免继续大量堆原始 Treasure Chance。
 
 ## 5. 概率体系
 
@@ -438,29 +479,46 @@ AuraSkills 自带 fishing loot pool 的基础概率当前设置为 0，避免与
 - 海怪概率
 - 宝藏概率
 - 附魔提供的对应临时加成
+- 钓竿路线
+- Fishing Power
+- 成长线和成长阶段
 
 `/sc gathering` 钓鱼面板显示：
 
 - AuraSkills Fishing 等级
 - 装备 Fishing Speed 总计
 - 等级 Fishing Speed
+- 有效 Fishing Speed 与 1500 上限
 - 最终 Sea Creature Chance
 - 最终 Treasure Chance
 - 预计咬钩窗口
 - 主手、护甲、饰品槽、护符袋各自提供的 Fishing Speed、Sea Creature Chance 和 Treasure Chance
 
-默认终局钓竿：
+默认钓竿字段：
 
 ```yaml
-tidecaller_rod:
+reed_rod:
   material: FISHING_ROD
-  req_skill: "fishing:45"
+  req_skill: "fishing:1"
   hand_rule: MAIN_HAND_ONLY
+  fishing_rod: true
+  fishing_route: MIXED
+  fishing_power: 10
+  growth_item: true
+  growth_line: mixed_rod
+  growth_stage: 1
   stats:
-    fishing_speed: 180
-    sea_creature_chance: 4.0
-    treasure_chance: 5.0
-    attr_luck: 8
+    fishing_speed: 35
+    sea_creature_chance: 2.0
+    treasure_chance: 0.5
+```
+
+钓竿路线：
+
+```text
+通用线：reed_rod T1 -> ink_rod T2
+海怪线：inkbound_tidebinder_rod T3 -> sharktooth_wavebreaker_rod T4 -> riptide_kinghunter_rod T5 -> lord_seabond_rod T6
+宝藏线：pearl_depthfinder_rod T3 -> diver_depthfinder_rod T4 -> abyss_treasureseeker_rod T5 -> tidevault_starhook_rod T6
 ```
 
 第一批钓鱼防具路线：
@@ -472,9 +530,9 @@ tidecaller_rod:
 
 配置入口：
 
-- `custom_items.yml`：钓鱼材料、40 件防具、阶段/路线/来源/用途元数据。
-- `equipment_sets.yml` 与 `passive_abilities.yml`：每套 2 件/4 件 `stat_bonus`，只做路线数值强化，不实现复杂套装技能。
-- `recipes.yml`：每个部位独立配方；升级配方使用上一阶同部位作为中心基底，并由 `CustomRecipeManager` 迁移成长状态。
+- `custom_items.yml`：钓鱼材料、40 件防具、10 把钓竿，以及阶段/路线/来源/用途元数据。钓竿字段已写入 PDC，并在 lore 身份区显示。
+- `equipment_sets.yml` 与 `passive_abilities.yml`：每套 2 件/4 件 `stat_bonus`，第一批只做路线数值或预留权重，不实现复杂套装技能。
+- `recipes.yml`：每个防具部位独立配方，钓竿配方使用上一阶段钓竿作为中心基底；升级配方由 `CustomRecipeManager` 迁移成长状态。
 - `gathering_loot.yml`：宝藏触发产出；当前仍映射到 rare/epic/legendary 三个既有档位，通过 `min_fishing_level` 表达 T1-T6 解锁。
 - `custom_mobs.yml`：`sea_creature_<entry_id>` 同名 PDC 规则负责海怪击杀材料掉落。
 
@@ -514,6 +572,9 @@ treasure_chance
 13. 钓鱼装备属性聚合主手、护甲、4 个饰品槽和护符袋，副手不生效。
 14. 海怪数值统一由 ServerCore 管理；MythicMobs 只负责实体、AI 和技能。
 15. 海怪与宝藏保留一次 AuraSkills 原始渔获 XP，并额外发放条目 `xp`。
+16. 钓竿阶段通过 `fishing_power` 预留池子门槛；当前 `FishingManager#hasEnoughFishingPower(Player, FishingPool)` 已提供结构，但默认池子尚未强制检查。
+17. 鱼饵是未来的背包消耗型道具；当前只在成功收杆分支预留 `handleBaitConsumption(...)`，没有默认鱼饵、没有实际消耗。
+18. 护符袋中相同内部 `item_id` 只生效一次；同 `talisman_family` 仍按既有优先级启用最高版本。
 
 ## 12. 后续任务
 
@@ -549,9 +610,9 @@ treasure_chance
 
 ### P1：配置化与内容完整度
 
-1. **继续扩展 1500 Fishing Speed 后的成长预算**
+1. **继续扩展 1500 Fishing Speed 前后的成长预算**
 
-   2026-07-06 已补齐第一批 T1-T6 钓鱼防具路线。当前 T6 宝藏线能通过 `tidevault_set + tidecaller_rod + 100 级 Fishing` 触达 `15-60 ticks`。后续如果加入重铸、宝石、饰品或钓鱼专属附魔，需要重新分配满配预算，避免常规内容过早溢出到等待下限。
+   2026-07-06 已补齐第一批 T1-T6 钓鱼防具与钓竿路线。当前 T6 海怪线装备目标约为 1150 FS，T6 宝藏线装备目标约为 1300 FS；含 100 级 Fishing 时 raw 值可超过 1500，但公式有效值硬封顶。后续如果加入鱼饵、重铸、宝石、饰品或钓鱼专属附魔，需要继续区分装备侧目标、raw 展示值和 effective 公式值，避免常规内容过早溢出。
 
 2. **将硬编码常量迁移到配置**
 
@@ -588,6 +649,10 @@ treasure_chance
    - 最低开放水域等级。
    - 前置任务或地牢进度。
 
+6. **实现鱼饵道具与消耗规则**
+
+   当前已预留成功收杆后的统一消耗钩子。未来鱼饵建议作为背包消耗型道具，在海怪、宝藏或指定渔获类型成功后扣除 1 个；具体鱼饵 ID、适用 catch type、优先级和失败提示仍待设计。
+
 ### P2：可观测性与体验
 
 1. 为 FishingManager 增加单元测试，至少覆盖等待公式、概率上限、档位权重和空合格表。
@@ -603,7 +668,11 @@ treasure_chance
 
 - 0、45、100 级的无装备等待窗口。
 - 100 级、有效速度 1500 时窗口为 `15-60 ticks`。
-- 100 级、`tidecaller_rod + tidevault_set` 四件基础属性可触达 `15-60 ticks`。
+- 100 级、raw 速度超过 1500 时窗口仍为 `15-60 ticks`，不会继续缩短。
+- `lord_set + lord_seabond_rod + gatherers_compass` 的装备目标接近 `1150 FS / 78 SCC / 11.5 TC`。
+- `tidevault_set + tidevault_starhook_rod + gatherers_compass` 的装备目标接近 `1300 FS / 31 SCC / 31 TC`。
+- 第一批钓竿物品 lore 显示路线、Fishing Power 和成长阶段。
+- 目前没有默认鱼饵道具，普通钓鱼不会实际消耗任何背包物品。
 - 非开放水域不会触发 ServerCore 海怪或宝藏。
 - 海怪成功后不再产出宝藏。
 - 海怪失败后宝藏仍可触发。

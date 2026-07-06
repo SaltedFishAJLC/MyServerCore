@@ -1,7 +1,6 @@
 package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
-import com.servercore.combat.damage.DamageService;
 import com.servercore.enchant.EnchantStatResolver;
 import com.servercore.enchant.EquipmentEnchantService;
 import com.servercore.passive.PassiveSnapshotService;
@@ -39,7 +38,6 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -53,10 +51,8 @@ public class AttributeManager implements Listener {
     private static final double AGILITY_ARMOR_PER_POINT = 1.5;
     private static final double INTELLIGENCE_MAGIC_REDUCTION_PER_POINT = 0.002;
     private static final double INTELLIGENCE_MANA_PER_POINT = 2.5;
-    private static final double WILLPOWER_REGEN_PER_POINT = 0.1;
     private static final double LUCK_DODGE_PER_POINT = 0.0015;
     private static final double LUCK_CRIT_PER_POINT = 0.0015;
-    private static final long COMBAT_WINDOW_MS = 3_000L;
     private static final String MANA_TRAIT_MODIFIER = "servercore_dimension_max_mana";
 
     private static AttributeManager instance;
@@ -64,8 +60,6 @@ public class AttributeManager implements Listener {
     private final ServerCorePlugin plugin;
     private final NamespacedKey healthModifierKey;
     private final NamespacedKey speedModifierKey;
-    private final Map<UUID, Long> lastDamageAt = new java.util.HashMap<>();
-    private BukkitTask regenTask;
 
     public AttributeManager(ServerCorePlugin plugin) {
         this.plugin = plugin;
@@ -74,7 +68,6 @@ public class AttributeManager implements Listener {
         instance = this;
 
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
-        this.regenTask = Bukkit.getScheduler().runTaskTimer(plugin, this::tickHealthRegeneration, 20L, 20L);
     }
 
     public static AttributeManager getInstance() {
@@ -82,10 +75,6 @@ public class AttributeManager implements Listener {
     }
 
     public void stop() {
-        if (regenTask != null) {
-            regenTask.cancel();
-            regenTask = null;
-        }
     }
 
     /**
@@ -237,6 +226,10 @@ public class AttributeManager implements Listener {
     }
 
     public double getHealthRegenPerSecond(Player player) {
+        PlayerRecoveryManager recoveryManager = PlayerRecoveryManager.getInstance();
+        if (recoveryManager != null) {
+            return recoveryManager.estimateOutOfCombatRegenPerSecond(player);
+        }
         EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
         double base = getBaseHealthRegenPerSecond(player);
         return equipmentEnchants == null ? base : equipmentEnchants.modifyNaturalRegen(player, base);
@@ -245,7 +238,7 @@ public class AttributeManager implements Listener {
     public double getBaseHealthRegenPerSecond(Player player) {
         ClassManager classManager = ClassManager.getInstance();
         double classRegen = classManager == null ? 0.0 : classManager.getBonusRegen(player);
-        return getWillpower(player) * WILLPOWER_REGEN_PER_POINT + classRegen;
+        return classRegen;
     }
 
     public double getDodgeChance(Player player) {
@@ -291,42 +284,6 @@ public class AttributeManager implements Listener {
             }
         };
         return new DodgePlan(true, commit);
-    }
-
-    /**
-     * 定时任务：每秒执行一次，根据玩家的意志(Wil) 和 职业(Class) 计算并恢复生命值。
-     * 判定 3 秒脱战规则。
-     */
-    public void tickHealthRegeneration() {
-        long now = System.currentTimeMillis();
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            refreshPlayer(player);
-            if (player.isDead() || player.getHealth() <= 0.0) {
-                continue;
-            }
-
-            double regen = getHealthRegenPerSecond(player);
-            if (regen <= 0.0) {
-                continue;
-            }
-
-            AttributeInstance maxHealthAttribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-            double maxHealth = maxHealthAttribute == null ? 20.0 : maxHealthAttribute.getValue();
-            if (player.getHealth() >= maxHealth) {
-                continue;
-            }
-
-            double multiplier = getRegenMultiplier(player, now);
-            double healed = regen * multiplier;
-            if (healed > 0.0) {
-                EquipmentEnchantService equipmentEnchants = EquipmentEnchantService.getInstance();
-                if (equipmentEnchants != null) {
-                    equipmentEnchants.heal(player, healed);
-                } else {
-                    player.setHealth(Math.min(maxHealth, player.getHealth() + healed));
-                }
-            }
-        }
     }
 
     public boolean isMagicDamageCause(EntityDamageEvent.DamageCause cause) {
@@ -491,33 +448,12 @@ public class AttributeManager implements Listener {
         return api == null ? null : api.getUser(player.getUniqueId());
     }
 
-    private double getRegenMultiplier(Player player, long now) {
-        long lastDamage = lastDamageAt.getOrDefault(player.getUniqueId(), 0L);
-        if (now - lastDamage <= COMBAT_WINDOW_MS) {
-            ClassManager classManager = ClassManager.getInstance();
-            return classManager == null ? 0.35 : classManager.getCombatRegenMultiplier(player);
-        }
-
-        return player.getFoodLevel() >= 20 ? 1.0 : 0.5;
-    }
-
     private int roundAttribute(Double value) {
         return (int) Math.round(value == null ? 0.0 : value);
     }
 
     private double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onDamageMonitor(EntityDamageEvent event) {
-        DamageService damageService = DamageService.getInstance();
-        com.servercore.combat.damage.DamageResult result =
-                damageService == null ? null : damageService.getFinalizedResult(event);
-        double actualDamage = result == null ? event.getFinalDamage() : result.actualDamage();
-        if (event.getEntity() instanceof Player player && actualDamage > 0.0) {
-            lastDamageAt.put(player.getUniqueId(), System.currentTimeMillis());
-        }
     }
 
     @EventHandler
@@ -558,7 +494,6 @@ public class AttributeManager implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        lastDamageAt.remove(event.getPlayer().getUniqueId());
         SkillsUser user = getSkillsUser(event.getPlayer());
         if (user != null && user.getTraitModifier(MANA_TRAIT_MODIFIER) != null) {
             user.removeTraitModifier(MANA_TRAIT_MODIFIER);

@@ -22,6 +22,7 @@ public class ActionBarManager {
     private static final Component ARMOR_ICON = Component.text("⛨ ");
     private static final Component MANA_ICON = Component.text("✦ ");
     private static final Component MANA_SUFFIX = Component.text("✎");
+    private static final Component STATUS_ICON = Component.text("⚑ ");
 
     public ActionBarManager(ServerCorePlugin plugin) {
         this.plugin = plugin;
@@ -55,6 +56,12 @@ public class ActionBarManager {
         // 3. 获取法力值 (通过 AuraSkills API)
         SkillsUser user = auraSkills.getUser(player.getUniqueId());
         double mana = user != null ? user.getMana() : 0.0;
+        PlayerRecoveryManager recoveryManager = PlayerRecoveryManager.getInstance();
+        PlayerRecoveryManager.RecoveryStatus recoveryStatus = recoveryManager == null
+                ? PlayerRecoveryManager.RecoveryStatus.DISABLED
+                : recoveryManager.getRecoveryStatus(player);
+        NamedTextColor statusColor = statusColor(recoveryStatus);
+        String statusText = recoveryManager == null ? "补给锁定" : recoveryManager.formatStatus(player);
 
         // 4. 高性能渲染 UI
         // 【架构师注】
@@ -72,9 +79,22 @@ public class ActionBarManager {
                 .append(MANA_ICON.color(NamedTextColor.BLUE))
                 .append(Component.text((int) mana, NamedTextColor.BLUE))
                 .append(MANA_SUFFIX.color(NamedTextColor.BLUE))
+                .append(SPACING)
+                .append(STATUS_ICON.color(statusColor))
+                .append(Component.text(statusText, statusColor))
                 .build();
 
         player.sendActionBar(actionBar);
+    }
+
+    private NamedTextColor statusColor(PlayerRecoveryManager.RecoveryStatus status) {
+        return switch (status) {
+            case COMBAT -> NamedTextColor.RED;
+            case BLOCKED -> NamedTextColor.YELLOW;
+            case RECOVERING -> NamedTextColor.GREEN;
+            case READY -> NamedTextColor.GRAY;
+            case DISABLED -> NamedTextColor.DARK_GRAY;
+        };
     }
 
     private String formatArmor(double armor) {

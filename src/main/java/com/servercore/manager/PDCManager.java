@@ -61,6 +61,12 @@ public class PDCManager {
     public final NamespacedKey KEY_ITEM_SCALE_VERSION;
     public final NamespacedKey KEY_ITEM_RARITY;
     public final NamespacedKey KEY_ITEM_EQUIPMENT_TIER;
+    public final NamespacedKey KEY_ITEM_FISHING_ROD;
+    public final NamespacedKey KEY_ITEM_FISHING_ROUTE;
+    public final NamespacedKey KEY_ITEM_FISHING_POWER;
+    public final NamespacedKey KEY_ITEM_GROWTH_ITEM;
+    public final NamespacedKey KEY_ITEM_GROWTH_LINE;
+    public final NamespacedKey KEY_ITEM_GROWTH_STAGE;
     public final NamespacedKey KEY_ITEM_ORIGINAL_NAME;
     public final NamespacedKey KEY_ITEM_REFORGE_ID;
     public final NamespacedKey KEY_ITEM_REFORGE_PREFIX;
@@ -153,6 +159,12 @@ public class PDCManager {
         this.KEY_ITEM_SCALE_VERSION = key("item_scale_version");
         this.KEY_ITEM_RARITY = key("item_rarity");
         this.KEY_ITEM_EQUIPMENT_TIER = key("item_equipment_tier");
+        this.KEY_ITEM_FISHING_ROD = key("item_fishing_rod");
+        this.KEY_ITEM_FISHING_ROUTE = key("item_fishing_route");
+        this.KEY_ITEM_FISHING_POWER = key("item_fishing_power");
+        this.KEY_ITEM_GROWTH_ITEM = key("item_growth_item");
+        this.KEY_ITEM_GROWTH_LINE = key("item_growth_line");
+        this.KEY_ITEM_GROWTH_STAGE = key("item_growth_stage");
         this.KEY_ITEM_ORIGINAL_NAME = key("item_original_name");
         this.KEY_ITEM_REFORGE_ID = key("item_reforge_id");
         this.KEY_ITEM_REFORGE_PREFIX = key("item_reforge_prefix");

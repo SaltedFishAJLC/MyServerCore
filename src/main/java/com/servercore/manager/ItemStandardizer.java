@@ -197,6 +197,7 @@ public class ItemStandardizer implements Listener {
     private void finishEquipmentItem(ItemStack item, ItemMeta meta, boolean isMythic, boolean applyDefaultTemplate) {
         // 原版属性只负责动画/手感展示，真实战斗数值统一从 ServerCore 的 PDC 面板读取。
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        ItemDurabilityManager.applyDurabilityRule(item, meta);
 
         if (isWeapon(item.getType())) {
             neutralizeVanillaWeaponAttributes(meta, item.getType());

@@ -167,6 +167,24 @@ public class CustomItemRegistry {
         if (definition.equipmentTier() > 0) {
             container.set(pdc.KEY_ITEM_EQUIPMENT_TIER, PersistentDataType.INTEGER, definition.equipmentTier());
         }
+        if (definition.fishingRod()) {
+            container.set(pdc.KEY_ITEM_FISHING_ROD, PersistentDataType.BYTE, (byte) 1);
+        }
+        if (!definition.fishingRoute().isBlank()) {
+            container.set(pdc.KEY_ITEM_FISHING_ROUTE, PersistentDataType.STRING, definition.fishingRoute());
+        }
+        if (definition.fishingPower() > 0) {
+            container.set(pdc.KEY_ITEM_FISHING_POWER, PersistentDataType.INTEGER, definition.fishingPower());
+        }
+        if (definition.growthItem()) {
+            container.set(pdc.KEY_ITEM_GROWTH_ITEM, PersistentDataType.BYTE, (byte) 1);
+        }
+        if (!definition.growthLine().isBlank()) {
+            container.set(pdc.KEY_ITEM_GROWTH_LINE, PersistentDataType.STRING, definition.growthLine());
+        }
+        if (definition.growthStage() > 0) {
+            container.set(pdc.KEY_ITEM_GROWTH_STAGE, PersistentDataType.INTEGER, definition.growthStage());
+        }
 
         if (definition.accessoryType() != null && !definition.accessoryType().isBlank()) {
             container.set(pdc.KEY_ACC_TYPE, PersistentDataType.STRING, definition.accessoryType());
@@ -235,6 +253,7 @@ public class CustomItemRegistry {
             meta.setCustomModelData(definition.customModelData());
         }
         meta.setUnbreakable(definition.unbreakable());
+        ItemDurabilityManager.applyDurabilityRule(item, meta);
         applyArmorAppearance(meta, definition.appearance());
         applyShieldAppearance(meta, definition.shieldAppearance());
 
@@ -501,6 +520,13 @@ public class CustomItemRegistry {
         for (AbilityDefinition ability : abilities) {
             abilityLore.addAll(ability.lore());
         }
+        String fishingRoute = normalizeConfigToken(section.getString("fishing_route", ""));
+        int fishingPower = Math.max(0, section.getInt("fishing_power", 0));
+        boolean fishingRod = section.getBoolean("fishing_rod",
+                material == Material.FISHING_ROD && (fishingPower > 0 || !fishingRoute.isBlank()));
+        boolean growthItem = section.getBoolean("growth_item", false);
+        String growthLine = normalizeItemId(section.getString("growth_line", ""));
+        int growthStage = Math.max(0, section.getInt("growth_stage", 0));
 
         return new CustomItemDefinition(
                 itemId,
@@ -509,6 +535,12 @@ public class CustomItemRegistry {
                 displayName,
                 rarity,
                 Math.max(0, Math.min(7, section.getInt("equipment_tier", section.getInt("tier", 0)))),
+                fishingRod,
+                fishingRod ? fishingRoute : "",
+                fishingRod ? fishingPower : 0,
+                growthItem,
+                growthLine,
+                growthStage,
                 stats,
                 sockets,
                 enchants,
@@ -723,6 +755,28 @@ public class CustomItemRegistry {
         int equipmentTier = container.getOrDefault(pdc.KEY_ITEM_EQUIPMENT_TIER, PersistentDataType.INTEGER, 0);
         if (equipmentTier > 0) {
             section.set("equipment_tier", equipmentTier);
+        }
+        if (container.getOrDefault(pdc.KEY_ITEM_FISHING_ROD, PersistentDataType.BYTE, (byte) 0) != 0) {
+            section.set("fishing_rod", true);
+        }
+        String fishingRoute = container.get(pdc.KEY_ITEM_FISHING_ROUTE, PersistentDataType.STRING);
+        if (fishingRoute != null && !fishingRoute.isBlank()) {
+            section.set("fishing_route", fishingRoute);
+        }
+        int fishingPower = container.getOrDefault(pdc.KEY_ITEM_FISHING_POWER, PersistentDataType.INTEGER, 0);
+        if (fishingPower > 0) {
+            section.set("fishing_power", fishingPower);
+        }
+        if (container.getOrDefault(pdc.KEY_ITEM_GROWTH_ITEM, PersistentDataType.BYTE, (byte) 0) != 0) {
+            section.set("growth_item", true);
+        }
+        String growthLine = container.get(pdc.KEY_ITEM_GROWTH_LINE, PersistentDataType.STRING);
+        if (growthLine != null && !growthLine.isBlank()) {
+            section.set("growth_line", growthLine);
+        }
+        int growthStage = container.getOrDefault(pdc.KEY_ITEM_GROWTH_STAGE, PersistentDataType.INTEGER, 0);
+        if (growthStage > 0) {
+            section.set("growth_stage", growthStage);
         }
 
         Map<String, Double> stats = readCurrentStats(container, pdc);
@@ -1409,6 +1463,10 @@ public class CustomItemRegistry {
         return raw == null ? "" : raw.trim().toLowerCase(Locale.ROOT);
     }
 
+    private String normalizeConfigToken(String raw) {
+        return raw == null ? "" : raw.trim().toUpperCase(Locale.ROOT).replace('-', '_').replace(' ', '_');
+    }
+
     private boolean isValidItemId(String itemId) {
         return itemId != null && !itemId.isBlank() && itemId.matches("[a-z0-9_:\\-.]+");
     }
@@ -1461,6 +1519,12 @@ public class CustomItemRegistry {
             String displayName,
             ItemFormatManager.Rarity rarity,
             int equipmentTier,
+            boolean fishingRod,
+            String fishingRoute,
+            int fishingPower,
+            boolean growthItem,
+            String growthLine,
+            int growthStage,
             Map<String, Double> stats,
             List<GemstoneManager.SocketType> sockets,
             Map<String, Integer> enchants,

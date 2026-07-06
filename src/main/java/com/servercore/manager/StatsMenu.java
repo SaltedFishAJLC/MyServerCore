@@ -140,9 +140,18 @@ public class StatsMenu {
                         .deserialize("<gray>最大法力值: <aqua>+" + formatStat(value * 2.5) + "</aqua></gray>")
                         .decoration(TextDecoration.ITALIC, false));
             }
-            case WILLPOWER -> lore.add(ServerCorePlugin.getMiniMessage()
-                    .deserialize("<gray>面板生命恢复: <yellow>+" + formatStat(value * 0.1) + " HP/s</yellow></gray>")
-                    .decoration(TextDecoration.ITALIC, false));
+            case WILLPOWER -> {
+                PlayerRecoveryManager recoveryManager = PlayerRecoveryManager.getInstance();
+                double exitSeconds = recoveryManager == null
+                        ? Math.max(4.0, 12.0 - value * 0.035)
+                        : recoveryManager.getExitSeconds(player);
+                lore.add(ServerCorePlugin.getMiniMessage()
+                        .deserialize("<gray>脱战等待: <yellow>" + formatStat(exitSeconds) + " 秒</yellow></gray>")
+                        .decoration(TextDecoration.ITALIC, false));
+                lore.add(ServerCorePlugin.getMiniMessage()
+                        .deserialize("<dark_gray>意志缩短脱战等待，不再直接提高基础回血速度。</dark_gray>")
+                        .decoration(TextDecoration.ITALIC, false));
+            }
             case LUCK -> {
                 lore.add(ServerCorePlugin.getMiniMessage()
                         .deserialize("<gray>闪避几率: <light_purple>+"
@@ -300,6 +309,7 @@ public class StatsMenu {
         double effectiveArmor = powerLevelManager == null ? 0.0 : powerLevelManager.calculateEffectiveArmorValue(player);
         double reduction = powerLevelManager == null ? 0.0 : powerLevelManager.calculateDamageReduction(player);
         double ehp = maxHealth / Math.max(0.01, 1.0 - reduction);
+        PlayerRecoveryManager recoveryManager = PlayerRecoveryManager.getInstance();
 
         List<Component> lore = new ArrayList<>();
         lore.add(Component.empty());
@@ -320,6 +330,22 @@ public class StatsMenu {
         lore.add(ServerCorePlugin.getMiniMessage()
                 .deserialize("<gray>有效生命 EHP: <aqua>" + formatStat(ehp) + "</aqua></gray>")
                 .decoration(TextDecoration.ITALIC, false));
+        if (recoveryManager != null) {
+            lore.add(Component.empty());
+            lore.add(ServerCorePlugin.getMiniMessage()
+                    .deserialize("<gray>后勤状态: <yellow>" + recoveryManager.formatStatus(player) + "</yellow></gray>")
+                    .decoration(TextDecoration.ITALIC, false));
+            lore.add(ServerCorePlugin.getMiniMessage()
+                    .deserialize("<gray>脱战回血: <red>"
+                            + formatStat(recoveryManager.estimateOutOfCombatRegenPerSecond(player))
+                            + " HP/s</red></gray>")
+                    .decoration(TextDecoration.ITALIC, false));
+            lore.add(ServerCorePlugin.getMiniMessage()
+                    .deserialize("<gray>脱战等待: <yellow>"
+                            + formatStat(recoveryManager.getExitSeconds(player))
+                            + " 秒</yellow></gray>")
+                    .decoration(TextDecoration.ITALIC, false));
+        }
 
         meta.lore(lore);
         item.setItemMeta(meta);

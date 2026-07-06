@@ -111,6 +111,7 @@ public class ShieldManager implements Listener {
             ShieldBlockResult result = new ShieldBlockResult(
                     ShieldBlockType.FULL_BLOCK, incomingDamage, 0.0, 0.0, false);
             Runnable commit = () -> {
+                markShieldCombat(defender, attacker);
                 perfectGuardCommit.run();
                 defender.getWorld().playSound(defender.getLocation(), Sound.ITEM_SHIELD_BLOCK, 0.85f, 1.15f);
             };
@@ -125,6 +126,7 @@ public class ShieldManager implements Listener {
         ShieldBlockResult result = new ShieldBlockResult(
                 type, blockedDamage, remainingDamage, appliedCooldownSeconds, true);
         Runnable commit = () -> {
+            markShieldCombat(defender, attacker);
             perfectGuardCommit.run();
             int cooldownTicks = (int) Math.round(appliedCooldownSeconds * 20.0);
             if (cooldownTicks > 0) {
@@ -137,6 +139,17 @@ public class ShieldManager implements Listener {
             defender.sendActionBar(Component.text(shieldBreak ? "盾牌崩裂!" : "格挡被突破!"));
         };
         return new ShieldBlockPlan(result, commit);
+    }
+
+    private void markShieldCombat(Player defender, Entity attacker) {
+        PlayerRecoveryManager recoveryManager = PlayerRecoveryManager.getInstance();
+        if (recoveryManager == null) {
+            return;
+        }
+        recoveryManager.markCombat(defender);
+        if (attacker instanceof Player player) {
+            recoveryManager.markCombat(player);
+        }
     }
 
     public double estimateShieldValuePerSecond(Player player, double maxHealth) {

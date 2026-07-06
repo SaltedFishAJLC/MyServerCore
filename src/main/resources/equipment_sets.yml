@@ -320,7 +320,7 @@ sets:
           riptide_set_tidebreaker:
             trigger: PASSIVE
             stats:
-              fishing_speed: 70
+              fishing_speed: 150
               sea_creature_chance: 6.0
               base_damage: 20
 
@@ -333,15 +333,15 @@ sets:
           abyss_set_sonar:
             trigger: PASSIVE
             stats:
-              fishing_speed: 65
               treasure_chance: 3.0
+              sea_creature_chance: -2.0
       4:
         abilities:
           abyss_set_lost_route:
             trigger: PASSIVE
             stats:
-              fishing_speed: 110
-              treasure_chance: 5.0
+              epic_treasure_weight: 0.05
+              legendary_treasure_weight: 0.05
 
   lord_set:
     name: "领主套装"
@@ -352,15 +352,13 @@ sets:
           lord_set_decree:
             trigger: PASSIVE
             stats:
-              sea_creature_chance: 6.0
+              sea_creature_chance: 8.0
               base_damage: 20
       4:
         abilities:
           lord_set_leviathan_command:
             trigger: PASSIVE
             stats:
-              fishing_speed: 100
-              sea_creature_chance: 8.0
               base_damage: 35
 
   tidevault_set:
@@ -372,12 +370,11 @@ sets:
           tidevault_set_keyring:
             trigger: PASSIVE
             stats:
-              fishing_speed: 90
-              treasure_chance: 4.0
+              treasure_chance: 3.0
       4:
         abilities:
           tidevault_set_royal_cache:
             trigger: PASSIVE
             stats:
-              fishing_speed: 150
-              treasure_chance: 7.0
+              epic_treasure_weight: 0.05
+              legendary_treasure_weight: 0.05

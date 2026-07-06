@@ -59,6 +59,194 @@ recipes:
     result:
       custom_item: tidecaller_rod
 
+  reed_rod:
+    shape:
+      - "ABA"
+      - " C "
+      - " D "
+    ingredients:
+      A:
+        material: KELP
+      B:
+        material: LILY_PAD
+      C:
+        material: FISHING_ROD
+      D:
+        custom_item: deep_sea_cache
+    result:
+      custom_item: reed_rod
+
+  ink_rod:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        material: INK_SAC
+      B:
+        material: GLOW_INK_SAC
+      C:
+        custom_item: deep_sea_cache
+      D:
+        custom_item: reed_rod
+      E:
+        custom_item: pearl_cluster
+    result:
+      custom_item: ink_rod
+
+  inkbound_tidebinder_rod:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: inkbound_membrane
+      B:
+        custom_item: dark_tide_core
+      C:
+        custom_item: drowned_map_fragment
+      D:
+        custom_item: ink_rod
+      E:
+        custom_item: pearl_cluster
+    result:
+      custom_item: inkbound_tidebinder_rod
+
+  sharktooth_wavebreaker_rod:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: shark_tooth
+      B:
+        custom_item: tidecaller_gill
+      C:
+        custom_item: stormfish_scale
+      D:
+        custom_item: inkbound_tidebinder_rod
+      E:
+        custom_item: ancient_shell
+    result:
+      custom_item: sharktooth_wavebreaker_rod
+
+  riptide_kinghunter_rod:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: tidecaller_gill
+      B:
+        custom_item: riptide_scale_core
+      C:
+        custom_item: stormfish_scale
+      D:
+        custom_item: sharktooth_wavebreaker_rod
+      E:
+        custom_item: abyssal_pearl
+    result:
+      custom_item: riptide_kinghunter_rod
+
+  lord_seabond_rod:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: leviathan_royal_scale
+      B:
+        custom_item: leviathan_lure_core
+      C:
+        custom_item: riptide_scale_core
+      D:
+        custom_item: riptide_kinghunter_rod
+      E:
+        custom_item: sunken_king_key
+    result:
+      custom_item: lord_seabond_rod
+
+  pearl_depthfinder_rod:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: pearl_cluster
+      B:
+        custom_item: drowned_map_fragment
+      C:
+        custom_item: deep_sea_cache
+      D:
+        custom_item: ink_rod
+      E:
+        custom_item: inkbound_membrane
+    result:
+      custom_item: pearl_depthfinder_rod
+
+  diver_depthfinder_rod:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: ancient_shell
+      B:
+        custom_item: tide_heart
+      C:
+        custom_item: reef_glass
+      D:
+        custom_item: pearl_depthfinder_rod
+      E:
+        custom_item: shark_tooth
+    result:
+      custom_item: diver_depthfinder_rod
+
+  abyss_treasureseeker_rod:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: abyssal_pearl
+      B:
+        custom_item: lost_compass
+      C:
+        custom_item: tide_heart
+      D:
+        custom_item: diver_depthfinder_rod
+      E:
+        custom_item: riptide_scale_core
+    result:
+      custom_item: abyss_treasureseeker_rod
+
+  tidevault_starhook_rod:
+    shape:
+      - "ABA"
+      - "CDC"
+      - "AEA"
+    ingredients:
+      A:
+        custom_item: sunken_king_key
+      B:
+        custom_item: leviathan_lure_core
+      C:
+        custom_item: abyssal_pearl
+      D:
+        custom_item: abyss_treasureseeker_rod
+      E:
+        custom_item: leviathan_royal_scale
+    result:
+      custom_item: tidevault_starhook_rod
+
   relic_spade:
     shape:
       - "ABA"

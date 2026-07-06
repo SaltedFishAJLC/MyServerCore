@@ -653,3 +653,45 @@
 - `.\gradle-8.5\bin\gradle.bat --no-daemon compileJava` 编译通过。
 - `.\gradle-8.5\bin\gradle.bat --no-daemon build` 完整构建通过，最终结果为 `BUILD SUCCESSFUL in 11s`。
 - 仓库没有可直接启动的 Paper 集成测试夹具；实际钓鱼触发、海怪击杀掉落、合成界面和 T6 潮藏套触达 `15-60 ticks` 仍需测试服验收。
+
+## 2026-07-06 玩家后勤与状态系统重构
+
+### 更新日志
+
+- 游侠职业属性池从敏捷/幸运改为敏捷/意志，避免与刺客重复；职业 UI 和 Power 计算会自动使用新的两个维度。
+- 新增 `ItemDurabilityManager`：所有装备、工具、武器、防具、钓竿、弓、弩、三叉戟、盾牌等可损耗物品强制不可破坏，登录、容器、点击、拾取和物品损耗事件都会兜底清除 damage。
+- `CustomItemRegistry` 与 `ItemStandardizer` 已接入不可破坏规则；自定义装备生成和原版装备标准化都会覆盖旧 `unbreakable` 字段口径。
+- 新增 `PlayerRecoveryManager`：关闭原版自然回血、锁定饱食与饱和、维护玩家战斗状态、按 WIL 缩短脱战等待，并在脱战安全后按最大生命百分比回血。
+- `DamageService` 在有效伤害结算后刷新攻击者/受击者战斗状态；`ShieldManager` 在完整格挡、破防或盾崩时刷新防御方战斗状态。
+- 食物补给改为配置驱动：默认苹果、面包、熟肉、熟鱼、金苹果可在满饱食时右键使用，手动扣物品、回血/吸收并进入分类冷却；未配置的 ServerCore 可食用材质材料不会被误吃。
+- ActionBar 和 `/sc stats` 显示新的后勤状态、脱战等待和脱战回血；意志说明改为缩短脱战等待，不再显示为直接自然回复。
+- 新增 `docs/player-logistics-system-status.md`，同步更新 `docs/numerical-systems-status.md` 与 `化石心核` lore。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon compileJava` 编译通过，只有既有过时 API 警告。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 完整构建通过，最终结果为 `BUILD SUCCESSFUL in 16s`。
+- 仓库没有可直接启动的 Paper 集成测试夹具；耐久、饱食锁定、食物补给、盾牌刷新脱战和附近敌对单位阻断恢复仍需测试服验收。
+
+## 2026-07-06 钓鱼竿阶段、Fishing Speed 上限与鱼饵接口预留
+
+### 更新日志
+
+- `FishingManager` 将等待公式入口的有效 Fishing Speed 硬封顶为 `1500`，保留 raw/effective 两层语义；达到或超过 1500 后窗口固定为 `15-60 ticks`。
+- `/sc gathering` 钓鱼面板新增有效 Fishing Speed / 1500 上限显示，继续拆分主手、护甲、饰品槽和护符袋贡献。
+- `PDCManager`、`CustomItemRegistry` 与 `ItemFormatManager` 支持钓竿字段：`fishing_rod`、`fishing_route`、`fishing_power`、`growth_item`、`growth_line`、`growth_stage`；物品 lore 会显示路线、Fishing Power 和成长阶段。
+- `FishingManager#hasEnoughFishingPower(Player, FishingPool)` 已预留钓鱼池 Fishing Power 门槛结构；当前默认池子尚未强制检查。
+- `FishingManager` 在海怪、宝藏和普通渔获成功分支后预留鱼饵消耗钩子；当前没有默认鱼饵道具，也不会扣除玩家背包物品。
+- `custom_items.yml` 新增 10 把钓竿：T1/T2 通用线、T3-T6 海怪线、T3-T6 宝藏线；`recipes.yml` 补齐对应成长配方。
+- 同步重算 T5/T6 钓鱼防具与套装：深渊四件基础为 `650 FS / 20 SCC / 14 TC`，潮藏四件基础为 `780 FS / 26 SCC / 20 TC`；深渊和潮藏 4 件套改为预留史诗/传说宝藏权重，不再直接加速度或宝藏概率。
+- 领主四件基础调整为 `720 FS / 55 SCC / 7 TC`，2 件套改为 +8 SCC；激流四件基础调整为 `520 FS / 44 SCC / 5 TC`，4 件套承接满套目标的 +150 FS / +6 SCC。
+- `docs/fishing-system-status.md` 同步新钓竿阶段、T6 目标、鱼饵接口和验收清单。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon compileJava` 编译通过，只有既有过时 API 警告。
+- SnakeYAML 2.2 成功解析 `custom_items.yml`、`recipes.yml`、`equipment_sets.yml`、`passive_abilities.yml`、`gathering_loot.yml`、`custom_mobs.yml`。
+- 配置引用检查确认配方、宝藏、海怪掉落、套装和被动引用均能找到目标 ID；新增 10 把钓竿均存在物品定义与配方引用。
+- 配置断言确认目标值：`lord_set + lord_seabond_rod + gatherers_compass` 为 `1150 FS / 78 SCC / 11.5 TC`，`tidevault_set + tidevault_starhook_rod + gatherers_compass` 为 `1300 FS / 31 SCC / 31 TC`。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 完整构建通过，最终结果为 `BUILD SUCCESSFUL in 16s`。
+- 仓库没有可直接启动的 Paper 集成测试夹具；钓竿合成、Fishing Power 门槛接入、未来鱼饵消耗和实际钓鱼事件仍需测试服验收。

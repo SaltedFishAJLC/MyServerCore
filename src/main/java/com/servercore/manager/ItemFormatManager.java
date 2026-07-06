@@ -632,6 +632,22 @@ public class ItemFormatManager implements Listener {
             lore.add(Component.text("装备阶段: T" + definition.equipmentTier(), NamedTextColor.GOLD)
                     .decoration(TextDecoration.ITALIC, false));
         }
+        if (definition.fishingRod()) {
+            if (!definition.fishingRoute().isBlank()) {
+                lore.add(Component.text("钓竿路线: " + fishingRouteLabel(definition.fishingRoute()), NamedTextColor.BLUE)
+                        .decoration(TextDecoration.ITALIC, false));
+            }
+            if (definition.fishingPower() > 0) {
+                lore.add(Component.text("Fishing Power: " + definition.fishingPower(), NamedTextColor.AQUA)
+                        .decoration(TextDecoration.ITALIC, false));
+            }
+        }
+        if (definition.growthItem() || !definition.growthLine().isBlank() || definition.growthStage() > 0) {
+            String growthLine = definition.growthLine().isBlank() ? "unknown" : definition.growthLine();
+            String growthStage = definition.growthStage() > 0 ? "T" + definition.growthStage() : "T?";
+            lore.add(Component.text("成长线: " + growthLine + " " + growthStage, NamedTextColor.DARK_AQUA)
+                    .decoration(TextDecoration.ITALIC, false));
+        }
         if (definition.imprintEligible() || definition.accessoryType().equalsIgnoreCase("IMPRINT")) {
             lore.add(Component.text("可作为印记：仅被动与套装身份生效", NamedTextColor.DARK_PURPLE)
                     .decoration(TextDecoration.ITALIC, false));
@@ -645,6 +661,16 @@ public class ItemFormatManager implements Listener {
             lore.add(Component.text("护符系列: " + definition.talismanFamily(), NamedTextColor.YELLOW)
                     .decoration(TextDecoration.ITALIC, false));
         }
+    }
+
+    private String fishingRouteLabel(String route) {
+        return switch (route == null ? "" : route.toUpperCase(Locale.ROOT)) {
+            case "MIXED" -> "通用";
+            case "SEA_CREATURE", "SEA_MONSTER" -> "海怪";
+            case "TREASURE" -> "宝藏";
+            case "SPECIAL" -> "特殊";
+            default -> route;
+        };
     }
 
     private void renderStoryLore(List<Component> lore, PersistentDataContainer container, PDCManager pdc) {

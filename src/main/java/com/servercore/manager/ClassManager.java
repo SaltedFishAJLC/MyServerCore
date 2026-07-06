@@ -49,7 +49,7 @@ public class ClassManager {
                 List.of("额外生命恢复 = Power * 0.08", "战斗中生命恢复保留至 70%", "承受附近队友 25% 实际伤害")),
         MARKSMAN("神射手", Material.BOW, AttributeManager.CoreAttribute.AGILITY, AttributeManager.CoreAttribute.INTELLIGENCE,
                 List.of("额外暴击率 = Power * 0.2%", "额外破甲率 = Power * 0.2%", "箭矢获得轻微吸附")),
-        RANGER("游侠", Material.FEATHER, AttributeManager.CoreAttribute.AGILITY, AttributeManager.CoreAttribute.LUCK,
+        RANGER("游侠", Material.FEATHER, AttributeManager.CoreAttribute.AGILITY, AttributeManager.CoreAttribute.WILLPOWER,
                 List.of("攻击速度 = Power * 0.2", "移动速度 = Power * 0.6", "允许二段跳", "命中叠加移动速度")),
         PROPHET("先知", Material.ENCHANTED_BOOK, AttributeManager.CoreAttribute.INTELLIGENCE, AttributeManager.CoreAttribute.WILLPOWER,
                 List.of("额外法力上限 = Power * 3.0", "消耗法力积累扭曲治疗光环")),

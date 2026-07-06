@@ -7,6 +7,7 @@ import com.servercore.enchant.EquipmentEnchantService;
 import com.servercore.manager.AttributeManager;
 import com.servercore.manager.ClassPassiveManager;
 import com.servercore.manager.PDCManager;
+import com.servercore.manager.PlayerRecoveryManager;
 import com.servercore.manager.PowerLevelManager;
 import com.servercore.manager.ShieldManager;
 import com.servercore.passive.PassiveSnapshotService;
@@ -107,6 +108,10 @@ public final class DamageService implements Listener {
         }
 
         DamageResult result = plan.result(actualDamage);
+        PlayerRecoveryManager recoveryManager = PlayerRecoveryManager.getInstance();
+        if (recoveryManager != null) {
+            recoveryManager.markCombat(packet, result);
+        }
         finalizedResults.put(event, result);
         if (isInternalDamageActive() && INTERNAL_PLANS.get().contains(plan)) {
             internalResults.put(plan, result);
@@ -369,7 +374,12 @@ public final class DamageService implements Listener {
             }
         }
         DamageResult result = internalResults.remove(plan);
-        return result == null ? plan.result(plan.serverCoreDamage()) : result;
+        result = result == null ? plan.result(plan.serverCoreDamage()) : result;
+        PlayerRecoveryManager recoveryManager = PlayerRecoveryManager.getInstance();
+        if (recoveryManager != null) {
+            recoveryManager.markCombat(packet, result);
+        }
+        return result;
     }
 
     private boolean shouldRestoreNoDamageTicksAfterInternalDamage(DamagePacket packet) {

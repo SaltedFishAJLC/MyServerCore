@@ -38,6 +38,7 @@ import com.servercore.manager.PlayerStatCache;
 import com.servercore.manager.AccessoryListener;
 import com.servercore.manager.ItemFormatManager;
 import com.servercore.manager.ItemStandardizer;
+import com.servercore.manager.ItemDurabilityManager;
 import com.servercore.manager.ReforgeManager;
 import com.servercore.manager.GemstoneManager;
 import com.servercore.manager.EnchantManager;
@@ -64,6 +65,7 @@ import com.servercore.manager.FishingManager;
 import com.servercore.manager.GlobalStatManager;
 import com.servercore.manager.MiningManager;
 import com.servercore.manager.NonCombatStatsMenu;
+import com.servercore.manager.PlayerRecoveryManager;
 import com.servercore.manager.RangedWeaponManager;
 import com.servercore.manager.ShieldManager;
 import com.servercore.manager.UniqueMobSpawnManager;
@@ -114,6 +116,7 @@ public final class ServerCorePlugin extends JavaPlugin {
     private VanillaItemOverrideManager vanillaItemOverrideManager;
     private UniqueMobSpawnManager uniqueMobSpawnManager;
     private ShieldManager shieldManager;
+    private PlayerRecoveryManager playerRecoveryManager;
     private ClassPassiveManager classPassiveManager;
     private StatusService statusService;
     private FrostService frostService;
@@ -170,6 +173,7 @@ public final class ServerCorePlugin extends JavaPlugin {
         this.weaponTemplateManager = new WeaponTemplateManager(this);
         this.shieldManager = new ShieldManager(this);
         this.attributeManager = new AttributeManager(this);
+        this.playerRecoveryManager = new PlayerRecoveryManager(this);
         this.globalStatManager = new GlobalStatManager(this);
         new CollectionSkillManager(this, globalStatManager);
         this.fishingManager = new FishingManager(this, globalStatManager);
@@ -195,6 +199,7 @@ public final class ServerCorePlugin extends JavaPlugin {
         this.enchantAcquisitionManager = new EnchantAcquisitionManager(this);
         this.vanillaItemOverrideManager = new VanillaItemOverrideManager(this);
         new ItemStandardizer(this);
+        new ItemDurabilityManager(this);
         new WeaponAbilityManager(this);
 
         // 注册"小红花"技能处理器
@@ -1105,6 +1110,10 @@ public final class ServerCorePlugin extends JavaPlugin {
 
         if (attributeManager != null) {
             attributeManager.stop();
+        }
+
+        if (playerRecoveryManager != null) {
+            playerRecoveryManager.stop();
         }
 
         if (equipmentEnchantService != null) {

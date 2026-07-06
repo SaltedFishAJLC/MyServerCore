@@ -20,6 +20,68 @@ power:
     update_interval_ticks: 20
     nearby_radius: 64.0
 
+survival:
+  hunger:
+    enabled: false
+    lock_food_level: 20
+    lock_saturation: 20.0
+
+  natural_regeneration:
+    enabled: false
+
+  out_of_combat_regen:
+    enabled: true
+    base_exit_seconds: 12.0
+    min_exit_seconds: 4.0
+    willpower_seconds_reduction_per_point: 0.035
+    heal_percent_per_second: 0.08
+    tick_interval: 20
+    block_in_boss_combat: true
+    block_near_hostile_radius: 12.0
+
+  foods:
+    apple:
+      material: APPLE
+      instant_heal_percent: 0.10
+      cooldown_seconds: 8
+      category: BASIC_FOOD
+    bread:
+      material: BREAD
+      instant_heal_percent: 0.14
+      cooldown_seconds: 8
+      category: BASIC_FOOD
+    cooked_beef:
+      material: COOKED_BEEF
+      instant_heal_percent: 0.18
+      cooldown_seconds: 10
+      category: BASIC_FOOD
+    cooked_porkchop:
+      material: COOKED_PORKCHOP
+      instant_heal_percent: 0.18
+      cooldown_seconds: 10
+      category: BASIC_FOOD
+    cooked_chicken:
+      material: COOKED_CHICKEN
+      instant_heal_percent: 0.16
+      cooldown_seconds: 10
+      category: BASIC_FOOD
+    cooked_cod:
+      material: COOKED_COD
+      instant_heal_percent: 0.16
+      cooldown_seconds: 10
+      category: SEAFOOD
+    cooked_salmon:
+      material: COOKED_SALMON
+      instant_heal_percent: 0.18
+      cooldown_seconds: 10
+      category: SEAFOOD
+    golden_apple:
+      material: GOLDEN_APPLE
+      instant_heal_percent: 0.25
+      absorption: 40
+      cooldown_seconds: 30
+      category: SPECIAL_FOOD
+
 weapon_templates:
   ONE_HANDED_SWORD:
     attack_speed: 1.6
