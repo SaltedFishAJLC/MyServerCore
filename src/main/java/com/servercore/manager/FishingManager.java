@@ -48,11 +48,11 @@ public class FishingManager implements Listener {
     private static final double TREASURE_CHANCE_PER_LEVEL = 0.0015;
     private static final int BASE_MIN_WAIT_TICKS = 150;
     private static final int BASE_MAX_WAIT_TICKS = 300;
-    private static final int MIN_WAIT_FLOOR_TICKS = 10;
-    private static final int MAX_WAIT_FLOOR_TICKS = 80;
+    private static final int MIN_WAIT_FLOOR_TICKS = 15;
+    private static final int MAX_WAIT_FLOOR_TICKS = 60;
     private static final int MAX_FISHING_LEVEL = 100;
     private static final double FISHING_SPEED_PER_LEVEL = 3.0;
-    private static final double FULL_BUILD_FISHING_SPEED_TARGET = 1400.0;
+    private static final double FULL_BUILD_FISHING_SPEED_TARGET = 1500.0;
     private static final double MIN_WAIT_SPEED_SCALE = MIN_WAIT_FLOOR_TICKS * FULL_BUILD_FISHING_SPEED_TARGET / (BASE_MIN_WAIT_TICKS - MIN_WAIT_FLOOR_TICKS);
     private static final double MAX_WAIT_SPEED_SCALE = MAX_WAIT_FLOOR_TICKS * FULL_BUILD_FISHING_SPEED_TARGET / (BASE_MAX_WAIT_TICKS - MAX_WAIT_FLOOR_TICKS);
 

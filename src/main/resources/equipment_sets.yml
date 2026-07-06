@@ -36,3 +36,348 @@ sets:
             range: 8
             width: 1.5
             damage_ratio: 0.75
+
+  frontier_guard:
+    name: "边境守卫套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          frontier_guard_drill:
+            trigger: PASSIVE
+            stats:
+              base_damage: 2
+              attr_toughness: 3
+      4:
+        abilities:
+          frontier_guard_line:
+            trigger: PASSIVE
+            amount: 0.05
+
+  steelwall_guard:
+    name: "钢壁卫士套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          steelwall_guard_bulk:
+            trigger: PASSIVE
+            stats:
+              max_health: 18
+              base_armor: 18
+      4:
+        abilities:
+          steelwall_guard_bastion:
+            trigger: PASSIVE
+            amount: 0.08
+
+  wind_hunter:
+    name: "逐风猎手套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          wind_hunter_focus:
+            trigger: PASSIVE
+            stats:
+              crit_chance: 0.04
+              armor_pen: 8
+      4:
+        abilities:
+          wind_hunter_tailwind:
+            trigger: PASSIVE
+            amount: 0.08
+
+  nightwalker:
+    name: "夜幕行者套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          nightwalker_precision:
+            trigger: PASSIVE
+            stats:
+              crit_chance: 0.05
+              crit_damage: 0.15
+      4:
+        abilities:
+          nightwalker_execution:
+            trigger: PASSIVE
+            amount: 0.12
+
+  astral_scholar:
+    name: "星辉学者套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          astral_scholar_focus:
+            trigger: PASSIVE
+            stats:
+              attr_intelligence: 25
+              attr_willpower: 15
+      4:
+        abilities:
+          astral_scholar_confluence:
+            trigger: PASSIVE
+            stats:
+              base_multiplier: 0.08
+
+  cobalt_vanguard:
+    name: "苍钢先锋套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          cobalt_vanguard_balance:
+            trigger: PASSIVE
+            stats:
+              base_damage: 8
+              base_armor: 20
+      4:
+        abilities:
+          cobalt_vanguard_assault:
+            trigger: PASSIVE
+            amount: 0.06
+
+  bedrock_bulwark:
+    name: "磐岩壁垒套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          bedrock_bulwark_mass:
+            trigger: PASSIVE
+            stats:
+              max_health: 30
+              base_armor: 25
+      4:
+        abilities:
+          bedrock_bulwark_guard:
+            trigger: PASSIVE
+            amount: 0.10
+
+  dusk_hunter:
+    name: "暮影猎手套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          dusk_hunter_precision:
+            trigger: PASSIVE
+            stats:
+              crit_chance: 0.06
+              crit_damage: 0.18
+      4:
+        abilities:
+          dusk_hunter_execute:
+            trigger: PASSIVE
+            amount: 0.10
+
+  windfeather_ranger:
+    name: "风翎游侠套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          windfeather_ranger_pierce:
+            trigger: PASSIVE
+            stats:
+              crit_chance: 0.04
+              armor_pen: 10
+      4:
+        abilities:
+          windfeather_ranger_barrage:
+            trigger: PASSIVE
+            amount: 0.08
+
+  lilypad_set:
+    name: "荷叶套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          lilypad_set_flow:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 10
+      4:
+        abilities:
+          lilypad_set_still_water:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 20
+              treasure_chance: 1.0
+
+  squid_set:
+    name: "乌贼套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          squid_set_scent:
+            trigger: PASSIVE
+            stats:
+              sea_creature_chance: 1.0
+      4:
+        abilities:
+          squid_set_deep_pull:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 20
+              sea_creature_chance: 2.0
+
+  inkbound_set:
+    name: "墨灵套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          inkbound_set_pressure:
+            trigger: PASSIVE
+            stats:
+              sea_creature_chance: 2.0
+              base_damage: 4
+      4:
+        abilities:
+          inkbound_set_abyssal_hook:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 35
+              sea_creature_chance: 3.0
+
+  sponge_set:
+    name: "海绵套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          sponge_set_salvage:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 25
+              treasure_chance: 1.5
+      4:
+        abilities:
+          sponge_set_soaked_cache:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 45
+              treasure_chance: 2.5
+
+  shark_set:
+    name: "鲨鱼套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          shark_set_bloodwater:
+            trigger: PASSIVE
+            stats:
+              sea_creature_chance: 3.0
+              base_damage: 8
+      4:
+        abilities:
+          shark_set_apex_hunter:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 45
+              sea_creature_chance: 4.0
+              base_damage: 12
+
+  diver_set:
+    name: "潜水员套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          diver_set_charted_depth:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 40
+              treasure_chance: 2.0
+      4:
+        abilities:
+          diver_set_sunken_route:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 70
+              treasure_chance: 3.5
+
+  riptide_set:
+    name: "激流套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          riptide_set_churning:
+            trigger: PASSIVE
+            stats:
+              sea_creature_chance: 4.0
+              base_damage: 12
+      4:
+        abilities:
+          riptide_set_tidebreaker:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 70
+              sea_creature_chance: 6.0
+              base_damage: 20
+
+  abyss_set:
+    name: "深渊套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          abyss_set_sonar:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 65
+              treasure_chance: 3.0
+      4:
+        abilities:
+          abyss_set_lost_route:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 110
+              treasure_chance: 5.0
+
+  lord_set:
+    name: "领主套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          lord_set_decree:
+            trigger: PASSIVE
+            stats:
+              sea_creature_chance: 6.0
+              base_damage: 20
+      4:
+        abilities:
+          lord_set_leviathan_command:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 100
+              sea_creature_chance: 8.0
+              base_damage: 35
+
+  tidevault_set:
+    name: "潮藏套装"
+    threshold_mode: CUMULATIVE
+    thresholds:
+      2:
+        abilities:
+          tidevault_set_keyring:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 90
+              treasure_chance: 4.0
+      4:
+        abilities:
+          tidevault_set_royal_cache:
+            trigger: PASSIVE
+            stats:
+              fishing_speed: 150
+              treasure_chance: 7.0

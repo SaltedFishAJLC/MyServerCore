@@ -348,6 +348,7 @@ public final class DamageService implements Listener {
     private DamageResult applyInternalBukkitDamage(DamagePacket packet, DamagePlan plan) {
         LivingEntity target = packet.target();
         int previousNoDamageTicks = target.getNoDamageTicks();
+        boolean restoreNoDamageTicks = shouldRestoreNoDamageTicksAfterInternalDamage(packet);
         INTERNAL_DEPTH.set(INTERNAL_DEPTH.get() + 1);
         INTERNAL_PLANS.get().addLast(plan);
         try {
@@ -363,12 +364,19 @@ public final class DamageService implements Listener {
         } finally {
             INTERNAL_PLANS.get().removeLastOccurrence(plan);
             INTERNAL_DEPTH.set(Math.max(0, INTERNAL_DEPTH.get() - 1));
-            if (!target.isDead() && target.isValid()) {
+            if (restoreNoDamageTicks && !target.isDead() && target.isValid()) {
                 target.setNoDamageTicks(previousNoDamageTicks);
             }
         }
         DamageResult result = internalResults.remove(plan);
         return result == null ? plan.result(plan.serverCoreDamage()) : result;
+    }
+
+    private boolean shouldRestoreNoDamageTicksAfterInternalDamage(DamagePacket packet) {
+        return packet.sourceKind() == DamageSourceKind.CUSTOM_STATUS
+                || packet.sourceKind() == DamageSourceKind.VANILLA_STATUS
+                || packet.tags().contains(DamageTag.DOT)
+                || packet.tags().contains(DamageTag.STATUS);
     }
 
     private double capNonLethalDamage(LivingEntity target, double damage) {

@@ -5,6 +5,7 @@ import com.servercore.combat.creature.CreatureTagService;
 import com.servercore.enchant.EnchantEffectService;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
@@ -22,6 +23,8 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.SpawnerSpawnEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -67,6 +70,7 @@ public class MobSpawnManager implements Listener {
         instance = this;
         initDefaultVanillaStats();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        Bukkit.getScheduler().runTask(plugin, this::scanLoadedEntities);
         this.hostileTargetTask = Bukkit.getScheduler().runTaskTimer(plugin, this::tickAlwaysHostileMobs, 20L, 40L);
     }
 
@@ -132,6 +136,45 @@ public class MobSpawnManager implements Listener {
         if (container.has(pdc.KEY_MOB_POWER_LEVEL, PersistentDataType.INTEGER)) return;
 
         applyScaling(entity, event.getSpawnReason(), null, false);
+    }
+
+    /**
+     * Chunk-generated structure entities already exist when their chunk is loaded,
+     * so modern Paper versions do not fire CreatureSpawnEvent with CHUNK_GEN for them.
+     * Defer one tick until the entity is fully added to the world, then initialize it
+     * through the same idempotent scaling path used by normal creature spawns.
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onEntitiesLoad(EntitiesLoadEvent event) {
+        List<LivingEntity> loadedEnemies = event.getEntities().stream()
+                .filter(LivingEntity.class::isInstance)
+                .map(LivingEntity.class::cast)
+                .filter(Enemy.class::isInstance)
+                .toList();
+        if (loadedEnemies.isEmpty()) {
+            return;
+        }
+
+        Bukkit.getScheduler().runTask(plugin, () -> loadedEnemies.forEach(this::applyLoadedEntityScaling));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onChunkLoad(ChunkLoadEvent event) {
+        if (!event.isNewChunk()) {
+            return;
+        }
+
+        Chunk chunk = event.getChunk();
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (!chunk.isLoaded()) {
+                return;
+            }
+            for (Entity entity : chunk.getEntities()) {
+                if (entity instanceof LivingEntity livingEntity) {
+                    applyLoadedEntityScaling(livingEntity);
+                }
+            }
+        });
     }
 
     public void applyCustomMobScaling(LivingEntity entity, String registryMobId) {
@@ -251,6 +294,32 @@ public class MobSpawnManager implements Listener {
 
         retargetAlwaysHostileMob(entity, registryMobId);
         hologramManager.attachHologram(entity, powerLevel);
+    }
+
+    private void scanLoadedEntities() {
+        for (World world : Bukkit.getWorlds()) {
+            for (LivingEntity entity : world.getLivingEntities()) {
+                applyLoadedEntityScaling(entity);
+            }
+        }
+    }
+
+    private void applyLoadedEntityScaling(LivingEntity entity) {
+        if (!(entity instanceof Enemy) || !entity.isValid() || entity.isDead()) {
+            return;
+        }
+
+        PDCManager pdc = PDCManager.getInstance();
+        if (pdc == null) {
+            return;
+        }
+
+        PersistentDataContainer container = entity.getPersistentDataContainer();
+        if (container.has(pdc.KEY_MOB_POWER_LEVEL, PersistentDataType.INTEGER)) {
+            return;
+        }
+
+        applyScaling(entity, CreatureSpawnEvent.SpawnReason.DEFAULT, null, false);
     }
 
     private void tickAlwaysHostileMobs() {

@@ -77,6 +77,12 @@ public class CombatManager implements Listener {
 
         if (!isRanged) {
             WeaponTemplateManager templateManager = WeaponTemplateManager.getInstance();
+            if (isRangedWeaponMeleeAttempt(player, templateManager)) {
+                event.setCancelled(true);
+                event.setDamage(0.0);
+                player.sendActionBar(net.kyori.adventure.text.Component.text("远程武器需要通过投射物造成伤害。"));
+                return;
+            }
             WeaponTemplateManager.HandValidationResult handValidation = templateManager == null
                     ? null
                     : templateManager.validateHands(player);
@@ -262,6 +268,18 @@ public class CombatManager implements Listener {
      */
     private CombatStats getCombatStats(Player player) {
         return CombatStats.getFullStats(player);
+    }
+
+    private boolean isRangedWeaponMeleeAttempt(Player player, WeaponTemplateManager templateManager) {
+        if (player == null || templateManager == null) {
+            return false;
+        }
+        ItemStack mainHand = player.getInventory().getItemInMainHand();
+        WeaponTemplateManager.WeaponTemplate template = templateManager.getTemplate(mainHand);
+        if (template == null && mainHand != null) {
+            template = templateManager.getDefaultTemplate(mainHand.getType());
+        }
+        return template != null && template.isRanged() && !template.isMelee();
     }
 
     private double rollBrutalityMultiplier(double brutality) {

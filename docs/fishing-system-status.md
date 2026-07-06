@@ -1,6 +1,6 @@
 # 钓鱼体系实现状态与后续任务
 
-更新时间：2026-06-18
+更新时间：2026-07-06
 
 本文以当前仓库代码为准，并结合本项目对话中已经确认的设计要求，记录 ServerCore 钓鱼体系的实现状态、计算约定、配置接口、已知问题和后续任务。
 
@@ -20,7 +20,9 @@
 
 当前成熟度属于“主流程和 P0 系统整合已实现，但仍存在内容平衡与自动化测试缺口”。尤其需要注意：
 
-- 默认内容无法达到设计目标中的满配 `10-80 ticks`。
+- 第一批 T1-T6 钓鱼装备、材料来源、宝藏交叉掉落和海怪击杀掉落已进入默认配置。
+- 当前公式满配目标为有效 Fishing Speed `1500` 时达到 `15-60 ticks`。
+- T6 宝藏线 `tidevault_set` + `tidecaller_rod` + 100 级 Fishing 可触达该等待下限；海怪线更偏 `Sea Creature Chance` 和战斗属性。
 - 钓鱼属性当前聚合主手、护甲、4 个饰品槽和护符袋；副手不生效。
 - 海怪已经通过 MobSpawnManager 专用入口统一接入减伤、虚拟血池和全息链路。
 - 缺少钓鱼系统自动化测试。
@@ -136,24 +138,27 @@ fishing_speed
 设计目标：
 
 - 初始等待窗口：`150-300 ticks`。
-- 满配有效 Fishing Speed 达到 1400 时：`10-80 ticks`。
-- 最低边界固定为 `10-80 ticks`，不会继续缩短。
+- 满配有效 Fishing Speed 达到 1500 时：`15-60 ticks`。
+- 最低边界固定为 `15-60 ticks`，不会继续缩短。
 
 有效速度记作 `S`。
 
 最短等待：
 
 ```text
-MinWait = max(10, round(150 × 100 / (100 + S)))
+MinScale = 15 × 1500 / (150 - 15)
+         ≈ 166.6667
+
+MinWait = max(15, round(150 × MinScale / (MinScale + S)))
 ```
 
 最长等待：
 
 ```text
-MaxScale = 80 × 1400 / (300 - 80)
-         ≈ 509.0909
+MaxScale = 60 × 1500 / (300 - 60)
+         = 375
 
-MaxWait = max(80, round(300 × MaxScale / (MaxScale + S)))
+MaxWait = max(60, round(300 × MaxScale / (MaxScale + S)))
 ```
 
 实际示例：
@@ -161,14 +166,15 @@ MaxWait = max(80, round(300 × MaxScale / (MaxScale + S)))
 | 有效 Fishing Speed | 等待窗口 |
 |---:|---:|
 | 0 | 150-300 ticks |
-| 135 | 64-237 ticks |
-| 180 | 54-222 ticks |
-| 300 | 38-189 ticks |
-| 315 | 36-185 ticks |
-| 480 | 26-154 ticks |
-| 800 | 17-117 ticks |
-| 1100 | 12-95 ticks |
-| 1400 | 10-80 ticks |
+| 135 | 83-221 ticks |
+| 180 | 72-203 ticks |
+| 300 | 54-167 ticks |
+| 315 | 52-163 ticks |
+| 480 | 39-132 ticks |
+| 800 | 26-96 ticks |
+| 1100 | 20-76 ticks |
+| 1400 | 16-63 ticks |
+| 1500 | 15-60 ticks |
 
 ### 4.3 当前平衡缺口
 
@@ -182,10 +188,20 @@ fishing_speed: 180
 
 ```text
 Effective Fishing Speed = 300 + 180 = 480
-等待窗口约为 26-154 ticks
+等待窗口约为 39-132 ticks
 ```
 
-要达到 `10-80 ticks`，100 级玩家仍需要约 1100 点装备/附魔 Fishing Speed。当前默认物品和附魔内容没有提供足够数值，因此“满配 10-80 ticks”目前只是公式目标，不是默认内容可达目标。
+第一批钓鱼套装补齐后，默认内容已有可触达下限的路线：
+
+```text
+100 级 Fishing = 300 Fishing Speed
+tidecaller_rod = 180 Fishing Speed
+tidevault_set 四件基础 = 1040 Fishing Speed
+合计 = 1520 Fishing Speed
+等待窗口 = 15-60 ticks
+```
+
+`tidevault_set` 的 2 件与 4 件套装被动还会额外提供 Fishing Speed，因此宝藏线是当前默认配置中最容易压到等待下限的路线。`lord_set` 作为 T6 海怪线终局套装，Fishing Speed 预算较低，但提供更高 Sea Creature Chance 和战斗属性。
 
 ## 5. 概率体系
 
@@ -358,7 +374,7 @@ Epic: 19
 Legendary: 3
 ```
 
-当前默认配置有 10 个宝藏条目。
+当前默认配置有 25 个宝藏条目。
 
 档位概率是对“当前等级已解锁档位”重新归一化后的概率。例如低等级只解锁 Rare 时，宝藏触发后必定进入 Rare，而不是仍有概率抽到未解锁档位后落空。
 
@@ -447,6 +463,28 @@ tidecaller_rod:
     attr_luck: 8
 ```
 
+第一批钓鱼防具路线：
+
+```text
+海怪线：荷叶套 T1 -> 乌贼套 T2 -> 墨灵套 T3 -> 鲨鱼套 T4 -> 激流套 T5 -> 领主套 T6
+宝藏线：荷叶套 T1 -> 海绵套 T3 -> 潜水员套 T4 -> 深渊套 T5 -> 潮藏套 T6
+```
+
+配置入口：
+
+- `custom_items.yml`：钓鱼材料、40 件防具、阶段/路线/来源/用途元数据。
+- `equipment_sets.yml` 与 `passive_abilities.yml`：每套 2 件/4 件 `stat_bonus`，只做路线数值强化，不实现复杂套装技能。
+- `recipes.yml`：每个部位独立配方；升级配方使用上一阶同部位作为中心基底，并由 `CustomRecipeManager` 迁移成长状态。
+- `gathering_loot.yml`：宝藏触发产出；当前仍映射到 rare/epic/legendary 三个既有档位，通过 `min_fishing_level` 表达 T1-T6 解锁。
+- `custom_mobs.yml`：`sea_creature_<entry_id>` 同名 PDC 规则负责海怪击杀材料掉落。
+
+当前材料来源原则：
+
+- `tide_heart`、`abyssal_pearl`、`leviathan_lure_core` 均同时存在宝藏来源和海怪来源。
+- `stormfish_scale`、`leviathan_royal_scale` 均保留海怪主来源，并提供低效率宝藏副来源。
+- T4 以后装备不直接从宝藏或海怪掉整件成品，而是通过材料与上一阶同部位升级。
+- 方尖碑等级暂未接入运行逻辑，仅保留为后续配置扩展方向。
+
 当前附魔解析器支持以下 numeric key：
 
 ```text
@@ -464,7 +502,7 @@ treasure_chance
 1. 钓鱼等级不直接乘算等待时间，只转换为 Fishing Speed。
 2. Fishing Speed 使用递减收益曲线，不使用线性减 tick。
 3. 基础等待窗口固定为 `150-300 ticks`。
-4. 最低等待窗口固定为 `10-80 ticks`。
+4. 最低等待窗口固定为 `15-60 ticks`。
 5. Sea Creature 的优先级高于 Treasure。
 6. 同一次收杆不能同时产出海怪和宝藏。
 7. Treasure 分为 rare、epic、legendary，档位和条目都使用权重。
@@ -511,9 +549,9 @@ treasure_chance
 
 ### P1：配置化与内容完整度
 
-1. **补齐达到 1400 Fishing Speed 的装备成长线**
+1. **继续扩展 1500 Fishing Speed 后的成长预算**
 
-   当前默认内容只能提供少量 Fishing Speed。需要增加护甲、饰品、重铸、宝石或附魔来源，并确定满配预算。
+   2026-07-06 已补齐第一批 T1-T6 钓鱼防具路线。当前 T6 宝藏线能通过 `tidevault_set + tidecaller_rod + 100 级 Fishing` 触达 `15-60 ticks`。后续如果加入重铸、宝石、饰品或钓鱼专属附魔，需要重新分配满配预算，避免常规内容过早溢出到等待下限。
 
 2. **将硬编码常量迁移到配置**
 
@@ -564,7 +602,8 @@ treasure_chance
 每次修改钓鱼体系后至少验证：
 
 - 0、45、100 级的无装备等待窗口。
-- 100 级、有效速度 1400 时窗口为 `10-80 ticks`。
+- 100 级、有效速度 1500 时窗口为 `15-60 ticks`。
+- 100 级、`tidecaller_rod + tidevault_set` 四件基础属性可触达 `15-60 ticks`。
 - 非开放水域不会触发 ServerCore 海怪或宝藏。
 - 海怪成功后不再产出宝藏。
 - 海怪失败后宝藏仍可触发。

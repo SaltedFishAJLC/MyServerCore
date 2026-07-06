@@ -1,6 +1,6 @@
 # ServerCore 装备体系实现状态
 
-更新时间：2026-06-21
+更新时间：2026-06-30
 
 本文根据当前仓库代码与“印记、套装、统一被动、护符系列”设计讨论整理。范围包括武器、盔甲、普通饰品、印记、护符包、套装和装备能力。
 
@@ -18,7 +18,7 @@
 | 套装 | 已实现部件去重、累计/最高阈值和多套装并存 | `EquipmentSetRegistry`、`equipment_sets.yml` |
 | 统一被动 | 已接入装备、饰品、护符、印记和套装快照 | `PassiveAbilityRegistry`、`PassiveSnapshotService` |
 | 冷却 | 已统一为玩家 PDC 持久冷却，主动与被动可共享 | `AbilityCooldownService` |
-| T6 测试装备 | 已实现上古之冠、绯红炼狱四件套与猩红征伐巨剑 | `custom_items.yml`、`equipment_sets.yml` |
+| T1-T4/T3/T6 装备 | 已实现物品配置、套装定义和可生效被动 | `custom_items.yml`、`equipment_sets.yml`、`passive_abilities.yml` |
 
 ## 2. 装备来源与生效规则
 
@@ -310,6 +310,29 @@ abilities:
 - `BleedApplyEvent` 可取消或修改概率、时长、总伤害；`BleedDamageEvent` 暴露经过抗性、DOT 上限与事件修正后的实际流血伤害。
 - “鲜血渴望”按实际流血伤害恢复，每个滚动 1 秒窗口最多恢复最大生命 15%；会经过普通治疗倍率，但不会调用血魔的吸血翻倍。
 
+### 7.2 T1-T4/T3 套装内容
+
+2026-06-30 已核对 `custom_items.yml` 中所有新增 `set_id`，并在 `equipment_sets.yml` 与 `passive_abilities.yml` 中补齐对应套装效果。以下套装不再只是物品配置，穿戴有效部件后会进入 `PassiveSnapshotService`，可通过 `/sc debug set` 与 `/sc debug passive` 验证。
+
+| set_id | 名称 | 阈值 | 当前效果 |
+| --- | --- | --- | --- |
+| `frontier_guard` | 边境守卫 | 2 / 4 | 2 件加少量攻击与韧性，4 件降低受到伤害 |
+| `steelwall_guard` | 钢壁卫士 | 2 / 4 | 2 件加生命和护甲，4 件降低受到伤害 |
+| `wind_hunter` | 逐风猎手 | 2 / 4 | 2 件加暴击率与破甲，4 件提高造成伤害 |
+| `nightwalker` | 夜幕行者 | 2 / 4 | 2 件加暴击率与暴击伤害，4 件提高造成伤害 |
+| `astral_scholar` | 星辉学者 | 2 / 4 | 2 件加智慧与意志，4 件提高综合增伤乘区 |
+| `cobalt_vanguard` | 苍钢先锋 | 2 / 4 | 2 件加攻击与护甲，4 件提高造成伤害 |
+| `bedrock_bulwark` | 磐岩壁垒 | 2 / 4 | 2 件加生命和护甲，4 件降低受到伤害 |
+| `dusk_hunter` | 暮影猎手 | 2 / 4 | 2 件加暴击率与暴击伤害，4 件提高造成伤害 |
+| `windfeather_ranger` | 风翎游侠 | 2 / 4 | 2 件加暴击率与破甲，4 件提高造成伤害 |
+
+保留的契约：
+
+- 套装只通过 `set_id + set_piece_id` 计数，同一部件 ID 去重。
+- 印记仍只启用 `PASSIVE` 与套装身份，不复制基础面板、重铸、宝石、附魔或武器模板属性。
+- 护符包仍不参与套装计数。
+- 新套装均使用已有通用 handler；复杂流派机制后续仍应新增独立 handler，而不是塞进通用数值项。
+
 ## 8. 当前未完成任务
 
 以下内容尚未实现或只保留了扩展位置：
@@ -322,7 +345,7 @@ abilities:
 6. 被动名称与说明目前只有中文结构，尚未接入多语言文件。
 7. 护符被压制原因显示在被动总览和调试输出中，尚未给护符包每个格子增加独立状态图标。
 8. 多文件重载分别保持各自旧注册表，但尚未实现跨 `custom_items.yml`、`passive_abilities.yml`、`equipment_sets.yml` 的单事务提交。
-9. 已有首套 T6 战斗测试内容，但 T1-T5、T7、正式护符和更广泛的生产套装仍未制作。
+9. T1-T4/T3 与 T6 战斗测试套装已完成配置和套装生效闭环；T5、T7、正式护符和更多掉落/制作来源仍未制作。
 10. `CURRENT_GAMEPLAY_SYSTEMS.md` 中旧的“4 饰品 + 任意护符包”描述尚未同步重写，后续项目总览更新时应引用本文。
 
 ## 9. 测试服验收清单
@@ -347,3 +370,5 @@ abilities:
 18. 正常穿戴上古之冠后验证其面板；改放入印记后确认面板消失但“鲜血渴望”仍生效。
 19. 同时制造多份流血，确认每秒恢复总量不超过最大生命 15%，切换为血魔后该恢复不翻倍。
 20. 用 `/sc debug passive`、`/sc debug set` 与战斗面板交叉核对 T6 能力来源。
+21. 逐套发放 T1-T4/T3 四件防具，确认 2 件与 4 件阈值分别出现在 `/sc debug set`，并在 `/sc debug passive` 中看到对应 `set:<set_id>:<threshold>` 来源。
+22. 把同一套装的一件防具放入印记、正常穿戴另一个不同 `set_piece_id`，确认套装件数增加但印记不提供该防具基础面板。

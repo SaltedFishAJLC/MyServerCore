@@ -38,6 +38,132 @@ abilities:
       - "造成的伤害提高 {amount}。"
     allowed_sources: [SET_BONUS]
 
+  frontier_guard_drill:
+    handler: stat_bonus
+    name: "边境守卫·操练"
+    description:
+      - "2 件：获得少量攻击与韧性。"
+    allowed_sources: [SET_BONUS]
+
+  frontier_guard_line:
+    handler: damage_reduction
+    name: "边境守卫·防线"
+    description:
+      - "4 件：受到的伤害降低 {amount}。"
+    allowed_sources: [SET_BONUS]
+
+  steelwall_guard_bulk:
+    handler: stat_bonus
+    name: "钢壁卫士·重装"
+    description:
+      - "2 件：获得生命值与护甲。"
+    allowed_sources: [SET_BONUS]
+
+  steelwall_guard_bastion:
+    handler: damage_reduction
+    name: "钢壁卫士·堡垒"
+    description:
+      - "4 件：受到的伤害降低 {amount}。"
+    allowed_sources: [SET_BONUS]
+
+  wind_hunter_focus:
+    handler: stat_bonus
+    name: "逐风猎手·瞄准"
+    description:
+      - "2 件：获得暴击率与破甲。"
+    allowed_sources: [SET_BONUS]
+
+  wind_hunter_tailwind:
+    handler: outgoing_multiplier
+    name: "逐风猎手·顺风"
+    description:
+      - "4 件：造成的伤害提高 {amount}。"
+    allowed_sources: [SET_BONUS]
+
+  nightwalker_precision:
+    handler: stat_bonus
+    name: "夜幕行者·精确"
+    description:
+      - "2 件：获得暴击率与暴击伤害。"
+    allowed_sources: [SET_BONUS]
+
+  nightwalker_execution:
+    handler: outgoing_multiplier
+    name: "夜幕行者·处决"
+    description:
+      - "4 件：造成的伤害提高 {amount}。"
+    allowed_sources: [SET_BONUS]
+
+  astral_scholar_focus:
+    handler: stat_bonus
+    name: "星辉学者·冥想"
+    description:
+      - "2 件：获得智慧与意志。"
+    allowed_sources: [SET_BONUS]
+
+  astral_scholar_confluence:
+    handler: stat_bonus
+    name: "星辉学者·星流"
+    description:
+      - "4 件：获得综合增伤乘区。"
+    allowed_sources: [SET_BONUS]
+
+  cobalt_vanguard_balance:
+    handler: stat_bonus
+    name: "苍钢先锋·均衡"
+    description:
+      - "2 件：获得攻击与护甲。"
+    allowed_sources: [SET_BONUS]
+
+  cobalt_vanguard_assault:
+    handler: outgoing_multiplier
+    name: "苍钢先锋·突击"
+    description:
+      - "4 件：造成的伤害提高 {amount}。"
+    allowed_sources: [SET_BONUS]
+
+  bedrock_bulwark_mass:
+    handler: stat_bonus
+    name: "磐岩壁垒·厚重"
+    description:
+      - "2 件：获得生命值与护甲。"
+    allowed_sources: [SET_BONUS]
+
+  bedrock_bulwark_guard:
+    handler: damage_reduction
+    name: "磐岩壁垒·固守"
+    description:
+      - "4 件：受到的伤害降低 {amount}。"
+    allowed_sources: [SET_BONUS]
+
+  dusk_hunter_precision:
+    handler: stat_bonus
+    name: "暮影猎手·破绽"
+    description:
+      - "2 件：获得暴击率与暴击伤害。"
+    allowed_sources: [SET_BONUS]
+
+  dusk_hunter_execute:
+    handler: outgoing_multiplier
+    name: "暮影猎手·猎杀"
+    description:
+      - "4 件：造成的伤害提高 {amount}。"
+    allowed_sources: [SET_BONUS]
+
+  windfeather_ranger_pierce:
+    handler: stat_bonus
+    name: "风翎游侠·穿风"
+    description:
+      - "2 件：获得暴击率与破甲。"
+    allowed_sources: [SET_BONUS]
+
+  windfeather_ranger_barrage:
+    handler: outgoing_multiplier
+    name: "风翎游侠·连射"
+    description:
+      - "4 件：造成的伤害提高 {amount}。"
+    allowed_sources: [SET_BONUS]
+
   elder_crown_blood_thirst:
     handler: bleed_lifesteal
     name: "鲜血渴望"
@@ -67,3 +193,143 @@ abilities:
     description:
       - "近战命中有 30% 概率使目标流血，在 10 秒内均匀失去 400 点生命。"
     allowed_sources: [MAIN_HAND]
+
+  lilypad_set_flow:
+    handler: stat_bonus
+    name: "荷叶套装·顺水"
+    description:
+      - "2 件：获得少量钓鱼速度。"
+    allowed_sources: [SET_BONUS]
+
+  lilypad_set_still_water:
+    handler: stat_bonus
+    name: "荷叶套装·静水"
+    description:
+      - "4 件：获得钓鱼速度与宝藏概率。"
+    allowed_sources: [SET_BONUS]
+
+  squid_set_scent:
+    handler: stat_bonus
+    name: "乌贼套装·墨味"
+    description:
+      - "2 件：提高海怪概率。"
+    allowed_sources: [SET_BONUS]
+
+  squid_set_deep_pull:
+    handler: stat_bonus
+    name: "乌贼套装·深拉"
+    description:
+      - "4 件：提高钓鱼速度与海怪概率。"
+    allowed_sources: [SET_BONUS]
+
+  inkbound_set_pressure:
+    handler: stat_bonus
+    name: "墨灵套装·深压"
+    description:
+      - "2 件：提高海怪概率与伤害。"
+    allowed_sources: [SET_BONUS]
+
+  inkbound_set_abyssal_hook:
+    handler: stat_bonus
+    name: "墨灵套装·墨钩"
+    description:
+      - "4 件：提高钓鱼速度与海怪概率。"
+    allowed_sources: [SET_BONUS]
+
+  sponge_set_salvage:
+    handler: stat_bonus
+    name: "海绵套装·打捞"
+    description:
+      - "2 件：提高钓鱼速度与宝藏概率。"
+    allowed_sources: [SET_BONUS]
+
+  sponge_set_soaked_cache:
+    handler: stat_bonus
+    name: "海绵套装·浸水匣"
+    description:
+      - "4 件：进一步提高钓鱼速度与宝藏概率。"
+    allowed_sources: [SET_BONUS]
+
+  shark_set_bloodwater:
+    handler: stat_bonus
+    name: "鲨鱼套装·血水"
+    description:
+      - "2 件：提高海怪概率与伤害。"
+    allowed_sources: [SET_BONUS]
+
+  shark_set_apex_hunter:
+    handler: stat_bonus
+    name: "鲨鱼套装·顶级猎手"
+    description:
+      - "4 件：提高钓鱼速度、海怪概率与伤害。"
+    allowed_sources: [SET_BONUS]
+
+  diver_set_charted_depth:
+    handler: stat_bonus
+    name: "潜水员套装·测深"
+    description:
+      - "2 件：提高钓鱼速度与宝藏概率。"
+    allowed_sources: [SET_BONUS]
+
+  diver_set_sunken_route:
+    handler: stat_bonus
+    name: "潜水员套装·沉船航线"
+    description:
+      - "4 件：进一步提高钓鱼速度与宝藏概率。"
+    allowed_sources: [SET_BONUS]
+
+  riptide_set_churning:
+    handler: stat_bonus
+    name: "激流套装·翻涌"
+    description:
+      - "2 件：提高海怪概率与伤害。"
+    allowed_sources: [SET_BONUS]
+
+  riptide_set_tidebreaker:
+    handler: stat_bonus
+    name: "激流套装·破潮"
+    description:
+      - "4 件：提高钓鱼速度、海怪概率与伤害。"
+    allowed_sources: [SET_BONUS]
+
+  abyss_set_sonar:
+    handler: stat_bonus
+    name: "深渊套装·声呐"
+    description:
+      - "2 件：提高钓鱼速度与宝藏概率。"
+    allowed_sources: [SET_BONUS]
+
+  abyss_set_lost_route:
+    handler: stat_bonus
+    name: "深渊套装·失落航线"
+    description:
+      - "4 件：进一步提高钓鱼速度与宝藏概率。"
+    allowed_sources: [SET_BONUS]
+
+  lord_set_decree:
+    handler: stat_bonus
+    name: "领主套装·海令"
+    description:
+      - "2 件：提高海怪概率与伤害。"
+    allowed_sources: [SET_BONUS]
+
+  lord_set_leviathan_command:
+    handler: stat_bonus
+    name: "领主套装·利维坦号令"
+    description:
+      - "4 件：提高钓鱼速度、海怪概率与伤害。"
+    allowed_sources: [SET_BONUS]
+
+  tidevault_set_keyring:
+    handler: stat_bonus
+    name: "潮藏套装·钥环"
+    description:
+      - "2 件：提高钓鱼速度与宝藏概率。"
+    allowed_sources: [SET_BONUS]
+
+  tidevault_set_royal_cache:
+    handler: stat_bonus
+    name: "潮藏套装·王库"
+    description:
+      - "4 件：大幅提高钓鱼速度与宝藏概率。"
+    allowed_sources: [SET_BONUS]

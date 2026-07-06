@@ -40,6 +40,7 @@ public final class EnchantGrindstoneListener implements Listener {
 
     private static final int GUI_SIZE = 45;
     private static final int ITEM_SLOT = 10;
+    private static final int CHEAT_SLOT = 44;
     private static final int[] OPTION_SLOTS = {12, 13, 14, 15, 16, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34};
 
     private final ServerCorePlugin plugin;
@@ -107,6 +108,12 @@ public final class EnchantGrindstoneListener implements Listener {
         }
 
         event.setCancelled(true);
+        if (rawSlot == CHEAT_SLOT && holder.adminAvailable() && hasEnchantAdmin(player)) {
+            holder.setAdminMode(!holder.adminMode());
+            renderSingleRemoveGui(holder);
+            return;
+        }
+
         String enchantId = holder.enchantAt(rawSlot);
         if (enchantId == null) {
             return;
@@ -144,7 +151,7 @@ public final class EnchantGrindstoneListener implements Listener {
     }
 
     private void openSingleRemoveGui(Player player, ItemStack initialItem) {
-        SingleRemoveHolder holder = new SingleRemoveHolder();
+        SingleRemoveHolder holder = new SingleRemoveHolder(hasEnchantAdmin(player));
         Inventory inventory = Bukkit.createInventory(holder, GUI_SIZE, Component.text("附魔拆除"));
         holder.setInventory(inventory);
         if (initialItem != null && !initialItem.getType().isAir()) {
@@ -162,6 +169,10 @@ public final class EnchantGrindstoneListener implements Listener {
         holder.clearOptions();
         for (int slot : OPTION_SLOTS) {
             inventory.setItem(slot, null);
+        }
+        inventory.setItem(CHEAT_SLOT, null);
+        if (holder.adminAvailable()) {
+            inventory.setItem(CHEAT_SLOT, createAdminModeIcon(holder.adminMode()));
         }
 
         ItemStack item = inventory.getItem(ITEM_SLOT);
@@ -189,7 +200,7 @@ public final class EnchantGrindstoneListener implements Listener {
             }
             int slot = OPTION_SLOTS[index++];
             holder.bind(slot, entry.getKey());
-            inventory.setItem(slot, createRemoveIcon(entry.getKey(), entry.getValue()));
+            inventory.setItem(slot, createRemoveIcon(entry.getKey(), entry.getValue(), holder.adminMode()));
         }
     }
 
@@ -233,22 +244,26 @@ public final class EnchantGrindstoneListener implements Listener {
         }
 
         EnchantDefinition definition = registry.get(enchantId).orElse(null);
+        boolean adminCheat = holder.adminMode() && hasEnchantAdmin(player);
         int dustCost = registry.pools().singleRemoveDustCost(definition, level);
-        if (countDust(player) < dustCost) {
+        if (!adminCheat && countDust(player) < dustCost) {
             player.sendMessage(Component.text("粉尘不足，需要 " + dustCost + " 个魔尘。", NamedTextColor.RED));
             return;
         }
 
         String specialItemId = registry.pools().singleRemoveSpecialMaterialItemId(definition);
         int specialAmount = registry.pools().singleRemoveSpecialMaterialAmount(definition);
-        if (registry.pools().singleRemoveRequiresSpecialMaterial(definition)
+        if (!adminCheat
+                && registry.pools().singleRemoveRequiresSpecialMaterial(definition)
                 && countCustomItem(player, specialItemId) < specialAmount) {
             player.sendMessage(Component.text("终极附魔拆除需要 " + specialAmount + " 个 " + specialMaterialName(specialItemId) + "。", NamedTextColor.RED));
             return;
         }
 
-        removeDust(player, dustCost);
-        if (registry.pools().singleRemoveRequiresSpecialMaterial(definition)) {
+        if (!adminCheat) {
+            removeDust(player, dustCost);
+        }
+        if (!adminCheat && registry.pools().singleRemoveRequiresSpecialMaterial(definition)) {
             removeCustomItem(player, specialItemId, specialAmount);
         }
 
@@ -262,7 +277,8 @@ public final class EnchantGrindstoneListener implements Listener {
         renderSingleRemoveGui(holder);
 
         String display = definition == null ? enchantId : definition.display();
-        player.sendMessage(Component.text("已拆除附魔: " + display + " " + toRoman(level), NamedTextColor.GREEN));
+        player.sendMessage(Component.text((adminCheat ? "管理员无消耗拆除: " : "已拆除附魔: ")
+                + display + " " + toRoman(level), NamedTextColor.GREEN));
     }
 
     private ItemStack buildClearResult(ItemStack source) {
@@ -319,7 +335,7 @@ public final class EnchantGrindstoneListener implements Listener {
         }
     }
 
-    private ItemStack createRemoveIcon(String enchantId, int level) {
+    private ItemStack createRemoveIcon(String enchantId, int level, boolean adminCheat) {
         EnchantRegistry registry = EnchantRegistry.getInstance();
         EnchantDefinition definition = registry == null ? null : registry.get(enchantId).orElse(null);
         int dustCost = registry == null ? 0 : registry.pools().singleRemoveDustCost(definition, level);
@@ -331,12 +347,16 @@ public final class EnchantGrindstoneListener implements Listener {
 
         List<Component> lore = new java.util.ArrayList<>();
         lore.add(Component.text("等级: " + toRoman(level), NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
-        lore.add(Component.text("消耗: " + dustCost + " 魔尘", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
-        if (requiresSpecial) {
+        if (adminCheat) {
+            lore.add(Component.text("管理员模式: 无消耗拆除。", NamedTextColor.RED).decoration(TextDecoration.ITALIC, false));
+        } else {
+            lore.add(Component.text("消耗: " + dustCost + " 魔尘", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+        }
+        if (!adminCheat && requiresSpecial) {
             lore.add(Component.text("额外消耗: " + specialAmount + " " + specialMaterialName(specialItemId), NamedTextColor.GOLD)
                     .decoration(TextDecoration.ITALIC, false));
         }
-        lore.add(Component.text("点击拆除该附魔", NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.text(adminCheat ? "点击无消耗拆除该附魔" : "点击拆除该附魔", NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
 
         return namedItem(Material.ENCHANTED_BOOK, display + " " + toRoman(level), lore, color);
     }
@@ -449,6 +469,22 @@ public final class EnchantGrindstoneListener implements Listener {
         return displayName == null || displayName.isBlank() ? itemId : displayName;
     }
 
+    private ItemStack createAdminModeIcon(boolean enabled) {
+        return namedItem(
+                enabled ? Material.COMMAND_BLOCK : Material.REDSTONE_TORCH,
+                enabled ? "管理员作弊拆除：开启" : "管理员作弊拆除",
+                List.of(Component.text(
+                        enabled ? "点击恢复普通消耗拆除。" : "点击后本界面拆除附魔不消耗材料。",
+                        NamedTextColor.GRAY
+                ).decoration(TextDecoration.ITALIC, false)),
+                enabled ? NamedTextColor.RED : NamedTextColor.GOLD
+        );
+    }
+
+    private boolean hasEnchantAdmin(Player player) {
+        return player != null && (player.hasPermission("sc.admin") || player.hasPermission("servercore.admin"));
+    }
+
     private ItemStack namedItem(Material material, String name, List<Component> lore) {
         return namedItem(material, name, lore, NamedTextColor.WHITE);
     }
@@ -483,7 +519,13 @@ public final class EnchantGrindstoneListener implements Listener {
 
     private static final class SingleRemoveHolder implements InventoryHolder {
         private final Map<Integer, String> enchantsBySlot = new HashMap<>();
+        private final boolean adminAvailable;
         private Inventory inventory;
+        private boolean adminMode;
+
+        private SingleRemoveHolder(boolean adminAvailable) {
+            this.adminAvailable = adminAvailable;
+        }
 
         private void bind(int slot, String enchantId) {
             enchantsBySlot.put(slot, enchantId);
@@ -495,6 +537,18 @@ public final class EnchantGrindstoneListener implements Listener {
 
         private void clearOptions() {
             enchantsBySlot.clear();
+        }
+
+        private boolean adminAvailable() {
+            return adminAvailable;
+        }
+
+        private boolean adminMode() {
+            return adminMode;
+        }
+
+        private void setAdminMode(boolean adminMode) {
+            this.adminMode = adminMode;
         }
 
         private void setInventory(Inventory inventory) {

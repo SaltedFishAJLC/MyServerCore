@@ -44,6 +44,52 @@ public class EnchantManager {
         addCustomEnchantChecked(item, enchantId, level);
     }
 
+    public EnchantApplyResult addCustomEnchantAdmin(ItemStack item, String enchantId, int level) {
+        EnchantApplyResult result = canApplyAdmin(item, enchantId, level);
+        if (!result.success()) {
+            return result;
+        }
+
+        String normalizedId = normalize(enchantId);
+        EnchantRegistry registry = EnchantRegistry.getInstance();
+        EnchantDefinition definition = registry == null ? null : registry.get(normalizedId).orElse(null);
+        if (definition == null) {
+            return EnchantApplyResult.fail("未知附魔: " + normalizedId);
+        }
+
+        Map<String, Integer> enchants = getAllCustomEnchants(item);
+        enchants.put(definition.id(), Math.max(1, Math.min(level, definition.maxLevel())));
+        writeEnchants(item, enchants);
+        refreshFormat(item);
+        return result;
+    }
+
+    public EnchantApplyResult canApplyAdmin(ItemStack item, String enchantId, int level) {
+        if (item == null || item.getType().isAir()) {
+            return EnchantApplyResult.fail("请将要附魔的物品放入界面。");
+        }
+        String normalizedId = normalize(enchantId);
+        EnchantRegistry registry = EnchantRegistry.getInstance();
+        if (registry == null) {
+            return EnchantApplyResult.fail("附魔注册表尚未加载。");
+        }
+
+        EnchantDefinition definition = registry.get(normalizedId).orElse(null);
+        if (definition == null) {
+            return EnchantApplyResult.fail("未知附魔: " + normalizedId);
+        }
+        if (!definition.enabled()) {
+            return EnchantApplyResult.fail("该附魔当前已禁用。");
+        }
+        if (level < 1 || level > definition.maxLevel()) {
+            return EnchantApplyResult.fail("等级必须在 1-" + definition.maxLevel() + " 之间。");
+        }
+        if (!isBook(item) && !EnchantSlotMatcher.matches(item, definition.slots())) {
+            return EnchantApplyResult.fail("该附魔不能应用到这件物品。");
+        }
+        return EnchantApplyResult.ok();
+    }
+
     public EnchantApplyResult canApplyFromEnchantTable(ItemStack item, String enchantId, int rolledLevel) {
         EnchantTableMerge merge = resolveEnchantTableMerge(item, enchantId, rolledLevel);
         return merge.result();

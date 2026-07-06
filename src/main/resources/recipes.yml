@@ -148,3 +148,416 @@ recipes:
         material: NETHER_STAR
     result:
       custom_item: ultimate_enchant_catalyst
+
+  leviathan_lure_core_from_fragments:
+    shape:
+      - "AAA"
+      - "ABA"
+      - "AAA"
+    ingredients:
+      A:
+        custom_item: leviathan_lure_fragment
+      B:
+        material: HEART_OF_THE_SEA
+    result:
+      custom_item: leviathan_lure_core
+
+  lilypad_helmet:
+    shape: ["ABA", "CDC", " E "]
+    ingredients:
+      A: {material: LILY_PAD}
+      B: {material: KELP}
+      C: {material: COD}
+      D: {material: LEATHER_HELMET}
+      E: {custom_item: deep_sea_cache}
+    result: {custom_item: lilypad_helmet}
+
+  lilypad_chestplate:
+    shape: ["ABA", "CDC", " E "]
+    ingredients:
+      A: {material: LILY_PAD}
+      B: {material: KELP}
+      C: {material: SALMON}
+      D: {material: LEATHER_CHESTPLATE}
+      E: {custom_item: deep_sea_cache}
+    result: {custom_item: lilypad_chestplate}
+
+  lilypad_leggings:
+    shape: ["ABA", "CDC", " E "]
+    ingredients:
+      A: {material: LILY_PAD}
+      B: {material: KELP}
+      C: {material: COD}
+      D: {material: LEATHER_LEGGINGS}
+      E: {custom_item: deep_sea_cache}
+    result: {custom_item: lilypad_leggings}
+
+  lilypad_boots:
+    shape: ["ABA", "CDC", " E "]
+    ingredients:
+      A: {material: LILY_PAD}
+      B: {material: KELP}
+      C: {material: SALMON}
+      D: {material: LEATHER_BOOTS}
+      E: {custom_item: deep_sea_cache}
+    result: {custom_item: lilypad_boots}
+
+  squid_helmet:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {material: INK_SAC}
+      B: {custom_item: pearl_cluster}
+      C: {custom_item: deep_sea_cache}
+      D: {custom_item: lilypad_helmet}
+      E: {material: GLOW_INK_SAC}
+    result: {custom_item: squid_helmet}
+
+  squid_chestplate:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {material: INK_SAC}
+      B: {custom_item: pearl_cluster}
+      C: {custom_item: deep_sea_cache}
+      D: {custom_item: lilypad_chestplate}
+      E: {material: GLOW_INK_SAC}
+    result: {custom_item: squid_chestplate}
+
+  squid_leggings:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {material: INK_SAC}
+      B: {custom_item: pearl_cluster}
+      C: {custom_item: deep_sea_cache}
+      D: {custom_item: lilypad_leggings}
+      E: {material: GLOW_INK_SAC}
+    result: {custom_item: squid_leggings}
+
+  squid_boots:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {material: INK_SAC}
+      B: {custom_item: pearl_cluster}
+      C: {custom_item: deep_sea_cache}
+      D: {custom_item: lilypad_boots}
+      E: {material: GLOW_INK_SAC}
+    result: {custom_item: squid_boots}
+
+  inkbound_helmet:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: inkbound_membrane}
+      B: {custom_item: dark_tide_core}
+      C: {custom_item: drowned_map_fragment}
+      D: {custom_item: squid_helmet}
+      E: {custom_item: ancient_shell}
+    result: {custom_item: inkbound_helmet}
+
+  inkbound_chestplate:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: inkbound_membrane}
+      B: {custom_item: dark_tide_core}
+      C: {custom_item: drowned_map_fragment}
+      D: {custom_item: squid_chestplate}
+      E: {custom_item: ancient_shell}
+    result: {custom_item: inkbound_chestplate}
+
+  inkbound_leggings:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: inkbound_membrane}
+      B: {custom_item: dark_tide_core}
+      C: {custom_item: drowned_map_fragment}
+      D: {custom_item: squid_leggings}
+      E: {custom_item: ancient_shell}
+    result: {custom_item: inkbound_leggings}
+
+  inkbound_boots:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: inkbound_membrane}
+      B: {custom_item: dark_tide_core}
+      C: {custom_item: drowned_map_fragment}
+      D: {custom_item: squid_boots}
+      E: {custom_item: ancient_shell}
+    result: {custom_item: inkbound_boots}
+
+  sponge_helmet:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {material: SPONGE}
+      B: {custom_item: pearl_cluster}
+      C: {custom_item: reef_glass}
+      D: {custom_item: lilypad_helmet}
+      E: {custom_item: drowned_map_fragment}
+    result: {custom_item: sponge_helmet}
+
+  sponge_chestplate:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {material: SPONGE}
+      B: {custom_item: pearl_cluster}
+      C: {custom_item: reef_glass}
+      D: {custom_item: lilypad_chestplate}
+      E: {custom_item: drowned_map_fragment}
+    result: {custom_item: sponge_chestplate}
+
+  sponge_leggings:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {material: SPONGE}
+      B: {custom_item: pearl_cluster}
+      C: {custom_item: reef_glass}
+      D: {custom_item: lilypad_leggings}
+      E: {custom_item: drowned_map_fragment}
+    result: {custom_item: sponge_leggings}
+
+  sponge_boots:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {material: SPONGE}
+      B: {custom_item: pearl_cluster}
+      C: {custom_item: reef_glass}
+      D: {custom_item: lilypad_boots}
+      E: {custom_item: drowned_map_fragment}
+    result: {custom_item: sponge_boots}
+
+  shark_helmet:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: shark_tooth}
+      B: {custom_item: tidecaller_gill}
+      C: {custom_item: stormfish_scale}
+      D: {custom_item: inkbound_helmet}
+      E: {custom_item: tide_heart}
+    result: {custom_item: shark_helmet}
+
+  shark_chestplate:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: shark_tooth}
+      B: {custom_item: tidecaller_gill}
+      C: {custom_item: stormfish_scale}
+      D: {custom_item: inkbound_chestplate}
+      E: {custom_item: tide_heart}
+    result: {custom_item: shark_chestplate}
+
+  shark_leggings:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: shark_tooth}
+      B: {custom_item: tidecaller_gill}
+      C: {custom_item: stormfish_scale}
+      D: {custom_item: inkbound_leggings}
+      E: {custom_item: tide_heart}
+    result: {custom_item: shark_leggings}
+
+  shark_boots:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: shark_tooth}
+      B: {custom_item: tidecaller_gill}
+      C: {custom_item: stormfish_scale}
+      D: {custom_item: inkbound_boots}
+      E: {custom_item: tide_heart}
+    result: {custom_item: shark_boots}
+
+  diver_helmet:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: reef_glass}
+      B: {custom_item: ancient_shell}
+      C: {custom_item: stormfish_scale}
+      D: {custom_item: sponge_helmet}
+      E: {custom_item: tide_heart}
+    result: {custom_item: diver_helmet}
+
+  diver_chestplate:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: reef_glass}
+      B: {custom_item: ancient_shell}
+      C: {custom_item: stormfish_scale}
+      D: {custom_item: sponge_chestplate}
+      E: {custom_item: tide_heart}
+    result: {custom_item: diver_chestplate}
+
+  diver_leggings:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: reef_glass}
+      B: {custom_item: ancient_shell}
+      C: {custom_item: stormfish_scale}
+      D: {custom_item: sponge_leggings}
+      E: {custom_item: tide_heart}
+    result: {custom_item: diver_leggings}
+
+  diver_boots:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: reef_glass}
+      B: {custom_item: ancient_shell}
+      C: {custom_item: stormfish_scale}
+      D: {custom_item: sponge_boots}
+      E: {custom_item: tide_heart}
+    result: {custom_item: diver_boots}
+
+  riptide_helmet:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: tidecaller_gill}
+      B: {custom_item: riptide_scale_core}
+      C: {custom_item: stormfish_scale}
+      D: {custom_item: shark_helmet}
+      E: {custom_item: abyssal_pearl}
+    result: {custom_item: riptide_helmet}
+
+  riptide_chestplate:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: tidecaller_gill}
+      B: {custom_item: riptide_scale_core}
+      C: {custom_item: stormfish_scale}
+      D: {custom_item: shark_chestplate}
+      E: {custom_item: abyssal_pearl}
+    result: {custom_item: riptide_chestplate}
+
+  riptide_leggings:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: tidecaller_gill}
+      B: {custom_item: riptide_scale_core}
+      C: {custom_item: stormfish_scale}
+      D: {custom_item: shark_leggings}
+      E: {custom_item: abyssal_pearl}
+    result: {custom_item: riptide_leggings}
+
+  riptide_boots:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: tidecaller_gill}
+      B: {custom_item: riptide_scale_core}
+      C: {custom_item: stormfish_scale}
+      D: {custom_item: shark_boots}
+      E: {custom_item: abyssal_pearl}
+    result: {custom_item: riptide_boots}
+
+  abyss_helmet:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: abyssal_pearl}
+      B: {custom_item: lost_compass}
+      C: {custom_item: tide_heart}
+      D: {custom_item: diver_helmet}
+      E: {custom_item: riptide_scale_core}
+    result: {custom_item: abyss_helmet}
+
+  abyss_chestplate:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: abyssal_pearl}
+      B: {custom_item: lost_compass}
+      C: {custom_item: tide_heart}
+      D: {custom_item: diver_chestplate}
+      E: {custom_item: riptide_scale_core}
+    result: {custom_item: abyss_chestplate}
+
+  abyss_leggings:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: abyssal_pearl}
+      B: {custom_item: lost_compass}
+      C: {custom_item: tide_heart}
+      D: {custom_item: diver_leggings}
+      E: {custom_item: riptide_scale_core}
+    result: {custom_item: abyss_leggings}
+
+  abyss_boots:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: abyssal_pearl}
+      B: {custom_item: lost_compass}
+      C: {custom_item: tide_heart}
+      D: {custom_item: diver_boots}
+      E: {custom_item: riptide_scale_core}
+    result: {custom_item: abyss_boots}
+
+  lord_helmet:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: leviathan_royal_scale}
+      B: {custom_item: leviathan_lure_core}
+      C: {custom_item: abyssal_pearl}
+      D: {custom_item: riptide_helmet}
+      E: {custom_item: sunken_king_key}
+    result: {custom_item: lord_helmet}
+
+  lord_chestplate:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: leviathan_royal_scale}
+      B: {custom_item: leviathan_lure_core}
+      C: {custom_item: abyssal_pearl}
+      D: {custom_item: riptide_chestplate}
+      E: {custom_item: sunken_king_key}
+    result: {custom_item: lord_chestplate}
+
+  lord_leggings:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: leviathan_royal_scale}
+      B: {custom_item: leviathan_lure_core}
+      C: {custom_item: abyssal_pearl}
+      D: {custom_item: riptide_leggings}
+      E: {custom_item: sunken_king_key}
+    result: {custom_item: lord_leggings}
+
+  lord_boots:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: leviathan_royal_scale}
+      B: {custom_item: leviathan_lure_core}
+      C: {custom_item: abyssal_pearl}
+      D: {custom_item: riptide_boots}
+      E: {custom_item: sunken_king_key}
+    result: {custom_item: lord_boots}
+
+  tidevault_helmet:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: sunken_king_key}
+      B: {custom_item: leviathan_lure_core}
+      C: {custom_item: abyssal_pearl}
+      D: {custom_item: abyss_helmet}
+      E: {custom_item: leviathan_royal_scale}
+    result: {custom_item: tidevault_helmet}
+
+  tidevault_chestplate:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: sunken_king_key}
+      B: {custom_item: leviathan_lure_core}
+      C: {custom_item: abyssal_pearl}
+      D: {custom_item: abyss_chestplate}
+      E: {custom_item: leviathan_royal_scale}
+    result: {custom_item: tidevault_chestplate}
+
+  tidevault_leggings:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: sunken_king_key}
+      B: {custom_item: leviathan_lure_core}
+      C: {custom_item: abyssal_pearl}
+      D: {custom_item: abyss_leggings}
+      E: {custom_item: leviathan_royal_scale}
+    result: {custom_item: tidevault_leggings}
+
+  tidevault_boots:
+    shape: ["ABA", "CDC", "AEA"]
+    ingredients:
+      A: {custom_item: sunken_king_key}
+      B: {custom_item: leviathan_lure_core}
+      C: {custom_item: abyssal_pearl}
+      D: {custom_item: abyss_boots}
+      E: {custom_item: leviathan_royal_scale}
+    result: {custom_item: tidevault_boots}

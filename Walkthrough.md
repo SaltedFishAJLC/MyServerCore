@@ -597,3 +597,59 @@
 
 - 逐段核对唯一命令执行器中的参数长度、别名、权限判断和目标玩家处理逻辑。
 - 本次仅新增和更新 Markdown 文档，没有修改 Java 或 YAML 运行逻辑，因此未重复执行 Gradle 构建。
+
+## 2026-06-21 WDA 结构怪物区块加载补偿
+
+### 更新日志
+
+- 确认指令召唤的 `WDA_IC_1_Normal_0` 属性正常，而结构随区块生成的同标签实体没有属性；根因是现代 Paper 不再为区块生成实体触发 `CreatureSpawnEvent` 的 `CHUNK_GEN` 路径。
+- `MobSpawnManager` 新增 `EntitiesLoadEvent` 与 `ChunkLoadEvent.isNewChunk()` 双入口：磁盘实体加载和新区块结构实体均在延迟一 tick 后扫描敌对生物，并复用现有 `custom_mobs.yml` 标签识别、属性计算、PDC 写入和全息生成链路。
+- 新增管理器启动时的已加载实体扫描，确保插件重载或热替换后，当前已加载区块中的结构怪也能补齐属性。
+- 补偿路径以 `KEY_MOB_POWER_LEVEL` 为幂等标记；已经完成 ServerCore 初始化的怪物不会重复缩放或重复生成全息。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat --no-daemon compileJava` 编译通过。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 完整构建通过，产物为 `build/libs/ServerCore-1.0.0-SNAPSHOT.jar`。
+- 仓库没有可直接启动的 Paper 集成测试夹具；最终需在测试服卸载并重新加载含 WDA 结构怪的区块，确认名称、等级、血量、攻击和全息均已应用。
+
+## 2026-06-30 远程武器近战、DOT 无敌帧、套装与管理员附魔收口
+
+### 更新日志
+
+- 修复拿弓/弩左键近战会结算弓面板伤害的问题；根因是 `CombatManager` 的玩家近战分支只区分 damager 是否为 Projectile，没有排除主手远程武器模板。现在非投射物事件中若主手模板为纯远程，会取消本次近战事件并提示必须通过投射物造成伤害。
+- 收口 `DamageService` 的内部扣血无敌帧规则：内部伤害应用前仍会临时清零 `noDamageTicks`，避免持续伤害被原版无敌帧吞掉；但只有 `CUSTOM_STATUS`、`VANILLA_STATUS`、`DOT` 或 `STATUS` 标签会在结算后恢复旧 tick。
+- 行为边界：lava/fire/hot floor/campfire/lightning/explosion 这类环境或爆炸内部伤害会保留原版受击冷却；fire tick/poison/wither 经 `StatusService` 转为状态 tick，bleed 走 `CUSTOM_STATUS + DOT + STATUS`，结算后恢复旧 tick；直接近战和玩家投射物仍走原 Bukkit 事件路径，不被内部 DOT 恢复逻辑改节奏。
+- 核对 `custom_items.yml` 所有 `set_id`：`test_warden`、`crimson_inferno` 与新增的 `frontier_guard`、`steelwall_guard`、`wind_hunter`、`nightwalker`、`astral_scholar`、`cobalt_vanguard`、`bedrock_bulwark`、`dusk_hunter`、`windfeather_ranger` 均已在 `equipment_sets.yml` 定义。
+- 为新增 T1-T4/T3 套装补齐 2 件/4 件阈值，并在 `passive_abilities.yml` 注册对应 `stat_bonus`、`damage_reduction`、`outgoing_multiplier` 被动；保留印记只启用 PASSIVE 与套装身份、不复制基础面板/附魔/宝石/武器模板属性的契约。
+- 附魔台定向 GUI 增加管理员作弊模式按钮，检测 `sc.admin` 或 `servercore.admin`；管理员可无消耗选择所有 enabled 且适用于该物品槽位的附魔，允许超过软上限但不超过硬上限，并旁路普通池、稀有度、冲突组和终极数量限制。
+- 砂轮单独拆除 GUI 增加管理员作弊拆除按钮；管理员模式下删除单条自定义附魔不消耗魔尘或终极材料。
+- 更新 `docs/equipment-system-status.md`，新增 `docs/equipment-set-test-commands.md`，列出当前套装、推荐搭配装备、发放指令、管理员附魔/砂轮入口和多人测试验收建议。
+
+### 验证记录
+
+- `custom_items.yml` 中所有唯一 `set_id` 与 `equipment_sets.yml` 顶层套装 id 对照，缺失列表为空。
+- 使用 SnakeYAML 2.2 实际解析 `custom_items.yml`、`passive_abilities.yml`、`equipment_sets.yml`，三份配置均成功。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon compileJava` 编译通过。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 完整构建通过，最终结果为 `BUILD SUCCESSFUL in 15s`。
+- 仓库没有可直接启动的 Paper 交互测试夹具；附魔台按钮、砂轮按钮、弓左键取消、lava/fire tick/poison/wither/bleed/近战节奏仍需在测试服按新文档实测。
+
+## 2026-07-06 钓鱼等待公式、钓鱼套装与海怪材料路线
+
+### 更新日志
+
+- `FishingManager` 等待时间公式保持递减收益曲线，但将满配硬下限从 `10-80 ticks @ 1400 Fishing Speed` 调整为 `15-60 ticks @ 1500 Fishing Speed`；`/sc gathering` 继续通过同一 `calculateWaitWindow()` 显示新窗口。
+- `docs/fishing-system-status.md` 同步新公式、示例表、验收目标和第一批钓鱼装备路线：海怪线为荷叶 -> 乌贼 -> 墨灵 -> 鲨鱼 -> 激流 -> 领主，宝藏线为荷叶 -> 海绵 -> 潜水员 -> 深渊 -> 潮藏。
+- `custom_items.yml` 补齐钓鱼材料元数据与新材料：墨灵残膜、暗潮墨核、鲨齿、潮唤者鳃片、激流鳞核、失落罗盘、利维坦王鳞、海王密钥、利维坦诱饵碎片；新增 10 套共 40 件钓鱼防具，材料和装备均记录阶段、路线、主/副来源和用途。
+- `equipment_sets.yml` 与 `passive_abilities.yml` 为 10 套钓鱼防具注册 2 件/4 件 `stat_bonus`，只做路线数值强化，不接入复杂套装技能或方尖碑逻辑。
+- `gathering_loot.yml` 扩展钓鱼宝藏表，在现有 rare/epic/legendary 三档内用 `min_fishing_level` 表达 T1-T6 解锁；高阶核心材料均保留双来源，海怪材料也有低效率宝藏副来源。
+- `custom_mobs.yml` 新增 `sea_creature_<entry_id>` PDC 匹配掉落规则，使钓出的 Deep Drowned、Reef Guardian、Abyss Guardian、Storm Eel、Elder Tidecaller、Leviathan Echo 击杀后能产出对应材料。
+- `recipes.yml` 新增利维坦诱饵碎片合成核心配方，并为每个钓鱼防具部位提供独立配方；升级配方使用上一阶同部位作为中心基底，保留现有配方系统的成长状态迁移能力。
+
+### 验证记录
+
+- 使用 SnakeYAML 2.2 解析 `custom_items.yml`、`gathering_loot.yml`、`custom_mobs.yml`、`equipment_sets.yml`、`passive_abilities.yml`、`recipes.yml`，六份配置均成功。
+- 配置引用检查确认新增配方、宝藏、海怪掉落、套装和被动均能找到目标 ID；唯一缺失引用仍是既有 `Mythic_Flame_Boss -> foundry_flame_sword`，本次未改动。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon compileJava` 编译通过。
+- `.\gradle-8.5\bin\gradle.bat --no-daemon build` 完整构建通过，最终结果为 `BUILD SUCCESSFUL in 11s`。
+- 仓库没有可直接启动的 Paper 集成测试夹具；实际钓鱼触发、海怪击杀掉落、合成界面和 T6 潮藏套触达 `15-60 ticks` 仍需测试服验收。

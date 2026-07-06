@@ -210,6 +210,8 @@ fishing:
         mod: 6.0
         xp: 160
   treasures:
+    # T1-T2 low-tier treasure. Treasure tier names remain rare/epic/legendary
+    # because FishingManager currently exposes exactly these three buckets.
     rare:
       weight: 78
       min_fishing_level: 0
@@ -218,80 +220,188 @@ fishing:
           custom_item: deep_sea_cache
           fallback_material: PRISMARINE_CRYSTALS
           amount: 1
-          weight: 90
+          weight: 100
           min_fishing_level: 1
           xp: 6
         sunken_emerald:
           custom_item: sunken_emerald
           fallback_material: EMERALD
           amount: 1
-          weight: 50
+          weight: 45
           min_fishing_level: 5
           xp: 8
         pearl_cluster:
           custom_item: pearl_cluster
           fallback_material: ENDER_PEARL
           amount: 1
-          weight: 26
-          min_fishing_level: 15
+          weight: 25
+          min_fishing_level: 10
           xp: 12
         drowned_map_fragment:
           custom_item: drowned_map_fragment
           fallback_material: MAP
           amount: 1
-          weight: 10
+          weight: 5
           min_fishing_level: 25
           xp: 18
+    # T3-T4 mid-tier treasure, including low-efficiency cross-route sea materials.
     epic:
       weight: 19
-      min_fishing_level: 12
+      min_fishing_level: 30
       entries:
-        ancient_shell:
-          custom_item: ancient_shell
-          fallback_material: NAUTILUS_SHELL
+        pearl_cluster:
+          custom_item: pearl_cluster
+          fallback_material: ENDER_PEARL
           amount: 1
-          weight: 40
-          min_fishing_level: 12
+          weight: 80
+          min_fishing_level: 30
           xp: 18
+        drowned_map_fragment:
+          custom_item: drowned_map_fragment
+          fallback_material: MAP
+          amount: 1
+          weight: 60
+          min_fishing_level: 30
+          xp: 24
         reef_glass:
           custom_item: reef_glass
           fallback_material: PRISMARINE_SHARD
           amount: 1
-          weight: 22
-          min_fishing_level: 25
+          weight: 40
+          min_fishing_level: 30
           xp: 28
+        ancient_shell:
+          custom_item: ancient_shell
+          fallback_material: NAUTILUS_SHELL
+          amount: 1
+          weight: 25
+          min_fishing_level: 30
+          xp: 18
         stormfish_scale:
           custom_item: stormfish_scale
           fallback_material: PHANTOM_MEMBRANE
           amount: 1
-          weight: 8
+          weight: 10
           min_fishing_level: 40
           xp: 45
+        shark_tooth:
+          custom_item: shark_tooth
+          fallback_material: PRISMARINE_SHARD
+          amount: 1
+          weight: 5
+          min_fishing_level: 40
+          xp: 48
+        inkbound_membrane:
+          custom_item: inkbound_membrane
+          fallback_material: GLOW_INK_SAC
+          amount: 1
+          weight: 5
+          min_fishing_level: 25
+          xp: 32
+        dark_tide_core:
+          custom_item: dark_tide_core
+          fallback_material: ECHO_SHARD
+          amount: 1
+          weight: 1
+          min_fishing_level: 30
+          xp: 60
+        tide_heart:
+          custom_item: tide_heart
+          fallback_material: HEART_OF_THE_SEA
+          amount: 1
+          weight: 3
+          min_fishing_level: 45
+          xp: 70
+    # T5-T6 high/endgame treasure. Duplicate custom_item entries let endgame
+    # weights rise after level 75 without changing the three-tier contract.
     legendary:
       weight: 3
-      min_fishing_level: 35
+      min_fishing_level: 60
       entries:
         tide_heart:
           custom_item: tide_heart
           fallback_material: HEART_OF_THE_SEA
           amount: 1
-          weight: 9
-          min_fishing_level: 35
-          xp: 60
+          weight: 45
+          min_fishing_level: 60
+          xp: 85
         abyssal_pearl:
           custom_item: abyssal_pearl
           fallback_material: ECHO_SHARD
           amount: 1
-          weight: 4
-          min_fishing_level: 55
-          xp: 110
+          weight: 18
+          min_fishing_level: 60
+          xp: 120
+        lost_compass:
+          custom_item: lost_compass
+          fallback_material: RECOVERY_COMPASS
+          amount: 1
+          weight: 10
+          min_fishing_level: 60
+          xp: 135
+        tidecaller_gill:
+          custom_item: tidecaller_gill
+          fallback_material: PRISMARINE_CRYSTALS
+          amount: 1
+          weight: 5
+          min_fishing_level: 60
+          xp: 95
+        riptide_scale_core:
+          custom_item: riptide_scale_core
+          fallback_material: NAUTILUS_SHELL
+          amount: 1
+          weight: 2
+          min_fishing_level: 60
+          xp: 150
         leviathan_lure_core:
           custom_item: leviathan_lure_core
           fallback_material: CONDUIT
           amount: 1
-          weight: 1
+          weight: 2
+          min_fishing_level: 60
+          xp: 240
+        endgame_abyssal_pearl:
+          custom_item: abyssal_pearl
+          fallback_material: ECHO_SHARD
+          amount: 1
+          weight: 40
+          min_fishing_level: 75
+          xp: 150
+        endgame_leviathan_lure_core:
+          custom_item: leviathan_lure_core
+          fallback_material: CONDUIT
+          amount: 1
+          weight: 12
+          min_fishing_level: 75
+          xp: 280
+        sunken_king_key:
+          custom_item: sunken_king_key
+          fallback_material: TRIAL_KEY
+          amount: 1
+          weight: 8
+          min_fishing_level: 75
+          xp: 260
+        endgame_lost_compass:
+          custom_item: lost_compass
+          fallback_material: RECOVERY_COMPASS
+          amount: 1
+          weight: 20
+          min_fishing_level: 75
+          xp: 155
+        leviathan_royal_scale:
+          custom_item: leviathan_royal_scale
+          fallback_material: ECHO_SHARD
+          amount: 1
+          weight: 4
           min_fishing_level: 75
           xp: 220
+        leviathan_lure_fragment:
+          custom_item: leviathan_lure_fragment
+          fallback_material: PRISMARINE_CRYSTALS
+          amount: 1
+          weight: 16
+          min_fishing_level: 70
+          xp: 120
 
 excavation:
   creatures:

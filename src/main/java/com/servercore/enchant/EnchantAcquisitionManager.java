@@ -41,6 +41,9 @@ public final class EnchantAcquisitionManager implements Listener {
             28, 29, 30, 31, 32, 33, 34,
             37, 38, 39, 40, 41, 42, 43
     };
+    private static final int SPECIAL_TABLE_PREV_PAGE_SLOT = 45;
+    private static final int SPECIAL_TABLE_CHEAT_SLOT = 49;
+    private static final int SPECIAL_TABLE_NEXT_PAGE_SLOT = 53;
 
     private final ServerCorePlugin plugin;
 
@@ -81,12 +84,16 @@ public final class EnchantAcquisitionManager implements Listener {
 
     public void openSpecialEnchantTable(Player player) {
         EnchantRegistry registry = EnchantRegistry.getInstance();
-        if (registry == null || registry.pools() == null || !registry.pools().isSpecialEnchantTableEnabled()) {
+        boolean admin = hasEnchantAdmin(player);
+        boolean specialEnabled = registry != null
+                && registry.pools() != null
+                && registry.pools().isSpecialEnchantTableEnabled();
+        if (!specialEnabled && !admin) {
             player.sendMessage(Component.text("定向附魔台未启用。", NamedTextColor.RED));
             return;
         }
 
-        SpecialTableHolder holder = new SpecialTableHolder();
+        SpecialTableHolder holder = new SpecialTableHolder(admin, admin && !specialEnabled);
         Inventory inventory = Bukkit.createInventory(holder, SPECIAL_TABLE_SIZE, Component.text("定向附魔台"));
         holder.setInventory(inventory);
         renderSpecialTable(holder);
@@ -222,6 +229,26 @@ public final class EnchantAcquisitionManager implements Listener {
 
         if (rawSlot == SPECIAL_TABLE_INPUT_SLOT) {
             swapSpecialTableInput(event, holder);
+            holder.setPage(0);
+            renderSpecialTable(holder);
+            return;
+        }
+
+        if (rawSlot == SPECIAL_TABLE_CHEAT_SLOT && holder.adminAvailable() && hasEnchantAdmin(player)) {
+            holder.setAdminMode(!holder.adminMode());
+            holder.setPage(0);
+            renderSpecialTable(holder);
+            return;
+        }
+
+        if (holder.adminMode() && rawSlot == SPECIAL_TABLE_PREV_PAGE_SLOT) {
+            holder.setPage(holder.page() - 1);
+            renderSpecialTable(holder);
+            return;
+        }
+
+        if (holder.adminMode() && rawSlot == SPECIAL_TABLE_NEXT_PAGE_SLOT) {
+            holder.setPage(holder.page() + 1);
             renderSpecialTable(holder);
             return;
         }
@@ -241,6 +268,7 @@ public final class EnchantAcquisitionManager implements Listener {
             }
             ItemStack moved = clicked.clone();
             holder.setInput(moved);
+            holder.setPage(0);
             top.setItem(SPECIAL_TABLE_INPUT_SLOT, moved);
             event.setCurrentItem(null);
             renderSpecialTable(holder);
@@ -261,6 +289,11 @@ public final class EnchantAcquisitionManager implements Listener {
     }
 
     private void applySpecialTableOffer(Player player, SpecialTableHolder holder, SpecialTableOffer offer) {
+        if (offer.adminCheat()) {
+            applyAdminSpecialTableOffer(player, holder, offer);
+            return;
+        }
+
         ItemStack input = holder.input();
         if (input == null || input.getType().isAir()) {
             return;
@@ -293,6 +326,34 @@ public final class EnchantAcquisitionManager implements Listener {
         player.sendMessage(Component.text("定向附魔成功: " + offer.definition().display() + " " + toRoman(offer.level()), NamedTextColor.GREEN));
     }
 
+    private void applyAdminSpecialTableOffer(Player player, SpecialTableHolder holder, SpecialTableOffer offer) {
+        if (!hasEnchantAdmin(player)) {
+            player.sendMessage(Component.text("需要 sc.admin 权限。", NamedTextColor.RED));
+            return;
+        }
+
+        ItemStack input = holder.input();
+        if (input == null || input.getType().isAir()) {
+            return;
+        }
+        EnchantManager enchantManager = EnchantManager.getInstance();
+        if (enchantManager == null) {
+            player.sendMessage(Component.text("附魔系统尚未加载。", NamedTextColor.RED));
+            return;
+        }
+
+        EnchantApplyResult result = enchantManager.addCustomEnchantAdmin(input, offer.definition().id(), offer.level());
+        if (!result.success()) {
+            player.sendMessage(Component.text(result.message(), NamedTextColor.RED));
+            return;
+        }
+
+        holder.setInput(input);
+        holder.getInventory().setItem(SPECIAL_TABLE_INPUT_SLOT, input);
+        refreshStats(player);
+        player.sendMessage(Component.text("管理员附魔成功: " + offer.definition().display() + " " + toRoman(offer.level()), NamedTextColor.GREEN));
+    }
+
     private void renderSpecialTable(SpecialTableHolder holder) {
         Inventory inventory = holder.getInventory();
         if (inventory == null) {
@@ -302,6 +363,12 @@ public final class EnchantAcquisitionManager implements Listener {
         holder.clearOffers();
         for (int slot : SPECIAL_TABLE_OFFER_SLOTS) {
             inventory.setItem(slot, null);
+        }
+        inventory.setItem(SPECIAL_TABLE_PREV_PAGE_SLOT, null);
+        inventory.setItem(SPECIAL_TABLE_CHEAT_SLOT, null);
+        inventory.setItem(SPECIAL_TABLE_NEXT_PAGE_SLOT, null);
+        if (holder.adminAvailable()) {
+            inventory.setItem(SPECIAL_TABLE_CHEAT_SLOT, createAdminModeIcon(holder.adminMode()));
         }
 
         ItemStack input = holder.input();
@@ -313,8 +380,16 @@ public final class EnchantAcquisitionManager implements Listener {
 
         EnchantRegistry registry = EnchantRegistry.getInstance();
         EnchantManager enchantManager = EnchantManager.getInstance();
-        if (registry == null || registry.pools() == null || enchantManager == null) {
+        if (registry == null || enchantManager == null) {
             inventory.setItem(31, createInfoIcon(Material.BARRIER, "附魔系统未加载", "请稍后再试。"));
+            return;
+        }
+        if (holder.adminMode()) {
+            renderAdminSpecialTable(holder, inventory, input, registry, enchantManager);
+            return;
+        }
+        if (registry.pools() == null) {
+            inventory.setItem(31, createInfoIcon(Material.BARRIER, "附魔池未加载", "请稍后再试。"));
             return;
         }
 
@@ -350,6 +425,50 @@ public final class EnchantAcquisitionManager implements Listener {
 
         if (index == 0) {
             inventory.setItem(31, createInfoIcon(Material.BARRIER, "没有可用定向附魔", "该物品没有可继续提升的普通或罕见附魔。"));
+        }
+    }
+
+    private void renderAdminSpecialTable(SpecialTableHolder holder, Inventory inventory, ItemStack input,
+                                         EnchantRegistry registry, EnchantManager enchantManager) {
+        List<SpecialTableOffer> offers = new ArrayList<>();
+        for (EnchantDefinition definition : registry.getEnabledDefinitions()) {
+            int existing = enchantManager.getCustomEnchantLevel(input, definition.id());
+            if (existing >= definition.maxLevel()) {
+                continue;
+            }
+            int targetLevel = Math.max(1, Math.min(existing + 1, definition.maxLevel()));
+            EnchantApplyResult validation = enchantManager.canApplyAdmin(input, definition.id(), targetLevel);
+            if (!validation.success()) {
+                continue;
+            }
+            offers.add(new SpecialTableOffer(definition, targetLevel, 0, 0, true));
+        }
+
+        if (offers.isEmpty()) {
+            inventory.setItem(31, createInfoIcon(Material.BARRIER, "没有可作弊添加的附魔", "该物品已达到所有适用附魔的硬上限。"));
+            holder.setPage(0);
+            return;
+        }
+
+        int pageSize = SPECIAL_TABLE_OFFER_SLOTS.length;
+        int maxPage = Math.max(0, (offers.size() - 1) / pageSize);
+        holder.setPage(Math.max(0, Math.min(holder.page(), maxPage)));
+        int from = holder.page() * pageSize;
+        int to = Math.min(offers.size(), from + pageSize);
+        int slotIndex = 0;
+        for (int index = from; index < to; index++) {
+            SpecialTableOffer offer = offers.get(index);
+            int slot = SPECIAL_TABLE_OFFER_SLOTS[slotIndex++];
+            holder.bind(slot, offer);
+            int existing = enchantManager.getCustomEnchantLevel(input, offer.definition().id());
+            inventory.setItem(slot, createSpecialTableOfferIcon(offer, existing));
+        }
+
+        if (holder.page() > 0) {
+            inventory.setItem(SPECIAL_TABLE_PREV_PAGE_SLOT, createPageIcon(Material.ARROW, "上一页", holder.page(), maxPage));
+        }
+        if (holder.page() < maxPage) {
+            inventory.setItem(SPECIAL_TABLE_NEXT_PAGE_SLOT, createPageIcon(Material.ARROW, "下一页", holder.page(), maxPage));
         }
     }
 
@@ -416,19 +535,38 @@ public final class EnchantAcquisitionManager implements Listener {
         List<Component> lore = new ArrayList<>();
         lore.add(Component.text("当前: " + (existingLevel <= 0 ? "未拥有" : toRoman(existingLevel)), NamedTextColor.GRAY)
                 .decoration(TextDecoration.ITALIC, false));
-        lore.add(Component.text("目标: " + toRoman(offer.level()) + " / 软上限 " + offer.definition().softMaxLevel(), NamedTextColor.GRAY)
-                .decoration(TextDecoration.ITALIC, false));
-        lore.add(Component.text("费用: " + offer.dustCost() + " 魔尘, " + offer.expLevelCost() + " 级经验", NamedTextColor.GRAY)
-                .decoration(TextDecoration.ITALIC, false));
+        if (offer.adminCheat()) {
+            lore.add(Component.text("目标: " + toRoman(offer.level()) + " / 硬上限 " + offer.definition().maxLevel(), NamedTextColor.GOLD)
+                    .decoration(TextDecoration.ITALIC, false));
+            lore.add(Component.text("管理员模式: 无消耗，忽略获取池、软上限、冲突和终极数量。", NamedTextColor.RED)
+                    .decoration(TextDecoration.ITALIC, false));
+        } else {
+            lore.add(Component.text("目标: " + toRoman(offer.level()) + " / 软上限 " + offer.definition().softMaxLevel(), NamedTextColor.GRAY)
+                    .decoration(TextDecoration.ITALIC, false));
+            lore.add(Component.text("费用: " + offer.dustCost() + " 魔尘, " + offer.expLevelCost() + " 级经验", NamedTextColor.GRAY)
+                    .decoration(TextDecoration.ITALIC, false));
+        }
         lore.add(Component.empty());
         for (String description : EnchantDescriptionRenderer.render(offer.definition(), offer.level())) {
             lore.add(Component.text(description, NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false));
         }
         lore.add(Component.empty());
-        lore.add(Component.text("点击附魔", NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.text(offer.adminCheat() ? "点击作弊附魔" : "点击附魔", NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
         meta.lore(lore);
         icon.setItemMeta(meta);
         return icon;
+    }
+
+    private ItemStack createAdminModeIcon(boolean enabled) {
+        String title = enabled ? "管理员作弊模式：开启" : "管理员作弊模式";
+        String body = enabled
+                ? "点击返回普通定向附魔。"
+                : "点击进入无消耗硬上限附魔列表。";
+        return createInfoIcon(enabled ? Material.COMMAND_BLOCK : Material.REDSTONE_TORCH, title, body);
+    }
+
+    private ItemStack createPageIcon(Material material, String title, int page, int maxPage) {
+        return createInfoIcon(material, title, "第 " + (page + 1) + " / " + (maxPage + 1) + " 页。");
     }
 
     private ItemStack createInfoIcon(Material material, String title, String body) {
@@ -534,6 +672,10 @@ public final class EnchantAcquisitionManager implements Listener {
         return minutes + "m";
     }
 
+    private boolean hasEnchantAdmin(Player player) {
+        return player != null && (player.hasPermission("sc.admin") || player.hasPermission("servercore.admin"));
+    }
+
     private String toRoman(int value) {
         return switch (Math.max(1, value)) {
             case 1 -> "I";
@@ -569,8 +711,16 @@ public final class EnchantAcquisitionManager implements Listener {
 
     private static final class SpecialTableHolder implements InventoryHolder {
         private final Map<Integer, SpecialTableOffer> offersBySlot = new HashMap<>();
+        private final boolean adminAvailable;
         private Inventory inventory;
         private ItemStack input;
+        private boolean adminMode;
+        private int page;
+
+        private SpecialTableHolder(boolean adminAvailable, boolean adminMode) {
+            this.adminAvailable = adminAvailable;
+            this.adminMode = adminMode;
+        }
 
         private void bind(int slot, SpecialTableOffer offer) {
             offersBySlot.put(slot, offer);
@@ -592,6 +742,26 @@ public final class EnchantAcquisitionManager implements Listener {
             this.input = input;
         }
 
+        private boolean adminAvailable() {
+            return adminAvailable;
+        }
+
+        private boolean adminMode() {
+            return adminMode;
+        }
+
+        private void setAdminMode(boolean adminMode) {
+            this.adminMode = adminMode;
+        }
+
+        private int page() {
+            return page;
+        }
+
+        private void setPage(int page) {
+            this.page = Math.max(0, page);
+        }
+
         private void setInventory(Inventory inventory) {
             this.inventory = inventory;
         }
@@ -602,6 +772,10 @@ public final class EnchantAcquisitionManager implements Listener {
         }
     }
 
-    private record SpecialTableOffer(EnchantDefinition definition, int level, int dustCost, int expLevelCost) {
+    private record SpecialTableOffer(EnchantDefinition definition, int level, int dustCost, int expLevelCost,
+                                     boolean adminCheat) {
+        private SpecialTableOffer(EnchantDefinition definition, int level, int dustCost, int expLevelCost) {
+            this(definition, level, dustCost, expLevelCost, false);
+        }
     }
 }

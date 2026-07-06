@@ -88,20 +88,20 @@ Warden_500:
   display_name: "Ancient Warden"
   override_power_level: 500
   bypass_world_level_cap: true
-  fixed_max_health: 500
+  # fixed_max_health: 500
   clear_vanilla_drops: false
   drops:
     - enchant_book: ultimate_phoenix_core
       level: 1
       chance: 1%
 
-Rogue_Enderman:
-  match_type: ENDERMAN
-  display_name: "恶徒"
-  override_power_level: 45
-  mod: 1.8
-  always_hostile: true
-  clear_vanilla_drops: false
+# Rogue_Enderman:
+#   match_type: ENDERMAN
+#   display_name: "恶徒"
+#   override_power_level: 45
+#   mod: 1.8
+#   always_hostile: true
+#   clear_vanilla_drops: false
 
 WDA_AT_Illusioner:
   match_type: ILLUSIONER
@@ -2366,3 +2366,108 @@ WDA_UPS_Silverfish_0:
   spawner_check_radius: 16
   spawner_vertical_radius: 8
   spawner_limit_mode: type
+
+sea_creature_deep_drowned:
+  match_pdc_id: "sea_creature_deep_drowned"
+  match_scoreboard_tag: "servercore_sea_creature"
+  display_name: "Deep Drowned"
+  clear_vanilla_drops: false
+  drops:
+    - item_id: deep_sea_cache
+      chance: 0.18
+      amount: 1
+    - item_id: drowned_map_fragment
+      chance: 0.03
+      amount: 1
+
+sea_creature_reef_guardian:
+  match_pdc_id: "sea_creature_reef_guardian"
+  match_scoreboard_tag: "servercore_sea_creature"
+  display_name: "Reef Guardian"
+  clear_vanilla_drops: false
+  drops:
+    - item_id: deep_sea_cache
+      chance: 0.35
+      amount: 1
+    - item_id: pearl_cluster
+      chance: 0.20
+      amount: 1
+    - item_id: ancient_shell
+      chance: 0.05
+      amount: 1
+
+sea_creature_abyss_guardian:
+  match_pdc_id: "sea_creature_abyss_guardian"
+  match_scoreboard_tag: "servercore_sea_creature"
+  display_name: "Abyss Guardian"
+  clear_vanilla_drops: false
+  drops:
+    - item_id: inkbound_membrane
+      chance: 0.45
+      amount: 1-2
+    - item_id: dark_tide_core
+      chance: 0.08
+      amount: 1
+    - item_id: drowned_map_fragment
+      chance: 0.18
+      amount: 1
+    - item_id: ancient_shell
+      chance: 0.06
+      amount: 1
+
+sea_creature_storm_eel:
+  match_pdc_id: "sea_creature_storm_eel"
+  match_scoreboard_tag: "servercore_sea_creature"
+  display_name: "Storm Eel"
+  clear_vanilla_drops: false
+  drops:
+    - item_id: stormfish_scale
+      chance: 0.40
+      amount: 1-2
+    - item_id: shark_tooth
+      chance: 0.25
+      amount: 1
+    - item_id: tide_heart
+      chance: 0.04
+      amount: 1
+
+sea_creature_elder_tidecaller:
+  match_pdc_id: "sea_creature_elder_tidecaller"
+  match_scoreboard_tag: "servercore_sea_creature"
+  display_name: "Elder Tidecaller"
+  clear_vanilla_drops: false
+  drops:
+    - item_id: tidecaller_gill
+      chance: 0.35
+      amount: 1-2
+    - item_id: riptide_scale_core
+      chance: 0.08
+      amount: 1
+    - item_id: tide_heart
+      chance: 0.10
+      amount: 1
+    - item_id: abyssal_pearl
+      chance: 0.035
+      amount: 1
+
+sea_creature_leviathan_echo:
+  match_pdc_id: "sea_creature_leviathan_echo"
+  match_scoreboard_tag: "servercore_sea_creature"
+  display_name: "Leviathan Echo"
+  clear_vanilla_drops: false
+  drops:
+    - item_id: leviathan_royal_scale
+      chance: 0.30
+      amount: 1
+    - item_id: abyssal_pearl
+      chance: 0.18
+      amount: 1
+    - item_id: leviathan_lure_fragment
+      chance: 0.16
+      amount: 1-2
+    - item_id: leviathan_lure_core
+      chance: 0.05
+      amount: 1
+    - item_id: sunken_king_key
+      chance: 0.03
+      amount: 1

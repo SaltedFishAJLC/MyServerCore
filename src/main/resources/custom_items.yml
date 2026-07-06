@@ -2,7 +2,7 @@
 # This file is copied to plugins/ServerCore/custom_items.yml on first start.
 #
 # Example:
-#
+
 # items:
 #   foundry_flame_sword:
 #     material: NETHERITE_SWORD
@@ -30,7 +30,7 @@
 #           - "右键释放一道熔火斩击。"
 #     story_lore:
 #       - "由铸炉深处的余烬锻成。"
-#
+
 #   painted_guard:
 #     material: SHIELD
 #     name: "绘纹守盾"
@@ -46,7 +46,7 @@
 #       shield_block_threshold: 14
 #       shield_effective_block: 0.7
 #       shield_cooldown_seconds: 2.5
-#
+
 #   trimmed_coat:
 #     material: LEATHER_CHESTPLATE
 #     name: "镶纹皮甲"
@@ -58,7 +58,7 @@
 #         pattern: minecraft:spire
 #     stats:
 #       base_armor: 80
-#
+
 # Notes:
 # - Percentage stats use decimals: 0.15 = +15.0%.
 # - abilities are parsed and written to item lore, but no trigger logic is registered by default.
@@ -155,7 +155,16 @@ items:
     material: PRISMARINE_CRYSTALS
     name: "深海匣"
     rarity: RARE
+    fishing_tier: T1
+    route: mixed
+    primary_source: "低级钓鱼宝藏"
+    secondary_source: "低级海怪掉落"
+    used_for:
+      - lilypad_set
+      - squid_set
     story_lore:
+      - "阶段: T1 / 路线: 通用材料"
+      - "来源: 低级宝藏为主，低级海怪为辅。"
       - "钓鱼宝藏中的基础货币材料。"
 
   sunken_emerald:
@@ -169,57 +178,265 @@ items:
     material: ENDER_PEARL
     name: "珍珠簇"
     rarity: EPIC
+    fishing_tier: T2-T3
+    route: treasure
+    primary_source: "低级/中级钓鱼宝藏"
+    secondary_source: "Reef Guardian 掉落"
+    used_for:
+      - squid_set
+      - sponge_set
+      - diver_set
     story_lore:
+      - "阶段: T2-T3 / 路线: 宝藏主产"
+      - "来源: 宝藏为主，Reef Guardian 为辅。"
       - "会吸引更深水域回声的钓具材料。"
 
   drowned_map_fragment:
     material: MAP
     name: "溺亡航图残页"
     rarity: EPIC
+    fishing_tier: T3
+    route: mixed
+    primary_source: "低级/中级钓鱼宝藏"
+    secondary_source: "Abyss Guardian 掉落"
+    used_for:
+      - inkbound_set
+      - sponge_set
     story_lore:
+      - "阶段: T3 / 路线: 分流材料"
+      - "来源: 宝藏为主，Abyss Guardian 为辅。"
       - "海怪与宝藏路线常被标在同一张破图上。"
 
   ancient_shell:
     material: NAUTILUS_SHELL
     name: "远古贝壳"
     rarity: EPIC
+    fishing_tier: T3-T4
+    route: treasure
+    primary_source: "中级钓鱼宝藏"
+    secondary_source: "Guardian / Elder Guardian 掉落"
+    used_for:
+      - inkbound_set
+      - sponge_set
+      - diver_set
     story_lore:
+      - "阶段: T3-T4 / 路线: 宝藏主产"
+      - "来源: 中级宝藏为主，守卫类海怪为辅。"
       - "钓鱼高阶装备的核心声腔。"
 
   reef_glass:
     material: PRISMARINE_SHARD
     name: "礁光玻璃"
     rarity: EPIC
+    fishing_tier: T3-T4
+    route: treasure
+    primary_source: "中级钓鱼宝藏"
+    secondary_source: "海底遗迹怪物掉落"
+    used_for:
+      - sponge_set
+      - diver_set
     story_lore:
+      - "阶段: T3-T4 / 路线: 宝藏线材料"
+      - "来源: 中级宝藏为主，海底遗迹怪物为辅。"
       - "在暖海中被珊瑚打磨过的半透明碎片。"
 
   stormfish_scale:
     material: PHANTOM_MEMBRANE
     name: "雷鱼鳞膜"
     rarity: LEGENDARY
+    fishing_tier: T4
+    route: sea_monster
+    primary_source: "Storm Eel 掉落"
+    secondary_source: "中级暴雨宝藏"
+    used_for:
+      - shark_set
+      - diver_set
+      - riptide_set
     story_lore:
+      - "阶段: T4 / 路线: 海怪主产"
+      - "来源: Storm Eel 为主，中级宝藏为辅。"
       - "暴雨中的海怪会留下带电的鳞膜。"
 
   tide_heart:
     material: HEART_OF_THE_SEA
     name: "潮汐之心"
     rarity: LEGENDARY
+    fishing_tier: T4-T5
+    route: treasure
+    primary_source: "高级钓鱼宝藏"
+    secondary_source: "Elder Tidecaller 低概率掉落"
+    used_for:
+      - shark_set
+      - diver_set
+      - abyss_set
     story_lore:
+      - "阶段: T4-T5 / 路线: 宝藏主产"
+      - "来源: 高级宝藏为主，Elder Tidecaller 为辅。"
       - "海底宝藏的高阶核心，可引导宝藏概率。"
 
   abyssal_pearl:
     material: ECHO_SHARD
     name: "深渊珍珠"
     rarity: MYTHIC
+    fishing_tier: T5
+    route: treasure
+    primary_source: "高级/终局钓鱼宝藏"
+    secondary_source: "高阶海怪低概率掉落"
+    used_for:
+      - riptide_set
+      - abyss_set
+      - lord_set
+      - tidevault_set
     story_lore:
+      - "阶段: T5 / 路线: 宝藏主产"
+      - "来源: 高阶宝藏为主，高阶海怪为辅。"
       - "深海会把声音折叠成珍珠。"
 
   leviathan_lure_core:
     material: CONDUIT
     name: "利维坦诱饵核"
     rarity: MYTHIC
+    fishing_tier: T6
+    route: mixed
+    primary_source: "终局钓鱼宝藏"
+    secondary_source: "Leviathan Echo 低概率掉落或碎片合成"
+    used_for:
+      - lord_set
+      - tidevault_set
     story_lore:
+      - "阶段: T6 / 路线: 双来源核心"
+      - "来源: 终局宝藏为主，Leviathan Echo 与碎片合成为辅。"
       - "足以让海怪概率变成一门生意。"
+
+  leviathan_lure_fragment:
+    material: PRISMARINE_CRYSTALS
+    name: "利维坦诱饵碎片"
+    rarity: LEGENDARY
+    fishing_tier: T6
+    route: sea_monster
+    primary_source: "Leviathan Echo 掉落"
+    secondary_source: "终局钓鱼宝藏"
+    used_for:
+      - leviathan_lure_core
+    story_lore:
+      - "阶段: T6 / 路线: 终局补偿材料"
+      - "8 枚碎片可通过配方合成利维坦诱饵核。"
+
+  inkbound_membrane:
+    material: GLOW_INK_SAC
+    name: "墨灵残膜"
+    rarity: EPIC
+    fishing_tier: T3
+    route: sea_monster
+    primary_source: "Abyss Guardian 掉落"
+    secondary_source: "中级钓鱼宝藏低权重"
+    used_for:
+      - inkbound_set
+    story_lore:
+      - "阶段: T3 / 路线: 海怪线材料"
+      - "Abyss Guardian 身上撕下的深色残膜。"
+
+  dark_tide_core:
+    material: ECHO_SHARD
+    name: "暗潮墨核"
+    rarity: LEGENDARY
+    fishing_tier: T3
+    route: sea_monster
+    primary_source: "Abyss Guardian 稀有掉落"
+    secondary_source: "中级钓鱼宝藏极低权重"
+    used_for:
+      - inkbound_set
+    story_lore:
+      - "阶段: T3 / 路线: 海怪线核心"
+      - "墨色潮流在核心内缓慢旋转。"
+
+  shark_tooth:
+    material: PRISMARINE_SHARD
+    name: "鲨齿"
+    rarity: LEGENDARY
+    fishing_tier: T4
+    route: sea_monster
+    primary_source: "Storm Eel / 高级海怪掉落"
+    secondary_source: "中级钓鱼宝藏低权重"
+    used_for:
+      - shark_set
+    story_lore:
+      - "阶段: T4 / 路线: 海怪线材料"
+      - "切口像被潮汐反复磨尖过。"
+
+  tidecaller_gill:
+    material: PRISMARINE_CRYSTALS
+    name: "潮唤者鳃片"
+    rarity: LEGENDARY
+    fishing_tier: T4-T5
+    route: sea_monster
+    primary_source: "Elder Tidecaller 掉落"
+    secondary_source: "高级钓鱼宝藏低权重"
+    used_for:
+      - shark_set
+      - riptide_set
+    story_lore:
+      - "阶段: T4-T5 / 路线: 海怪线材料"
+      - "仍会随着附近水流轻轻开合。"
+
+  riptide_scale_core:
+    material: NAUTILUS_SHELL
+    name: "激流鳞核"
+    rarity: MYTHIC
+    fishing_tier: T5
+    route: sea_monster
+    primary_source: "Elder Tidecaller 稀有掉落"
+    secondary_source: "高级钓鱼宝藏极低权重"
+    used_for:
+      - riptide_set
+      - abyss_set
+    story_lore:
+      - "阶段: T5 / 路线: 海怪线核心"
+      - "内部压着一道永不散开的逆流。"
+
+  lost_compass:
+    material: RECOVERY_COMPASS
+    name: "失落罗盘"
+    rarity: MYTHIC
+    fishing_tier: T5
+    route: treasure
+    primary_source: "高级钓鱼宝藏"
+    secondary_source: "藏宝图任务预留"
+    used_for:
+      - abyss_set
+    story_lore:
+      - "阶段: T5 / 路线: 宝藏线核心"
+      - "指针总会偏向尚未打开的沉船舱门。"
+
+  leviathan_royal_scale:
+    material: ECHO_SHARD
+    name: "利维坦王鳞"
+    rarity: MYTHIC
+    fishing_tier: T6
+    route: sea_monster
+    primary_source: "Leviathan Echo 掉落"
+    secondary_source: "终局钓鱼宝藏低权重"
+    used_for:
+      - lord_set
+      - tidevault_set
+    story_lore:
+      - "阶段: T6 / 路线: 海怪线终局材料"
+      - "鳞面映出的不是光，而是深海的压力。"
+
+  sunken_king_key:
+    material: TRIAL_KEY
+    name: "海王密钥"
+    rarity: MYTHIC
+    fishing_tier: T6
+    route: treasure
+    primary_source: "终局钓鱼宝藏"
+    secondary_source: "Leviathan Echo 低概率掉落"
+    used_for:
+      - lord_set
+      - tidevault_set
+    story_lore:
+      - "阶段: T6 / 路线: 宝藏线终局材料"
+      - "据说只能打开已经沉没的王库。"
 
   buried_relic:
     material: AMETHYST_SHARD
@@ -732,3 +949,2090 @@ items:
       attr_luck: 8
     story_lore:
       - "同系列中只有最高稀有度版本生效。"
+
+  # =========================================================
+  # T1：边境守卫——均衡近战
+  # 套装合计：25 HP、40 DEF、8伤害
+  # =========================================================
+
+  frontier_helmet:
+    material: IRON_HELMET
+    name: "边境守卫头盔"
+    rarity: COMMON
+    equipment_tier: 1
+    set_id: frontier_guard
+    set_piece_id: helmet
+    unbreakable: true
+    stats:
+      base_armor: 7
+      max_health: 4
+      damage: 1
+      attr_toughness: 2
+
+  frontier_chestplate:
+    material: IRON_CHESTPLATE
+    name: "边境守卫胸甲"
+    rarity: COMMON
+    equipment_tier: 1
+    set_id: frontier_guard
+    set_piece_id: chestplate
+    unbreakable: true
+    stats:
+      base_armor: 14
+      max_health: 9
+      damage: 3
+      attr_toughness: 3
+    sockets:
+      - ARMOR
+
+  frontier_leggings:
+    material: IRON_LEGGINGS
+    name: "边境守卫护腿"
+    rarity: COMMON
+    equipment_tier: 1
+    set_id: frontier_guard
+    set_piece_id: leggings
+    unbreakable: true
+    stats:
+      base_armor: 11
+      max_health: 7
+      damage: 2
+      attr_toughness: 2
+
+  frontier_boots:
+    material: IRON_BOOTS
+    name: "边境守卫战靴"
+    rarity: COMMON
+    equipment_tier: 1
+    set_id: frontier_guard
+    set_piece_id: boots
+    unbreakable: true
+    stats:
+      base_armor: 8
+      max_health: 5
+      damage: 2
+      attr_agility: 3
+
+  frontier_sword:
+    material: IRON_SWORD
+    name: "边境制式长剑"
+    rarity: UNCOMMON
+    equipment_tier: 1
+    weapon_template: ONE_HANDED_SWORD
+    hand_rule: BOTH_HANDS_ALLOWED
+    unbreakable: true
+    stats:
+      damage: 24
+      crit_chance: 0.04
+      crit_damage: 0.15
+      brutality: 2
+      attr_toughness: 3
+    sockets:
+      - WEAPON
+    story_lore:
+      - "边境卫兵使用的制式武器。"
+
+
+  # =========================================================
+  # T2：钢壁卫士——高血量、高防御、盾牌流
+  # 套装合计：70 HP、100 DEF、10伤害
+  # =========================================================
+
+  steelwall_helmet:
+    material: CHAINMAIL_HELMET
+    name: "钢壁卫士头盔"
+    rarity: RARE
+    equipment_tier: 2
+    set_id: steelwall_guard
+    set_piece_id: helmet
+    unbreakable: true
+    stats:
+      base_armor: 18
+      max_health: 12
+      damage: 1
+      attr_toughness: 5
+      attr_willpower: 2
+
+  steelwall_chestplate:
+    material: IRON_CHESTPLATE
+    name: "钢壁卫士胸甲"
+    rarity: RARE
+    equipment_tier: 2
+    set_id: steelwall_guard
+    set_piece_id: chestplate
+    unbreakable: true
+    stats:
+      base_armor: 34
+      max_health: 25
+      damage: 4
+      attr_toughness: 8
+      attr_willpower: 4
+    sockets:
+      - ARMOR
+      - DEFENSE
+
+  steelwall_leggings:
+    material: IRON_LEGGINGS
+    name: "钢壁卫士护腿"
+    rarity: RARE
+    equipment_tier: 2
+    set_id: steelwall_guard
+    set_piece_id: leggings
+    unbreakable: true
+    stats:
+      base_armor: 29
+      max_health: 20
+      damage: 3
+      attr_toughness: 6
+      attr_willpower: 3
+    sockets:
+      - ARMOR
+
+  steelwall_boots:
+    material: CHAINMAIL_BOOTS
+    name: "钢壁卫士战靴"
+    rarity: RARE
+    equipment_tier: 2
+    set_id: steelwall_guard
+    set_piece_id: boots
+    unbreakable: true
+    stats:
+      base_armor: 19
+      max_health: 13
+      damage: 2
+      attr_toughness: 4
+      attr_willpower: 3
+
+  steelwall_axe:
+    material: IRON_AXE
+    name: "钢壁破阵斧"
+    rarity: RARE
+    equipment_tier: 2
+    weapon_template: ONE_HANDED_AXE
+    hand_rule: MAIN_HAND_ONLY
+    unbreakable: true
+    stats:
+      damage: 50
+      crit_chance: 0.05
+      crit_damage: 0.25
+      brutality: 7
+      attr_toughness: 6
+    sockets:
+      - WEAPON
+    story_lore:
+      - "重量足以破开盾牌，却仍能单手挥动。"
+
+  steelwall_shield:
+    material: SHIELD
+    name: "钢壁塔盾"
+    rarity: RARE
+    equipment_tier: 2
+    weapon_template: SHIELD
+    hand_rule: OFF_HAND_ONLY
+    unbreakable: true
+    shield:
+      color: GRAY
+      patterns:
+        - BLACK:STRIPE_CENTER
+        - WHITE:BORDER
+    stats:
+      shield_block_threshold: 22
+      shield_effective_block: 0.68
+      shield_cooldown_seconds: 3.0
+      base_armor: 10
+      max_health: 8
+      attr_toughness: 4
+
+
+  # =========================================================
+  # T3：逐风猎手——远程、敏捷、暴击
+  # 套装合计：70 HP、110 DEF、35伤害、12%暴击率
+  # =========================================================
+
+  wind_hunter_helmet:
+    material: LEATHER_HELMET
+    name: "逐风猎手兜帽"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: wind_hunter
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#587A46"
+    stats:
+      base_armor: 20
+      max_health: 12
+      damage: 6
+      crit_chance: 0.03
+      attr_agility: 8
+      attr_luck: 4
+    sockets:
+      - ARMOR
+
+  wind_hunter_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "逐风猎手皮甲"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: wind_hunter
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#47683B"
+    stats:
+      base_armor: 38
+      max_health: 24
+      damage: 12
+      crit_chance: 0.04
+      crit_damage: 0.08
+      attr_agility: 14
+      attr_luck: 5
+    sockets:
+      - ARMOR
+      - OFFENSE
+
+  wind_hunter_leggings:
+    material: LEATHER_LEGGINGS
+    name: "逐风猎手护腿"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: wind_hunter
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#405C35"
+    stats:
+      base_armor: 32
+      max_health: 20
+      damage: 10
+      crit_chance: 0.03
+      crit_damage: 0.08
+      attr_agility: 12
+      attr_luck: 4
+    sockets:
+      - ARMOR
+
+  wind_hunter_boots:
+    material: LEATHER_BOOTS
+    name: "逐风猎手长靴"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: wind_hunter
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#334A2B"
+    stats:
+      base_armor: 20
+      max_health: 14
+      damage: 7
+      crit_chance: 0.02
+      crit_damage: 0.08
+      attr_agility: 10
+      attr_luck: 3
+    sockets:
+      - ARMOR
+
+  wind_hunter_longbow:
+    material: BOW
+    name: "逐风长弓"
+    rarity: EPIC
+    equipment_tier: 3
+    weapon_template: LONG_BOW
+    hand_rule: TWO_HANDED
+    unbreakable: true
+    stats:
+      damage: 90
+      crit_chance: 0.10
+      crit_damage: 0.35
+      brutality: 5
+      attr_agility: 15
+      attr_luck: 8
+    sockets:
+      - WEAPON
+      - UNIVERSAL
+    story_lore:
+      - "弓弦震动时，箭矢已经追上了风。"
+
+
+  # =========================================================
+  # T4：夜幕行者——高暴击、高爆伤、低生存
+  # 套装合计：160 HP、190 DEF、75伤害
+  #            20%暴击率、48%暴击伤害
+  # =========================================================
+
+  nightwalker_helmet:
+    material: LEATHER_HELMET
+    name: "夜幕行者面罩"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    set_id: nightwalker
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#211A2B"
+    stats:
+      base_armor: 35
+      max_health: 28
+      damage: 12
+      crit_chance: 0.05
+      crit_damage: 0.10
+      attr_agility: 15
+      attr_luck: 7
+    sockets:
+      - ARMOR
+      - OFFENSE
+
+  nightwalker_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "夜幕行者暗衣"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    set_id: nightwalker
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#17121F"
+      trim:
+        material: minecraft:amethyst
+        pattern: minecraft:silence
+    stats:
+      base_armor: 65
+      max_health: 55
+      damage: 25
+      crit_chance: 0.06
+      crit_damage: 0.14
+      attr_agility: 24
+      attr_luck: 10
+    sockets:
+      - ARMOR
+      - OFFENSE
+
+  nightwalker_leggings:
+    material: LEATHER_LEGGINGS
+    name: "夜幕行者绑腿"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    set_id: nightwalker
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#1B1524"
+    stats:
+      base_armor: 55
+      max_health: 47
+      damage: 22
+      crit_chance: 0.05
+      crit_damage: 0.14
+      attr_agility: 21
+      attr_luck: 9
+    sockets:
+      - ARMOR
+      - UNIVERSAL
+
+  nightwalker_boots:
+    material: LEATHER_BOOTS
+    name: "夜幕行者软靴"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    set_id: nightwalker
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#110D18"
+    stats:
+      base_armor: 35
+      max_health: 30
+      damage: 16
+      crit_chance: 0.04
+      crit_damage: 0.10
+      attr_agility: 18
+      attr_luck: 7
+    sockets:
+      - ARMOR
+      - OFFENSE
+
+  nightwalker_dagger:
+    material: NETHERITE_SWORD
+    name: "静默獠牙"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    weapon_template: DAGGER
+    hand_rule: BOTH_HANDS_ALLOWED
+    unbreakable: true
+    stats:
+      damage: 145
+      crit_chance: 0.12
+      crit_damage: 0.45
+      brutality: 6
+      attack_speed_bonus: 0.20
+      attr_agility: 25
+      attr_luck: 12
+    sockets:
+      - WEAPON
+      - OFFENSE
+    story_lore:
+      - "受害者往往先感到寒冷，随后才发现伤口。"
+
+
+  # =========================================================
+  # T4：星辉学派——智慧、意志、法术输出
+  # 套装合计：220 HP、230 DEF、45伤害
+  #            120智慧、75意志、12%暴击率
+  # =========================================================
+
+  astral_scholar_helmet:
+    material: GOLDEN_HELMET
+    name: "星辉学者冠冕"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    set_id: astral_scholar
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      trim:
+        material: minecraft:amethyst
+        pattern: minecraft:spire
+    stats:
+      base_armor: 42
+      max_health: 38
+      damage: 7
+      crit_chance: 0.03
+      attr_intelligence: 24
+      attr_willpower: 15
+      attr_luck: 4
+    sockets:
+      - ARMOR
+      - MAGIC
+
+  astral_scholar_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "星辉学者长袍"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    set_id: astral_scholar
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#302A68"
+      trim:
+        material: minecraft:gold
+        pattern: minecraft:spire
+    stats:
+      base_armor: 78
+      max_health: 75
+      damage: 15
+      crit_chance: 0.04
+      crit_damage: 0.08
+      attr_intelligence: 40
+      attr_willpower: 24
+      attr_luck: 5
+    sockets:
+      - ARMOR
+      - MAGIC
+
+  astral_scholar_leggings:
+    material: LEATHER_LEGGINGS
+    name: "星辉学者长裤"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    set_id: astral_scholar
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#272257"
+      trim:
+        material: minecraft:amethyst
+        pattern: minecraft:spire
+    stats:
+      base_armor: 68
+      max_health: 65
+      damage: 14
+      crit_chance: 0.03
+      crit_damage: 0.08
+      attr_intelligence: 34
+      attr_willpower: 21
+      attr_luck: 4
+    sockets:
+      - ARMOR
+      - MAGIC
+
+  astral_scholar_boots:
+    material: LEATHER_BOOTS
+    name: "星辉学者短靴"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    set_id: astral_scholar
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#211D49"
+    stats:
+      base_armor: 42
+      max_health: 42
+      damage: 9
+      crit_chance: 0.02
+      crit_damage: 0.06
+      attr_intelligence: 22
+      attr_willpower: 15
+      attr_luck: 3
+    sockets:
+      - ARMOR
+      - UNIVERSAL
+
+  astral_scythe:
+    material: NETHERITE_HOE
+    name: "星轨法镰"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    weapon_template: SCYTHE
+    hand_rule: TWO_HANDED
+    unbreakable: true
+    stats:
+      damage: 150
+      crit_chance: 0.08
+      crit_damage: 0.35
+      brutality: 4
+      attr_intelligence: 45
+      attr_willpower: 20
+      attr_luck: 6
+    sockets:
+      - WEAPON
+      - MAGIC
+      - UNIVERSAL
+    story_lore:
+      - "镰刃划过之处，会留下短暂的星轨。"
+
+  # =========================================================
+  # T3 苍钢先锋：均衡单手剑
+  # 满套+武器约：
+  # 236 HP / 275 DEF / 231 DAMAGE
+  # 19% CC / 190% CD / 25 BRUTALITY
+  # =========================================================
+
+  cobalt_vanguard_helmet:
+    material: DIAMOND_HELMET
+    name: "苍钢先锋头盔"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: cobalt_vanguard
+    set_piece_id: helmet
+    unbreakable: true
+    stats:
+      max_health: 25
+      base_armor: 45
+      damage: 10
+      crit_chance: 0.01
+      crit_damage: 0.02
+      brutality: 2
+      attr_toughness: 10
+      attr_agility: 6
+      attr_luck: 4
+    sockets:
+      - UNIVERSAL
+
+  cobalt_vanguard_chestplate:
+    material: DIAMOND_CHESTPLATE
+    name: "苍钢先锋胸甲"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: cobalt_vanguard
+    set_piece_id: chestplate
+    unbreakable: true
+    stats:
+      max_health: 40
+      base_armor: 80
+      damage: 18
+      crit_chance: 0.02
+      crit_damage: 0.04
+      brutality: 3
+      attr_toughness: 16
+      attr_agility: 10
+      attr_luck: 6
+    sockets:
+      - UNIVERSAL
+      - UNIVERSAL
+
+  cobalt_vanguard_leggings:
+    material: DIAMOND_LEGGINGS
+    name: "苍钢先锋护腿"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: cobalt_vanguard
+    set_piece_id: leggings
+    unbreakable: true
+    stats:
+      max_health: 35
+      base_armor: 65
+      damage: 15
+      crit_chance: 0.02
+      crit_damage: 0.04
+      brutality: 3
+      attr_toughness: 14
+      attr_agility: 8
+      attr_luck: 5
+    sockets:
+      - UNIVERSAL
+
+  cobalt_vanguard_boots:
+    material: DIAMOND_BOOTS
+    name: "苍钢先锋战靴"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: cobalt_vanguard
+    set_piece_id: boots
+    unbreakable: true
+    stats:
+      max_health: 20
+      base_armor: 40
+      damage: 7
+      crit_chance: 0.01
+      crit_damage: 0.02
+      brutality: 2
+      attr_toughness: 8
+      attr_agility: 6
+      attr_luck: 5
+    sockets:
+      - UNIVERSAL
+
+  cobalt_vanguard_sword:
+    material: DIAMOND_SWORD
+    name: "苍钢先锋剑"
+    rarity: EPIC
+    equipment_tier: 3
+    weapon_template: ONE_HANDED_SWORD
+    hand_rule: MAIN_HAND_ONLY
+    unbreakable: true
+    stats:
+      damage: 180
+      crit_chance: 0.10
+      crit_damage: 0.28
+      brutality: 15
+    sockets:
+      - UNIVERSAL
+      - UNIVERSAL
+    story_lore:
+      - "攻守均衡的苍钢制式武器。"
+
+
+  # =========================================================
+  # T3 磐岩壁垒：盾斧坦克
+  # 满套+武器+盾牌约：
+  # 365 HP / 373 DEF / 181 DAMAGE
+  # 9.5% CC / 165% CD / 35 BRUTALITY
+  # =========================================================
+
+  bedrock_bulwark_helmet:
+    material: IRON_HELMET
+    name: "磐岩壁垒头盔"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: bedrock_bulwark
+    set_piece_id: helmet
+    unbreakable: true
+    stats:
+      max_health: 35
+      base_armor: 60
+      damage: 5
+      brutality: 3
+      attr_toughness: 13
+      attr_agility: 4
+      attr_luck: 2
+
+  bedrock_bulwark_chestplate:
+    material: NETHERITE_CHESTPLATE
+    name: "磐岩壁垒重甲"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: bedrock_bulwark
+    set_piece_id: chestplate
+    unbreakable: true
+    stats:
+      max_health: 55
+      base_armor: 100
+      damage: 10
+      crit_chance: 0.01
+      brutality: 5
+      attr_toughness: 20
+      attr_agility: 6
+      attr_luck: 3
+    sockets:
+      - UNIVERSAL
+      - UNIVERSAL
+
+  bedrock_bulwark_leggings:
+    material: NETHERITE_LEGGINGS
+    name: "磐岩壁垒腿甲"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: bedrock_bulwark
+    set_piece_id: leggings
+    unbreakable: true
+    stats:
+      max_health: 50
+      base_armor: 85
+      damage: 9
+      crit_chance: 0.01
+      brutality: 4
+      attr_toughness: 17
+      attr_agility: 6
+      attr_luck: 3
+    sockets:
+      - UNIVERSAL
+
+  bedrock_bulwark_boots:
+    material: IRON_BOOTS
+    name: "磐岩壁垒战靴"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: bedrock_bulwark
+    set_piece_id: boots
+    unbreakable: true
+    stats:
+      max_health: 30
+      base_armor: 55
+      damage: 6
+      crit_chance: 0.01
+      brutality: 3
+      attr_toughness: 10
+      attr_agility: 4
+      attr_luck: 2
+
+  bedrock_bulwark_axe:
+    material: DIAMOND_AXE
+    name: "磐岩破阵斧"
+    rarity: EPIC
+    equipment_tier: 3
+    weapon_template: ONE_HANDED_AXE
+    hand_rule: MAIN_HAND_ONLY
+    unbreakable: true
+    stats:
+      damage: 150
+      crit_chance: 0.05
+      crit_damage: 0.15
+      brutality: 20
+    sockets:
+      - UNIVERSAL
+      - UNIVERSAL
+
+  bedrock_bulwark_shield:
+    material: SHIELD
+    name: "磐岩塔盾"
+    rarity: EPIC
+    equipment_tier: 3
+    weapon_template: SHIELD
+    hand_rule: OFF_HAND_ONLY
+    unbreakable: true
+    shield:
+      color: GRAY
+      patterns:
+        - BLACK:BORDER
+        - WHITE:STRIPE_CENTER
+    stats:
+      max_health: 35
+      base_armor: 35
+      shield_block_threshold: 35
+      shield_effective_block: 0.70
+      shield_cooldown_seconds: 2.5
+      attr_toughness: 10
+      attr_agility: 5
+    sockets:
+      - UNIVERSAL
+
+
+  # =========================================================
+  # T3 暮影猎手：匕首暴击
+  # 满套+武器约：
+  # 150 HP / 243 DEF / 216 DAMAGE
+  # 36% CC / 225% CD / 10 BRUTALITY
+  # =========================================================
+
+  dusk_hunter_helmet:
+    material: LEATHER_HELMET
+    name: "暮影猎手面罩"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: dusk_hunter
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#241D2E"
+    stats:
+      max_health: 15
+      base_armor: 30
+      damage: 14
+      crit_chance: 0.03
+      crit_damage: 0.07
+      attr_toughness: 5
+      attr_agility: 12
+      attr_luck: 12
+
+  dusk_hunter_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "暮影猎手暗衣"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: dusk_hunter
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#18131F"
+    stats:
+      max_health: 25
+      base_armor: 55
+      damage: 22
+      crit_chance: 0.04
+      crit_damage: 0.11
+      brutality: 2
+      attr_toughness: 8
+      attr_agility: 17
+      attr_luck: 18
+    sockets:
+      - UNIVERSAL
+      - UNIVERSAL
+
+  dusk_hunter_leggings:
+    material: LEATHER_LEGGINGS
+    name: "暮影猎手绑腿"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: dusk_hunter
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#1C1624"
+    stats:
+      max_health: 25
+      base_armor: 45
+      damage: 20
+      crit_chance: 0.03
+      crit_damage: 0.10
+      brutality: 2
+      attr_toughness: 7
+      attr_agility: 15
+      attr_luck: 16
+    sockets:
+      - UNIVERSAL
+
+  dusk_hunter_boots:
+    material: LEATHER_BOOTS
+    name: "暮影猎手软靴"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: dusk_hunter
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#100C16"
+    stats:
+      max_health: 15
+      base_armor: 30
+      damage: 14
+      crit_chance: 0.02
+      crit_damage: 0.07
+      brutality: 1
+      attr_toughness: 5
+      attr_agility: 11
+      attr_luck: 14
+    sockets:
+      - UNIVERSAL
+
+  dusk_hunter_dagger:
+    material: DIAMOND_SWORD
+    name: "暮影獠牙"
+    rarity: EPIC
+    equipment_tier: 3
+    weapon_template: DAGGER
+    hand_rule: BOTH_HANDS_ALLOWED
+    unbreakable: true
+    stats:
+      damage: 145
+      crit_chance: 0.15
+      crit_damage: 0.40
+      brutality: 5
+    sockets:
+      - UNIVERSAL
+      - UNIVERSAL
+    story_lore:
+      - "轻巧、迅速，并且异常致命。"
+
+
+  # =========================================================
+  # T3 风翎游侠：短弓、暴击、破甲
+  # 满套+武器约：
+  # 180 HP / 248 DEF / 246 DAMAGE
+  # 28.75% CC / 205% CD / 25 ARMOR PEN
+  # =========================================================
+
+  windfeather_helmet:
+    material: LEATHER_HELMET
+    name: "风翎游侠兜帽"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: windfeather_ranger
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#486A4B"
+    stats:
+      max_health: 18
+      base_armor: 35
+      damage: 10
+      crit_chance: 0.02
+      crit_damage: 0.05
+      armor_pen: 2
+      attr_toughness: 6
+      attr_agility: 10
+      attr_luck: 10
+
+  windfeather_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "风翎游侠皮甲"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: windfeather_ranger
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#38563D"
+    stats:
+      max_health: 34
+      base_armor: 65
+      damage: 18
+      crit_chance: 0.03
+      crit_damage: 0.08
+      armor_pen: 3
+      attr_toughness: 10
+      attr_agility: 14
+      attr_luck: 13
+    sockets:
+      - UNIVERSAL
+      - UNIVERSAL
+
+  windfeather_leggings:
+    material: LEATHER_LEGGINGS
+    name: "风翎游侠护腿"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: windfeather_ranger
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#304A35"
+    stats:
+      max_health: 30
+      base_armor: 50
+      damage: 17
+      crit_chance: 0.03
+      crit_damage: 0.07
+      armor_pen: 3
+      attr_toughness: 8
+      attr_agility: 12
+      attr_luck: 12
+    sockets:
+      - UNIVERSAL
+
+  windfeather_boots:
+    material: LEATHER_BOOTS
+    name: "风翎游侠长靴"
+    rarity: EPIC
+    equipment_tier: 3
+    set_id: windfeather_ranger
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#263D2C"
+    stats:
+      max_health: 18
+      base_armor: 30
+      damage: 10
+      crit_chance: 0.02
+      crit_damage: 0.05
+      armor_pen: 2
+      attr_toughness: 6
+      attr_agility: 9
+      attr_luck: 10
+    sockets:
+      - UNIVERSAL
+
+  windfeather_shortbow:
+    material: BOW
+    name: "风翎短弓"
+    rarity: EPIC
+    equipment_tier: 3
+    weapon_template: SHORTBOW
+    hand_rule: TWO_HANDED
+    unbreakable: true
+    stats:
+      damage: 190
+      crit_chance: 0.12
+      crit_damage: 0.30
+      armor_pen: 15
+    sockets:
+      - UNIVERSAL
+      - UNIVERSAL
+    story_lore:
+      - "无需长时间蓄力便能连续射击。"
+
+
+  # =========================================================
+  # 钓鱼装备第一批：T1-T6 海怪线 / 宝藏线
+  # 方尖碑门槛暂不接入逻辑；后续可在此处预留 future_obelisk_level。
+  # =========================================================
+
+  lilypad_helmet:
+    material: LEATHER_HELMET
+    name: "荷叶兜帽"
+    rarity: COMMON
+    equipment_tier: 1
+    req_skill: "fishing:1"
+    required_combat_level: 0
+    fishing_route: mixed
+    set_id: lilypad_set
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#4E8B45"
+    stats:
+      fishing_speed: 12
+      sea_creature_chance: 0.2
+      treasure_chance: 0.2
+      base_armor: 5
+      max_health: 8
+      attr_luck: 1
+    story_lore:
+      - "T1 入门钓鱼套。路线: 通用。"
+      - "不需要击杀海怪即可开始制作。"
+
+  lilypad_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "荷叶上衣"
+    rarity: COMMON
+    equipment_tier: 1
+    req_skill: "fishing:1"
+    required_combat_level: 0
+    fishing_route: mixed
+    set_id: lilypad_set
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#5A9A4B"
+    stats:
+      fishing_speed: 18
+      sea_creature_chance: 0.3
+      treasure_chance: 0.3
+      base_armor: 10
+      max_health: 14
+      attr_luck: 1
+    story_lore:
+      - "T1 入门钓鱼套。路线: 通用。"
+      - "用浅水材料缝成，适合第一次离岸。"
+
+  lilypad_leggings:
+    material: LEATHER_LEGGINGS
+    name: "荷叶护腿"
+    rarity: COMMON
+    equipment_tier: 1
+    req_skill: "fishing:1"
+    required_combat_level: 0
+    fishing_route: mixed
+    set_id: lilypad_set
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#46783D"
+    stats:
+      fishing_speed: 17
+      sea_creature_chance: 0.3
+      treasure_chance: 0.3
+      base_armor: 8
+      max_health: 12
+      attr_luck: 1
+    story_lore:
+      - "T1 入门钓鱼套。路线: 通用。"
+      - "湿润但轻便，能稳住最初的抛竿节奏。"
+
+  lilypad_boots:
+    material: LEATHER_BOOTS
+    name: "荷叶轻靴"
+    rarity: COMMON
+    equipment_tier: 1
+    req_skill: "fishing:1"
+    required_combat_level: 0
+    fishing_route: mixed
+    set_id: lilypad_set
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#3E6B36"
+    stats:
+      fishing_speed: 13
+      sea_creature_chance: 0.2
+      treasure_chance: 0.2
+      base_armor: 5
+      max_health: 8
+      attr_agility: 2
+      attr_luck: 1
+    story_lore:
+      - "T1 入门钓鱼套。路线: 通用。"
+      - "鞋底沾着一点池塘泥。"
+
+  squid_helmet:
+    material: LEATHER_HELMET
+    name: "乌贼面罩"
+    rarity: RARE
+    equipment_tier: 2
+    req_skill: "fishing:15"
+    required_combat_level: 20
+    fishing_route: sea_monster
+    upgrade_from: lilypad_helmet
+    set_id: squid_set
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#2F3348"
+    stats:
+      fishing_speed: 20
+      sea_creature_chance: 0.8
+      treasure_chance: 0.2
+      base_armor: 14
+      max_health: 18
+      damage: 2
+      attr_luck: 1
+    story_lore:
+      - "T2 海怪入门套。建议战斗等级: 20。"
+      - "第一次把海怪概率当作装备目标。"
+
+  squid_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "乌贼外衣"
+    rarity: RARE
+    equipment_tier: 2
+    req_skill: "fishing:15"
+    required_combat_level: 20
+    fishing_route: sea_monster
+    upgrade_from: lilypad_chestplate
+    set_id: squid_set
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#262A3D"
+    stats:
+      fishing_speed: 30
+      sea_creature_chance: 1.2
+      treasure_chance: 0.4
+      base_armor: 26
+      max_health: 30
+      damage: 4
+      attr_toughness: 3
+    story_lore:
+      - "T2 海怪入门套。建议战斗等级: 20。"
+      - "墨囊染层能压住低阶海怪的腥味。"
+
+  squid_leggings:
+    material: LEATHER_LEGGINGS
+    name: "乌贼护腿"
+    rarity: RARE
+    equipment_tier: 2
+    req_skill: "fishing:15"
+    required_combat_level: 20
+    fishing_route: sea_monster
+    upgrade_from: lilypad_leggings
+    set_id: squid_set
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#232638"
+    stats:
+      fishing_speed: 28
+      sea_creature_chance: 1.1
+      treasure_chance: 0.4
+      base_armor: 22
+      max_health: 26
+      damage: 3
+      attr_toughness: 2
+    story_lore:
+      - "T2 海怪入门套。建议战斗等级: 20。"
+      - "拖拽湿网时依旧能保持动作。"
+
+  squid_boots:
+    material: LEATHER_BOOTS
+    name: "乌贼软靴"
+    rarity: RARE
+    equipment_tier: 2
+    req_skill: "fishing:15"
+    required_combat_level: 20
+    fishing_route: sea_monster
+    upgrade_from: lilypad_boots
+    set_id: squid_set
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#1D2030"
+    stats:
+      fishing_speed: 22
+      sea_creature_chance: 0.9
+      treasure_chance: 0.2
+      base_armor: 14
+      max_health: 18
+      damage: 2
+      attr_agility: 4
+    story_lore:
+      - "T2 海怪入门套。建议战斗等级: 20。"
+      - "靴面会在水边泛出淡淡墨光。"
+
+  inkbound_helmet:
+    material: LEATHER_HELMET
+    name: "墨灵兜帽"
+    rarity: EPIC
+    equipment_tier: 3
+    req_skill: "fishing:30"
+    required_combat_level: 50
+    fishing_route: sea_monster
+    upgrade_from: squid_helmet
+    set_id: inkbound_set
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#141923"
+    stats:
+      fishing_speed: 32
+      sea_creature_chance: 1.6
+      treasure_chance: 0.4
+      base_armor: 28
+      max_health: 30
+      damage: 5
+      attr_luck: 2
+    story_lore:
+      - "T3 海怪线套装。建议战斗等级: 50。"
+      - "主材料来自 Abyss Guardian。"
+
+  inkbound_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "墨灵战衣"
+    rarity: EPIC
+    equipment_tier: 3
+    req_skill: "fishing:30"
+    required_combat_level: 50
+    fishing_route: sea_monster
+    upgrade_from: squid_chestplate
+    set_id: inkbound_set
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#10151F"
+    stats:
+      fishing_speed: 48
+      sea_creature_chance: 2.4
+      treasure_chance: 0.6
+      base_armor: 52
+      max_health: 48
+      damage: 9
+      attr_toughness: 7
+    story_lore:
+      - "T3 海怪线套装。建议战斗等级: 50。"
+      - "暗潮墨核缝在胸口内侧。"
+
+  inkbound_leggings:
+    material: LEATHER_LEGGINGS
+    name: "墨灵护腿"
+    rarity: EPIC
+    equipment_tier: 3
+    req_skill: "fishing:30"
+    required_combat_level: 50
+    fishing_route: sea_monster
+    upgrade_from: squid_leggings
+    set_id: inkbound_set
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#0D121B"
+    stats:
+      fishing_speed: 45
+      sea_creature_chance: 2.2
+      treasure_chance: 0.6
+      base_armor: 44
+      max_health: 42
+      damage: 8
+      attr_toughness: 5
+    story_lore:
+      - "T3 海怪线套装。建议战斗等级: 50。"
+      - "每一片残膜都曾在深水中呼吸。"
+
+  inkbound_boots:
+    material: LEATHER_BOOTS
+    name: "墨灵潜靴"
+    rarity: EPIC
+    equipment_tier: 3
+    req_skill: "fishing:30"
+    required_combat_level: 50
+    fishing_route: sea_monster
+    upgrade_from: squid_boots
+    set_id: inkbound_set
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#090D14"
+    stats:
+      fishing_speed: 35
+      sea_creature_chance: 1.8
+      treasure_chance: 0.4
+      base_armor: 28
+      max_health: 30
+      damage: 5
+      attr_agility: 8
+    story_lore:
+      - "T3 海怪线套装。建议战斗等级: 50。"
+      - "脚步声会被墨色水膜吞掉。"
+
+  sponge_helmet:
+    material: LEATHER_HELMET
+    name: "海绵头盔"
+    rarity: EPIC
+    equipment_tier: 3
+    req_skill: "fishing:30"
+    required_combat_level: 50
+    fishing_route: treasure
+    upgrade_from: lilypad_helmet
+    set_id: sponge_set
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#D7B94C"
+    stats:
+      fishing_speed: 52
+      sea_creature_chance: 0.4
+      treasure_chance: 1.2
+      base_armor: 22
+      max_health: 24
+      attr_luck: 4
+    story_lore:
+      - "T3 宝藏线套装。建议战斗等级: 50。"
+      - "从荷叶套直接分流到宝藏效率。"
+
+  sponge_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "海绵潜衣"
+    rarity: EPIC
+    equipment_tier: 3
+    req_skill: "fishing:30"
+    required_combat_level: 50
+    fishing_route: treasure
+    upgrade_from: lilypad_chestplate
+    set_id: sponge_set
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#CDAF43"
+    stats:
+      fishing_speed: 78
+      sea_creature_chance: 0.6
+      treasure_chance: 1.8
+      base_armor: 42
+      max_health: 38
+      attr_luck: 7
+    story_lore:
+      - "T3 宝藏线套装。建议战斗等级: 50。"
+      - "吸饱海水后会指向更沉的箱子。"
+
+  sponge_leggings:
+    material: LEATHER_LEGGINGS
+    name: "海绵护腿"
+    rarity: EPIC
+    equipment_tier: 3
+    req_skill: "fishing:30"
+    required_combat_level: 50
+    fishing_route: treasure
+    upgrade_from: lilypad_leggings
+    set_id: sponge_set
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#BFA03A"
+    stats:
+      fishing_speed: 72
+      sea_creature_chance: 0.6
+      treasure_chance: 1.6
+      base_armor: 36
+      max_health: 34
+      attr_luck: 6
+    story_lore:
+      - "T3 宝藏线套装。建议战斗等级: 50。"
+      - "航图残页被压在夹层里防潮。"
+
+  sponge_boots:
+    material: LEATHER_BOOTS
+    name: "海绵短靴"
+    rarity: EPIC
+    equipment_tier: 3
+    req_skill: "fishing:30"
+    required_combat_level: 50
+    fishing_route: treasure
+    upgrade_from: lilypad_boots
+    set_id: sponge_set
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#A88D32"
+    stats:
+      fishing_speed: 58
+      sea_creature_chance: 0.4
+      treasure_chance: 1.4
+      base_armor: 24
+      max_health: 24
+      attr_agility: 7
+      attr_luck: 5
+    story_lore:
+      - "T3 宝藏线套装。建议战斗等级: 50。"
+      - "每一步都能挤出一点咸水。"
+
+  shark_helmet:
+    material: LEATHER_HELMET
+    name: "鲨鱼战盔"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    req_skill: "fishing:45"
+    required_combat_level: 100
+    fishing_route: sea_monster
+    upgrade_from: inkbound_helmet
+    set_id: shark_set
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#475A65"
+    stats:
+      fishing_speed: 52
+      sea_creature_chance: 2.4
+      treasure_chance: 0.6
+      base_armor: 50
+      max_health: 55
+      damage: 12
+      attr_toughness: 8
+    story_lore:
+      - "T4 海怪线套装。建议战斗等级: 100。"
+      - "主材料来自 Storm Eel 与 Elder Tidecaller。"
+
+  shark_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "鲨鱼鳞甲"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    req_skill: "fishing:45"
+    required_combat_level: 100
+    fishing_route: sea_monster
+    upgrade_from: inkbound_chestplate
+    set_id: shark_set
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#3E515C"
+    stats:
+      fishing_speed: 78
+      sea_creature_chance: 3.6
+      treasure_chance: 0.9
+      base_armor: 90
+      max_health: 82
+      damage: 22
+      attr_toughness: 15
+    story_lore:
+      - "T4 海怪线套装。建议战斗等级: 100。"
+      - "鲨齿挂在胸甲边缘，提醒海怪靠近的代价。"
+
+  shark_leggings:
+    material: LEATHER_LEGGINGS
+    name: "鲨鱼护腿"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    req_skill: "fishing:45"
+    required_combat_level: 100
+    fishing_route: sea_monster
+    upgrade_from: inkbound_leggings
+    set_id: shark_set
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#344751"
+    stats:
+      fishing_speed: 72
+      sea_creature_chance: 3.2
+      treasure_chance: 0.8
+      base_armor: 76
+      max_health: 72
+      damage: 19
+      attr_toughness: 12
+    story_lore:
+      - "T4 海怪线套装。建议战斗等级: 100。"
+      - "雷鱼鳞膜让护腿在雨中微微发亮。"
+
+  shark_boots:
+    material: LEATHER_BOOTS
+    name: "鲨鱼战靴"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    req_skill: "fishing:45"
+    required_combat_level: 100
+    fishing_route: sea_monster
+    upgrade_from: inkbound_boots
+    set_id: shark_set
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#2D3D46"
+    stats:
+      fishing_speed: 58
+      sea_creature_chance: 2.8
+      treasure_chance: 0.7
+      base_armor: 50
+      max_health: 55
+      damage: 12
+      attr_agility: 12
+    story_lore:
+      - "T4 海怪线套装。建议战斗等级: 100。"
+      - "踩入水中时，附近小鱼会本能散开。"
+
+  diver_helmet:
+    material: LEATHER_HELMET
+    name: "潜水员头盔"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    req_skill: "fishing:45"
+    required_combat_level: 100
+    fishing_route: treasure
+    upgrade_from: sponge_helmet
+    set_id: diver_set
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#2E6E78"
+      trim:
+        material: minecraft:copper
+        pattern: minecraft:coast
+    stats:
+      fishing_speed: 84
+      sea_creature_chance: 0.8
+      treasure_chance: 2.0
+      base_armor: 40
+      max_health: 42
+      attr_luck: 8
+    story_lore:
+      - "T4 宝藏线套装。建议战斗等级: 100。"
+      - "需要少量 Storm Eel 材料，但效率核心仍是宝藏。"
+
+  diver_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "潜水员胸甲"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    req_skill: "fishing:45"
+    required_combat_level: 100
+    fishing_route: treasure
+    upgrade_from: sponge_chestplate
+    set_id: diver_set
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#285D67"
+      trim:
+        material: minecraft:copper
+        pattern: minecraft:coast
+    stats:
+      fishing_speed: 126
+      sea_creature_chance: 1.2
+      treasure_chance: 3.0
+      base_armor: 74
+      max_health: 68
+      attr_luck: 14
+    story_lore:
+      - "T4 宝藏线套装。建议战斗等级: 100。"
+      - "礁光玻璃让沉船轮廓更早浮现。"
+
+  diver_leggings:
+    material: LEATHER_LEGGINGS
+    name: "潜水员护腿"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    req_skill: "fishing:45"
+    required_combat_level: 100
+    fishing_route: treasure
+    upgrade_from: sponge_leggings
+    set_id: diver_set
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#224F58"
+      trim:
+        material: minecraft:copper
+        pattern: minecraft:coast
+    stats:
+      fishing_speed: 116
+      sea_creature_chance: 1.1
+      treasure_chance: 2.6
+      base_armor: 62
+      max_health: 60
+      attr_luck: 12
+    story_lore:
+      - "T4 宝藏线套装。建议战斗等级: 100。"
+      - "远古贝壳嵌在膝侧，能听见箱锁回声。"
+
+  diver_boots:
+    material: LEATHER_BOOTS
+    name: "潜水员铅靴"
+    rarity: LEGENDARY
+    equipment_tier: 4
+    req_skill: "fishing:45"
+    required_combat_level: 100
+    fishing_route: treasure
+    upgrade_from: sponge_boots
+    set_id: diver_set
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#1C4148"
+    stats:
+      fishing_speed: 94
+      sea_creature_chance: 0.9
+      treasure_chance: 2.4
+      base_armor: 40
+      max_health: 42
+      attr_agility: 10
+      attr_luck: 10
+    story_lore:
+      - "T4 宝藏线套装。建议战斗等级: 100。"
+      - "鞋跟很沉，心却总往宝箱方向走。"
+
+  riptide_helmet:
+    material: LEATHER_HELMET
+    name: "激流战盔"
+    rarity: MYTHIC
+    equipment_tier: 5
+    req_skill: "fishing:60"
+    required_combat_level: 250
+    fishing_route: sea_monster
+    upgrade_from: shark_helmet
+    set_id: riptide_set
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#1D5F7A"
+    stats:
+      fishing_speed: 84
+      sea_creature_chance: 3.6
+      treasure_chance: 1.0
+      base_armor: 90
+      max_health: 95
+      damage: 24
+      attr_toughness: 16
+    story_lore:
+      - "T5 海怪线套装。建议生态战斗等级: 250。"
+      - "激流鳞核会把深海怒意带回钩尖。"
+
+  riptide_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "激流胸甲"
+    rarity: MYTHIC
+    equipment_tier: 5
+    req_skill: "fishing:60"
+    required_combat_level: 250
+    fishing_route: sea_monster
+    upgrade_from: shark_chestplate
+    set_id: riptide_set
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#174F68"
+    stats:
+      fishing_speed: 126
+      sea_creature_chance: 5.4
+      treasure_chance: 1.5
+      base_armor: 155
+      max_health: 145
+      damage: 42
+      attr_toughness: 28
+    story_lore:
+      - "T5 海怪线套装。建议生态战斗等级: 250。"
+      - "潮唤者鳃片沿胸口排成一圈。"
+
+  riptide_leggings:
+    material: LEATHER_LEGGINGS
+    name: "激流护腿"
+    rarity: MYTHIC
+    equipment_tier: 5
+    req_skill: "fishing:60"
+    required_combat_level: 250
+    fishing_route: sea_monster
+    upgrade_from: shark_leggings
+    set_id: riptide_set
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#13465C"
+    stats:
+      fishing_speed: 116
+      sea_creature_chance: 4.8
+      treasure_chance: 1.3
+      base_armor: 130
+      max_health: 125
+      damage: 36
+      attr_toughness: 23
+    story_lore:
+      - "T5 海怪线套装。建议生态战斗等级: 250。"
+      - "每次迈步都像踩着反卷的浪。"
+
+  riptide_boots:
+    material: LEATHER_BOOTS
+    name: "激流踏浪靴"
+    rarity: MYTHIC
+    equipment_tier: 5
+    req_skill: "fishing:60"
+    required_combat_level: 250
+    fishing_route: sea_monster
+    upgrade_from: shark_boots
+    set_id: riptide_set
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#0E394D"
+    stats:
+      fishing_speed: 94
+      sea_creature_chance: 4.2
+      treasure_chance: 1.2
+      base_armor: 90
+      max_health: 95
+      damage: 24
+      attr_agility: 22
+    story_lore:
+      - "T5 海怪线套装。建议生态战斗等级: 250。"
+      - "浪会追着穿戴者的脚步向前。"
+
+  abyss_helmet:
+    material: LEATHER_HELMET
+    name: "深渊目镜"
+    rarity: MYTHIC
+    equipment_tier: 5
+    req_skill: "fishing:60"
+    required_combat_level: 250
+    fishing_route: treasure
+    upgrade_from: diver_helmet
+    set_id: abyss_set
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#222C4D"
+      trim:
+        material: minecraft:amethyst
+        pattern: minecraft:tide
+    stats:
+      fishing_speed: 136
+      sea_creature_chance: 1.2
+      treasure_chance: 3.2
+      base_armor: 70
+      max_health: 72
+      attr_luck: 14
+    story_lore:
+      - "T5 宝藏线套装。建议生态战斗等级: 250。"
+      - "失落罗盘固定在目镜侧面。"
+
+  abyss_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "深渊潜甲"
+    rarity: MYTHIC
+    equipment_tier: 5
+    req_skill: "fishing:60"
+    required_combat_level: 250
+    fishing_route: treasure
+    upgrade_from: diver_chestplate
+    set_id: abyss_set
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#1A2340"
+      trim:
+        material: minecraft:amethyst
+        pattern: minecraft:tide
+    stats:
+      fishing_speed: 204
+      sea_creature_chance: 1.8
+      treasure_chance: 4.8
+      base_armor: 125
+      max_health: 110
+      attr_luck: 24
+    story_lore:
+      - "T5 宝藏线套装。建议生态战斗等级: 250。"
+      - "深渊珍珠让宝藏回声变得清晰。"
+
+  abyss_leggings:
+    material: LEATHER_LEGGINGS
+    name: "深渊护腿"
+    rarity: MYTHIC
+    equipment_tier: 5
+    req_skill: "fishing:60"
+    required_combat_level: 250
+    fishing_route: treasure
+    upgrade_from: diver_leggings
+    set_id: abyss_set
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#151D35"
+      trim:
+        material: minecraft:amethyst
+        pattern: minecraft:tide
+    stats:
+      fishing_speed: 188
+      sea_creature_chance: 1.6
+      treasure_chance: 4.4
+      base_armor: 105
+      max_health: 96
+      attr_luck: 20
+    story_lore:
+      - "T5 宝藏线套装。建议生态战斗等级: 250。"
+      - "每一根缝线都被潮汐之心校准过。"
+
+  abyss_boots:
+    material: LEATHER_BOOTS
+    name: "深渊静靴"
+    rarity: MYTHIC
+    equipment_tier: 5
+    req_skill: "fishing:60"
+    required_combat_level: 250
+    fishing_route: treasure
+    upgrade_from: diver_boots
+    set_id: abyss_set
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#10172A"
+    stats:
+      fishing_speed: 152
+      sea_creature_chance: 1.4
+      treasure_chance: 3.6
+      base_armor: 70
+      max_health: 72
+      attr_agility: 16
+      attr_luck: 16
+    story_lore:
+      - "T5 宝藏线套装。建议生态战斗等级: 250。"
+      - "脚步越轻，宝箱越近。"
+
+  lord_helmet:
+    material: LEATHER_HELMET
+    name: "领主海冠"
+    rarity: MYTHIC
+    equipment_tier: 6
+    req_skill: "fishing:75"
+    required_combat_level: 500
+    fishing_route: sea_monster
+    upgrade_from: riptide_helmet
+    set_id: lord_set
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#0F2234"
+      trim:
+        material: minecraft:diamond
+        pattern: minecraft:eye
+    stats:
+      fishing_speed: 130
+      sea_creature_chance: 5.0
+      treasure_chance: 1.6
+      base_armor: 150
+      max_health: 150
+      damage: 42
+      attr_toughness: 25
+    story_lore:
+      - "T6 海怪终局套装。建议生态战斗等级: 500。"
+      - "利维坦王鳞沿冠脊排列。"
+
+  lord_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "领主重甲"
+    rarity: MYTHIC
+    equipment_tier: 6
+    req_skill: "fishing:75"
+    required_combat_level: 500
+    fishing_route: sea_monster
+    upgrade_from: riptide_chestplate
+    set_id: lord_set
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#0B1B2A"
+      trim:
+        material: minecraft:diamond
+        pattern: minecraft:eye
+    stats:
+      fishing_speed: 195
+      sea_creature_chance: 7.5
+      treasure_chance: 2.4
+      base_armor: 250
+      max_health: 230
+      damage: 70
+      attr_toughness: 45
+    story_lore:
+      - "T6 海怪终局套装。建议生态战斗等级: 500。"
+      - "穿戴者更像是在向深海宣战。"
+
+  lord_leggings:
+    material: LEATHER_LEGGINGS
+    name: "领主护腿"
+    rarity: MYTHIC
+    equipment_tier: 6
+    req_skill: "fishing:75"
+    required_combat_level: 500
+    fishing_route: sea_monster
+    upgrade_from: riptide_leggings
+    set_id: lord_set
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#081724"
+      trim:
+        material: minecraft:diamond
+        pattern: minecraft:eye
+    stats:
+      fishing_speed: 180
+      sea_creature_chance: 6.8
+      treasure_chance: 2.2
+      base_armor: 210
+      max_health: 200
+      damage: 60
+      attr_toughness: 38
+    story_lore:
+      - "T6 海怪终局套装。建议生态战斗等级: 500。"
+      - "每一片甲都听过 Leviathan Echo 的回声。"
+
+  lord_boots:
+    material: LEATHER_BOOTS
+    name: "领主踏潮靴"
+    rarity: MYTHIC
+    equipment_tier: 6
+    req_skill: "fishing:75"
+    required_combat_level: 500
+    fishing_route: sea_monster
+    upgrade_from: riptide_boots
+    set_id: lord_set
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#06111B"
+    stats:
+      fishing_speed: 145
+      sea_creature_chance: 5.7
+      treasure_chance: 1.8
+      base_armor: 150
+      max_health: 150
+      damage: 42
+      attr_agility: 32
+    story_lore:
+      - "T6 海怪终局套装。建议生态战斗等级: 500。"
+      - "潮水会为它让路，也会为它合拢。"
+
+  tidevault_helmet:
+    material: LEATHER_HELMET
+    name: "潮藏面罩"
+    rarity: MYTHIC
+    equipment_tier: 6
+    req_skill: "fishing:75"
+    required_combat_level: 500
+    fishing_route: treasure
+    upgrade_from: abyss_helmet
+    set_id: tidevault_set
+    set_piece_id: helmet
+    unbreakable: true
+    appearance:
+      leather_color: "#264B63"
+      trim:
+        material: minecraft:gold
+        pattern: minecraft:flow
+    stats:
+      fishing_speed: 208
+      sea_creature_chance: 1.6
+      treasure_chance: 5.0
+      base_armor: 110
+      max_health: 110
+      attr_luck: 24
+    story_lore:
+      - "T6 宝藏终局套装。建议生态战斗等级: 500。"
+      - "100 级、唤潮钓竿和满套可触达 1500 有效 Fishing Speed。"
+
+  tidevault_chestplate:
+    material: LEATHER_CHESTPLATE
+    name: "潮藏王库甲"
+    rarity: MYTHIC
+    equipment_tier: 6
+    req_skill: "fishing:75"
+    required_combat_level: 500
+    fishing_route: treasure
+    upgrade_from: abyss_chestplate
+    set_id: tidevault_set
+    set_piece_id: chestplate
+    unbreakable: true
+    appearance:
+      leather_color: "#1F4056"
+      trim:
+        material: minecraft:gold
+        pattern: minecraft:flow
+    stats:
+      fishing_speed: 312
+      sea_creature_chance: 2.4
+      treasure_chance: 7.5
+      base_armor: 190
+      max_health: 170
+      attr_luck: 40
+    story_lore:
+      - "T6 宝藏终局套装。建议生态战斗等级: 500。"
+      - "海王密钥会在接近终局宝藏时发热。"
+
+  tidevault_leggings:
+    material: LEATHER_LEGGINGS
+    name: "潮藏护腿"
+    rarity: MYTHIC
+    equipment_tier: 6
+    req_skill: "fishing:75"
+    required_combat_level: 500
+    fishing_route: treasure
+    upgrade_from: abyss_leggings
+    set_id: tidevault_set
+    set_piece_id: leggings
+    unbreakable: true
+    appearance:
+      leather_color: "#1A3548"
+      trim:
+        material: minecraft:gold
+        pattern: minecraft:flow
+    stats:
+      fishing_speed: 286
+      sea_creature_chance: 2.2
+      treasure_chance: 6.8
+      base_armor: 160
+      max_health: 150
+      attr_luck: 34
+    story_lore:
+      - "T6 宝藏终局套装。建议生态战斗等级: 500。"
+      - "深渊珍珠与王库纹路在腿甲上相互校准。"
+
+  tidevault_boots:
+    material: LEATHER_BOOTS
+    name: "潮藏寻库靴"
+    rarity: MYTHIC
+    equipment_tier: 6
+    req_skill: "fishing:75"
+    required_combat_level: 500
+    fishing_route: treasure
+    upgrade_from: abyss_boots
+    set_id: tidevault_set
+    set_piece_id: boots
+    unbreakable: true
+    appearance:
+      leather_color: "#142B3B"
+    stats:
+      fishing_speed: 234
+      sea_creature_chance: 1.8
+      treasure_chance: 5.7
+      base_armor: 110
+      max_health: 110
+      attr_agility: 24
+      attr_luck: 28
+    story_lore:
+      - "T6 宝藏终局套装。建议生态战斗等级: 500。"
+      - "它们踩过的每一片水面都像地图边缘。"
