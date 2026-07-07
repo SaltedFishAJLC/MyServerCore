@@ -1,0 +1,125 @@
+# Fishing environment modifiers.
+# All bonuses are temporary and are applied only while calculating the active fishing action.
+
+settings:
+  require_open_water_for_custom_fishing: true
+  require_open_water_for_environment_bonus: true
+  use_vanilla_open_water_check: true
+  debug: false
+
+biome_tags:
+  OCEAN:
+    - OCEAN
+    - DEEP_OCEAN
+    - COLD_OCEAN
+    - DEEP_COLD_OCEAN
+    - FROZEN_OCEAN
+    - DEEP_FROZEN_OCEAN
+    - LUKEWARM_OCEAN
+    - DEEP_LUKEWARM_OCEAN
+    - WARM_OCEAN
+  DEEP_OCEAN:
+    - DEEP_OCEAN
+    - DEEP_COLD_OCEAN
+    - DEEP_FROZEN_OCEAN
+    - DEEP_LUKEWARM_OCEAN
+  WARM:
+    - WARM_OCEAN
+    - LUKEWARM_OCEAN
+    - DEEP_LUKEWARM_OCEAN
+  COLD:
+    - COLD_OCEAN
+    - DEEP_COLD_OCEAN
+    - FROZEN_OCEAN
+    - DEEP_FROZEN_OCEAN
+  FROZEN:
+    - FROZEN_OCEAN
+    - DEEP_FROZEN_OCEAN
+    - FROZEN_RIVER
+  SWAMP:
+    - SWAMP
+    - MANGROVE_SWAMP
+  RIVER:
+    - RIVER
+    - FROZEN_RIVER
+
+modifiers:
+  rain_open_water:
+    enabled: true
+    priority: 10
+    conditions:
+      require_open_water: true
+      require_rain_influenced: true
+      weather: [RAIN, THUNDER]
+    stats:
+      fishing_speed_flat: 80
+      sea_creature_chance: 2.0
+      treasure_chance: 0.5
+    environment_tags: [RAIN_BONUS]
+
+  thunderstorm:
+    enabled: true
+    priority: 20
+    conditions:
+      require_open_water: true
+      require_rain_influenced: true
+      weather: [THUNDER]
+    stats:
+      fishing_speed_flat: 140
+      sea_creature_chance: 4.0
+      treasure_chance: 1.0
+    environment_tags: [STORM, HIGH_RISK]
+
+  ocean_current:
+    enabled: true
+    priority: 30
+    conditions:
+      require_open_water: true
+      biome_tags: [OCEAN]
+    stats:
+      fishing_speed_flat: 40
+      sea_creature_chance: 1.0
+    environment_tags: [OCEAN_CURRENT]
+
+  deep_ocean_depth:
+    enabled: true
+    priority: 40
+    conditions:
+      require_open_water: true
+      biome_tags: [DEEP_OCEAN]
+    stats:
+      fishing_speed_flat: 60
+      sea_creature_chance: 2.0
+      treasure_chance: 1.0
+    environment_tags: [DEEP_SEA]
+
+  swamp_miasma:
+    enabled: true
+    priority: 50
+    conditions:
+      require_open_water: true
+      biome_tags: [SWAMP]
+    stats:
+      sea_creature_chance: 2.5
+      treasure_chance: -0.5
+    environment_tags: [SWAMP_WATER, DROWNED_WRAITH_POOL]
+
+  warm_reef:
+    enabled: true
+    priority: 60
+    conditions:
+      require_open_water: true
+      biome_tags: [WARM]
+    stats:
+      treasure_chance: 1.5
+    environment_tags: [REEF]
+
+  frozen_current:
+    enabled: true
+    priority: 70
+    conditions:
+      require_open_water: true
+      biome_tags: [COLD]
+    stats:
+      sea_creature_chance: 1.5
+    environment_tags: [FROZEN_CURRENT]

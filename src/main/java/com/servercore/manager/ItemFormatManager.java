@@ -301,6 +301,7 @@ public class ItemFormatManager implements Listener {
         renderRegisteredAbilities(lore, item);
         addBlankIfNeeded(lore);
         renderEquipmentIdentity(lore, item);
+        renderFishingContentIdentity(lore, container, pdc);
         addBlankIfNeeded(lore);
         lore.add(rarity.colorize(rarity.localizedLabel() + " " + getItemKind(item.getType())).decoration(TextDecoration.BOLD, true));
         renderStoryLore(lore, container, pdc);
@@ -663,6 +664,37 @@ public class ItemFormatManager implements Listener {
         }
     }
 
+    private void renderFishingContentIdentity(List<Component> lore, PersistentDataContainer container, PDCManager pdc) {
+        String itemType = container.get(pdc.KEY_ITEM_TYPE, PersistentDataType.STRING);
+        if (itemType == null || itemType.isBlank()) {
+            return;
+        }
+        String label = switch (itemType.toUpperCase(Locale.ROOT)) {
+            case "BAIT" -> "鱼饵";
+            case "NORMAL_FISH" -> "普通鱼";
+            default -> itemType;
+        };
+        lore.add(Component.text("类型: " + label, NamedTextColor.GRAY)
+                .decoration(TextDecoration.ITALIC, false));
+
+        Integer fishingTier = container.get(pdc.KEY_ITEM_FISHING_TIER, PersistentDataType.INTEGER);
+        if (fishingTier != null && fishingTier > 0) {
+            lore.add(Component.text("钓鱼阶段: T" + fishingTier, NamedTextColor.GOLD)
+                    .decoration(TextDecoration.ITALIC, false));
+        }
+
+        String route = container.get(pdc.KEY_ITEM_FISHING_ROUTE, PersistentDataType.STRING);
+        if (route != null && !route.isBlank()) {
+            lore.add(Component.text("钓鱼路线: " + fishingRouteLabel(route), NamedTextColor.BLUE)
+                    .decoration(TextDecoration.ITALIC, false));
+        }
+        Integer fishingPower = container.get(pdc.KEY_ITEM_FISHING_POWER, PersistentDataType.INTEGER);
+        if (fishingPower != null && fishingPower > 0) {
+            lore.add(Component.text("Fishing Power: " + fishingPower, NamedTextColor.AQUA)
+                    .decoration(TextDecoration.ITALIC, false));
+        }
+    }
+
     private String fishingRouteLabel(String route) {
         return switch (route == null ? "" : route.toUpperCase(Locale.ROOT)) {
             case "MIXED" -> "通用";
@@ -814,6 +846,7 @@ public class ItemFormatManager implements Listener {
     private boolean isManagedItem(ItemStack item, PersistentDataContainer container, PDCManager pdc) {
         return container.has(pdc.KEY_ITEM_ID, PersistentDataType.STRING)
                 || container.has(pdc.KEY_ACC_TYPE, PersistentDataType.STRING)
+                || container.has(pdc.KEY_ITEM_TYPE, PersistentDataType.STRING)
                 || container.has(pdc.KEY_WEAPON_TEMPLATE, PersistentDataType.STRING)
                 || container.has(pdc.KEY_WEAPON_HAND_RULE, PersistentDataType.STRING)
                 || container.has(pdc.KEY_ITEM_REFORGE_ID, PersistentDataType.STRING)

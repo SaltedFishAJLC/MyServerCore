@@ -149,6 +149,8 @@ public class NonCombatStatsMenu {
         lore.add(fishingSourceLine("护甲", fishingStats.armor()));
         lore.add(fishingSourceLine("饰品槽", fishingStats.accessories()));
         lore.add(fishingSourceLine("护符袋", fishingStats.talismanBag()));
+        lore.add(fishingSourceLine("临时增益", fishingStats.temporary()));
+        lore.add(fishingSourceLine("环境修正", fishingStats.environment()));
         return createNamedItem(Material.FISHING_ROD, mm("<blue><bold>钓鱼</bold></blue>"), lore);
     }
 

@@ -174,6 +174,36 @@ items:
     story_lore:
       - "长年泡在海底遗迹里的绿宝石，回收价值更高。"
 
+  ocean_current_core:
+    material: HEART_OF_THE_SEA
+    name: "Ocean Current Core"
+    rarity: LEGENDARY
+    fishing_tier: T4
+    route: sea_monster
+    primary_source: "High-tier ocean treasure and sea creatures"
+    used_for:
+      - sea_monster_raid_catalyst
+    ability_lore:
+      - "Fishing event catalyst"
+      - "Can trigger Sea Monster Raid in rainy open ocean water."
+    story_lore:
+      - "A dense knot of current pressure. It hums during rain."
+
+  sunken_compass:
+    material: COMPASS
+    name: "Sunken Compass"
+    rarity: EPIC
+    fishing_tier: T4
+    route: treasure
+    primary_source: "Deep ocean treasure"
+    used_for:
+      - secret_treasure_hunt_catalyst
+    ability_lore:
+      - "Fishing event catalyst"
+      - "Can trigger Secret Treasure Hunt in deep open ocean water."
+    story_lore:
+      - "Its needle points toward caches that should have stayed lost."
+
   pearl_cluster:
     material: ENDER_PEARL
     name: "珍珠簇"

@@ -681,7 +681,7 @@
 - `/sc gathering` 钓鱼面板新增有效 Fishing Speed / 1500 上限显示，继续拆分主手、护甲、饰品槽和护符袋贡献。
 - `PDCManager`、`CustomItemRegistry` 与 `ItemFormatManager` 支持钓竿字段：`fishing_rod`、`fishing_route`、`fishing_power`、`growth_item`、`growth_line`、`growth_stage`；物品 lore 会显示路线、Fishing Power 和成长阶段。
 - `FishingManager#hasEnoughFishingPower(Player, FishingPool)` 已预留钓鱼池 Fishing Power 门槛结构；当前默认池子尚未强制检查。
-- `FishingManager` 在海怪、宝藏和普通渔获成功分支后预留鱼饵消耗钩子；当前没有默认鱼饵道具，也不会扣除玩家背包物品。
+- `FishingManager` 在海怪、宝藏和普通渔获成功分支后预留鱼饵消耗钩子；该阶段尚无默认鱼饵道具，也不会扣除玩家背包物品。
 - `custom_items.yml` 新增 10 把钓竿：T1/T2 通用线、T3-T6 海怪线、T3-T6 宝藏线；`recipes.yml` 补齐对应成长配方。
 - 同步重算 T5/T6 钓鱼防具与套装：深渊四件基础为 `650 FS / 20 SCC / 14 TC`，潮藏四件基础为 `780 FS / 26 SCC / 20 TC`；深渊和潮藏 4 件套改为预留史诗/传说宝藏权重，不再直接加速度或宝藏概率。
 - 领主四件基础调整为 `720 FS / 55 SCC / 7 TC`，2 件套改为 +8 SCC；激流四件基础调整为 `520 FS / 44 SCC / 5 TC`，4 件套承接满套目标的 +150 FS / +6 SCC。
@@ -694,4 +694,42 @@
 - 配置引用检查确认配方、宝藏、海怪掉落、套装和被动引用均能找到目标 ID；新增 10 把钓竿均存在物品定义与配方引用。
 - 配置断言确认目标值：`lord_set + lord_seabond_rod + gatherers_compass` 为 `1150 FS / 78 SCC / 11.5 TC`，`tidevault_set + tidevault_starhook_rod + gatherers_compass` 为 `1300 FS / 31 SCC / 31 TC`。
 - `.\gradle-8.5\bin\gradle.bat --no-daemon build` 完整构建通过，最终结果为 `BUILD SUCCESSFUL in 16s`。
-- 仓库没有可直接启动的 Paper 集成测试夹具；钓竿合成、Fishing Power 门槛接入、未来鱼饵消耗和实际钓鱼事件仍需测试服验收。
+- 仓库没有可直接启动的 Paper 集成测试夹具；钓竿合成、Fishing Power 门槛接入、后续鱼饵消耗和实际钓鱼事件仍需测试服验收。
+
+## 2026-07-06 鱼饵与可食用普通鱼
+
+### 更新日志
+
+- 新增 `FishingContentManager`，负责读取 `fishing_baits.yml`、`fish_items.yml`，并维护鱼饵预约、普通鱼掉落、普通鱼食用冷却和钓鱼食物 Buff。
+- 第一批 T1-T6 鱼饵已进入默认配置；抛竿时按背包 storage 槽位顺序预约第一个鱼饵，成功钓起海怪、宝藏、普通鱼或保留原版渔获时消耗，空杆/取消/换世界/退出/钩子清理时返还。
+- 第一批 T1-T6 普通鱼已进入默认配置；海怪和宝藏均失败后按普通鱼池生成自定义渔获，支持等级、天气、required_bait、鱼饵权重和食物 Buff 权重修正。
+- 普通鱼食用在 `FishingContentManager` 中拦截，不写入 `survival.foods`；它只借用 `PlayerRecoveryManager#healImmediate()` 与 `syncFoodState()`，避免和基础食物补给及未来料理系统冲突。
+- 钓鱼属性快照新增“临时增益”来源，鱼饵和普通鱼食物 Buff 的 Fishing Speed / SCC / TC 会参与结算；临时正向 Treasure Chance 默认合计封顶为 `+1.0` 百分点。
+- `ItemFormatManager` 识别 `item_type = BAIT / NORMAL_FISH`、`item_fishing_tier` 和 `item_fishing_route`，新内容生成后会显示类型、阶段、路线和能力说明。
+- 新增管理员命令：`/sc admin bait list`、`/sc admin bait give <id> [amount]`、`/sc admin fish list`、`/sc admin fish give <id> [amount]`；`/sc admin gatheringloot reload` 同时重载鱼饵和普通鱼配置。
+- `docs/fishing-system-status.md`、`docs/player-logistics-system-status.md` 和 `docs/servercore-command-reference.md` 已同步当前状态。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat build` 完整构建通过，最终结果为 `BUILD SUCCESSFUL in 8s`。
+- 仓库没有可直接启动的 Paper 集成测试夹具；鱼饵预约返还、实际收杆消耗、普通鱼右键食用和食物 Buff 替换仍需测试服验收。
+
+## 2026-07-07 钓鱼环境修正与多人事件测试版
+
+### 更新日志
+
+- 新增 `FishingEnvironmentManager` 与 `com.servercore.fishing` 上下文模型，读取 `fishing_environment.yml`，把天气、群系、时间、雨水/天空影响和开阔水域解析为本次钓鱼的临时环境修正。
+- 开阔水域优先使用 Paper/原版 `FishHook#isInOpenWater()`，旧 5x5 水域检查仅作为 fallback；ServerCore 自定义海怪、宝藏和多人事件默认只在开阔水域触发。
+- 环境规则默认提供雨天、雷暴、海流、深海、沼泽、暖海礁和寒流修正，并产生 `RAIN_BONUS`、`STORM`、`OCEAN_CURRENT`、`DEEP_SEA` 等标签；这些加成作为 `FishingStatSnapshot.environment()` 独立来源参与计算。
+- `gathering_loot.yml` 海怪条目现在支持 `conditions`，可按开阔水域、群系标签、环境标签、天气和时间过滤；旧 `biome_tags` 仍兼容。
+- 新增 `FishingEventManager` 与 `fishing_events.yml`，海怪或宝藏基础 roll 成功后才尝试启动多人事件；概率未命中、环境不符、冷却或活跃数量限制时不会消耗催化剂。
+- 默认事件包含 `sea_monster_raid` 与 `secret_treasure_hunt`；催化剂为 `ocean_current_core` 和 `sunken_compass`，已加入 `custom_items.yml`。
+- 事件怪继续通过 `MobSpawnManager#spawnFishingSeaCreature()` 生成，并写入 `fishing_event_id`、`fishing_event_instance`、`fishing_event_contribution_weight` PDC；伤害、击杀和事件范围内成功钓鱼都会累计贡献。
+- 新增 `/sc admin fishing reload` 与 `/sc admin fishing debug`；`/sc admin gatheringloot reload` 也会同步重载环境和事件配置。
+- `docs/fishing-system-status.md` 与 `docs/servercore-command-reference.md` 已同步当前入口、配置、事件流程和测试服验收清单。
+
+### 验证记录
+
+- `.\gradle-8.5\bin\gradle.bat build` 完整构建通过，最终结果为 `BUILD SUCCESSFUL in 7s`。
+- 构建仅出现既有 `EntityRemoveEvent` 与铁砧 repair cost API 过时警告，未出现本轮新增代码错误。
+- 仓库没有可直接启动的 Paper 集成测试夹具；开阔水域 API、雨天/深海环境命中、催化剂消耗、多人事件进度和贡献奖励仍需测试服实测。

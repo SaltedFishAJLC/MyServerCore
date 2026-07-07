@@ -20,6 +20,7 @@
 | 战斗状态 | `DamageService`、`ShieldManager` | 有效伤害结算后刷新玩家战斗状态；盾牌成功格挡也刷新状态。 |
 | 脱战回血 | `PlayerRecoveryManager` | 倒计时结束且附近无敌对单位时，按最大生命百分比平滑回血。 |
 | 食物补给 | `PlayerRecoveryManager` | 配置过的食物右键立即补给，手动扣物品、回血/吸收并进入分类冷却。 |
+| 普通鱼食用 | `FishingContentManager` | 钓鱼产出的普通鱼右键食用，借用 `PlayerRecoveryManager` 的立即治疗与饱食同步入口，并维护钓鱼食物 Buff。 |
 
 ## 3. 当前规则
 
@@ -84,6 +85,13 @@ healPerSecond = maxHealth * heal_percent_per_second + flatRecovery
 - 原版饱食/药水效果会被取消，治疗和吸收由 ServerCore 手动执行。
 - ServerCore 自定义材料即使使用可食用材质，只要没有配置为补给品，也不会被误吃。
 - 食物 buff 目前只实现立即回血和吸收；短时料理 buff 应继续接入该管理器或后续统一 buff 层。
+
+钓鱼普通鱼例外：
+
+- `fish_items.yml` 中的 `fish_type: NORMAL_FISH` 由 `FishingContentManager` 在 `PlayerInteractEvent` / `PlayerItemConsumeEvent` 的较早优先级拦截。
+- 普通鱼不会写入 `survival.foods`，因此不会改变基础补给品、熟鱼或未来料理的配置口径。
+- 普通鱼食用只调用 `PlayerRecoveryManager#healImmediate()` 和 `syncFoodState()`，回血、扣物品、短冷却和钓鱼食物 Buff 由钓鱼内容管理器维护。
+- 同组钓鱼食物 Buff 不叠加，保留更强者；不同组可以共存。来自鱼饵和普通鱼的临时 Treasure Chance 默认合计封顶为 `+1.0` 百分点。
 
 ## 5. 药水联动预留
 

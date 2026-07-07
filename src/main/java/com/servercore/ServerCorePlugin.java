@@ -61,6 +61,9 @@ import com.servercore.manager.AuraSkillsMenuHijacker;
 import com.servercore.manager.CollectionSkillManager;
 import com.servercore.manager.ClassPassiveManager;
 import com.servercore.manager.ClassManager;
+import com.servercore.manager.FishingContentManager;
+import com.servercore.manager.FishingEnvironmentManager;
+import com.servercore.manager.FishingEventManager;
 import com.servercore.manager.FishingManager;
 import com.servercore.manager.GlobalStatManager;
 import com.servercore.manager.MiningManager;
@@ -108,6 +111,9 @@ public final class ServerCorePlugin extends JavaPlugin {
     private EnchantAcquisitionManager enchantAcquisitionManager;
     private RecycleManager recycleManager;
     private GlobalStatManager globalStatManager;
+    private FishingContentManager fishingContentManager;
+    private FishingEnvironmentManager fishingEnvironmentManager;
+    private FishingEventManager fishingEventManager;
     private MiningManager miningManager;
     private FishingManager fishingManager;
     private WeaponTemplateManager weaponTemplateManager;
@@ -176,7 +182,10 @@ public final class ServerCorePlugin extends JavaPlugin {
         this.playerRecoveryManager = new PlayerRecoveryManager(this);
         this.globalStatManager = new GlobalStatManager(this);
         new CollectionSkillManager(this, globalStatManager);
-        this.fishingManager = new FishingManager(this, globalStatManager);
+        this.fishingContentManager = new FishingContentManager(this);
+        this.fishingEnvironmentManager = new FishingEnvironmentManager(this);
+        this.fishingEventManager = new FishingEventManager(this);
+        this.fishingManager = new FishingManager(this, globalStatManager, fishingContentManager, fishingEnvironmentManager, fishingEventManager);
         this.miningManager = new MiningManager(this, globalStatManager);
         new RequirementManager(this);
         this.accListener = new AccessoryListener(this);
@@ -567,6 +576,47 @@ public final class ServerCorePlugin extends JavaPlugin {
                     return true;
                 } else if (args.length == 3
                         && args[0].equalsIgnoreCase("admin")
+                        && args[1].equalsIgnoreCase("fishing")
+                        && args[2].equalsIgnoreCase("reload")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>You do not have permission.</red>"));
+                        return true;
+                    }
+
+                    int loaded = 0;
+                    if (fishingManager != null) {
+                        loaded += fishingManager.reloadLootTables();
+                    }
+                    if (fishingContentManager != null) {
+                        loaded += fishingContentManager.reload();
+                    }
+                    if (fishingEnvironmentManager != null) {
+                        loaded += fishingEnvironmentManager.reload();
+                    }
+                    if (fishingEventManager != null) {
+                        loaded += fishingEventManager.reload();
+                    }
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Fishing configs reloaded: " + loaded + "</green>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && args[1].equalsIgnoreCase("fishing")
+                        && args[2].equalsIgnoreCase("debug")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>You do not have permission.</red>"));
+                        return true;
+                    }
+
+                    if (fishingManager == null) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Fishing manager is not ready.</red>"));
+                        return true;
+                    }
+                    for (String line : fishingManager.describeCurrentFishingContext(player)) {
+                        player.sendMessage(Component.text(line));
+                    }
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
                         && (args[1].equalsIgnoreCase("gatheringloot") || args[1].equalsIgnoreCase("loot"))
                         && args[2].equalsIgnoreCase("reload")) {
                     if (!player.hasPermission("servercore.admin")) {
@@ -579,10 +629,107 @@ public final class ServerCorePlugin extends JavaPlugin {
                     if (fishingManager != null) {
                         loaded += fishingManager.reloadLootTables();
                     }
+                    if (fishingContentManager != null) {
+                        loaded += fishingContentManager.reload();
+                    }
+                    if (fishingEnvironmentManager != null) {
+                        loaded += fishingEnvironmentManager.reload();
+                    }
+                    if (fishingEventManager != null) {
+                        loaded += fishingEventManager.reload();
+                    }
                     if (miningManager != null) {
                         loaded += miningManager.reloadLootTables();
                     }
                     player.sendMessage(MINI_MESSAGE.deserialize("<green>Gathering loot tables reloaded: " + loaded + "</green>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("bait") || args[1].equalsIgnoreCase("baits"))
+                        && args[2].equalsIgnoreCase("list")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+
+                    String ids = fishingContentManager == null ? "" : String.join(", ", fishingContentManager.getBaitIds());
+                    player.sendMessage(MINI_MESSAGE.deserialize(ids.isBlank()
+                            ? "<yellow>No fishing baits loaded.</yellow>"
+                            : "<green>Fishing baits:</green> <white>" + ids + "</white>"));
+                    return true;
+                } else if (args.length >= 4
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("bait") || args[1].equalsIgnoreCase("baits"))
+                        && args[2].equalsIgnoreCase("give")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+
+                    int amount = 1;
+                    if (args.length >= 5) {
+                        try {
+                            amount = Math.max(1, Integer.parseInt(args[4]));
+                        } catch (NumberFormatException exception) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<red>Amount must be a number.</red>"));
+                            return true;
+                        }
+                    }
+
+                    ItemStack item = fishingContentManager == null ? null : fishingContentManager.createBaitItem(args[3], amount);
+                    if (item == null) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Unknown fishing bait id: " + args[3] + "</red>"));
+                        return true;
+                    }
+                    java.util.Map<Integer, ItemStack> overflow = player.getInventory().addItem(item);
+                    for (ItemStack leftover : overflow.values()) {
+                        player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+                    }
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Gave fishing bait:</green> <white>" + args[3] + "</white>"));
+                    return true;
+                } else if (args.length == 3
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("fish") || args[1].equalsIgnoreCase("normalfish") || args[1].equalsIgnoreCase("normal-fish"))
+                        && args[2].equalsIgnoreCase("list")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+
+                    String ids = fishingContentManager == null ? "" : String.join(", ", fishingContentManager.getFishIds());
+                    player.sendMessage(MINI_MESSAGE.deserialize(ids.isBlank()
+                            ? "<yellow>No normal fish loaded.</yellow>"
+                            : "<green>Normal fish:</green> <white>" + ids + "</white>"));
+                    return true;
+                } else if (args.length >= 4
+                        && args[0].equalsIgnoreCase("admin")
+                        && (args[1].equalsIgnoreCase("fish") || args[1].equalsIgnoreCase("normalfish") || args[1].equalsIgnoreCase("normal-fish"))
+                        && args[2].equalsIgnoreCase("give")) {
+                    if (!player.hasPermission("servercore.admin")) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>你没有权限！</red>"));
+                        return true;
+                    }
+
+                    int amount = 1;
+                    if (args.length >= 5) {
+                        try {
+                            amount = Math.max(1, Integer.parseInt(args[4]));
+                        } catch (NumberFormatException exception) {
+                            player.sendMessage(MINI_MESSAGE.deserialize("<red>Amount must be a number.</red>"));
+                            return true;
+                        }
+                    }
+
+                    ItemStack item = fishingContentManager == null ? null : fishingContentManager.createFishItem(args[3], amount);
+                    if (item == null) {
+                        player.sendMessage(MINI_MESSAGE.deserialize("<red>Unknown normal fish id: " + args[3] + "</red>"));
+                        return true;
+                    }
+                    java.util.Map<Integer, ItemStack> overflow = player.getInventory().addItem(item);
+                    for (ItemStack leftover : overflow.values()) {
+                        player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+                    }
+                    player.sendMessage(MINI_MESSAGE.deserialize("<green>Gave normal fish:</green> <white>" + args[3] + "</white>"));
                     return true;
                 } else if (args.length == 3
                         && args[0].equalsIgnoreCase("admin")
@@ -1114,6 +1261,14 @@ public final class ServerCorePlugin extends JavaPlugin {
 
         if (playerRecoveryManager != null) {
             playerRecoveryManager.stop();
+        }
+
+        if (fishingContentManager != null) {
+            fishingContentManager.stop();
+        }
+
+        if (fishingEventManager != null) {
+            fishingEventManager.stop();
         }
 
         if (equipmentEnchantService != null) {

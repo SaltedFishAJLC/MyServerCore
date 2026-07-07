@@ -1,0 +1,189 @@
+# Test-version multiplayer fishing events.
+# Events are attempted only after the matching base fishing roll succeeds.
+
+settings:
+  max_active_events: 1
+  cleanup_on_disable: true
+  debug: false
+
+events:
+  sea_monster_raid:
+    enabled: true
+    name: "Sea Monster Raid"
+    trigger:
+      type: SEA_CREATURE_ROLL
+      chance: 0.20
+      catalyst_item: ocean_current_core
+      cooldown:
+        same_world_game_day: true
+        real_seconds: 1800
+      conditions:
+        require_open_water: true
+        require_rain_influenced: true
+        biome_tags: [OCEAN]
+        environment_tags: [OCEAN_CURRENT]
+        weather: [RAIN, THUNDER]
+    duration_seconds: 480
+    radius: 34
+    join_radius: 64
+    min_contribution: 90
+    progress_target: 0
+    complete_on_duration: true
+    empty_timeout_seconds: 90
+    contribution:
+      damage_multiplier: 1.0
+      kill: 95
+      valid_fishing_catch: 30
+    messages:
+      start: "[Fishing Event] {player} stirred an ocean current. Sea Monster Raid near {x}, {z}!"
+      complete: "[Fishing Event] Sea Monster Raid was pushed back."
+      fail: "[Fishing Event] Sea Monster Raid dispersed."
+    waves:
+      wave_1:
+        at_seconds: 0
+        mobs:
+          tide_drowned:
+            entity_type: DROWNED
+            name: "Tide Drowned"
+            amount: 4
+            level_offset: 0
+            base_health: 54
+            mod: 1.6
+            contribution_weight: 1.0
+      wave_2:
+        at_seconds: 120
+        mobs:
+          storm_guardian:
+            entity_type: GUARDIAN
+            name: "Storm Guardian"
+            amount: 3
+            level_offset: 8
+            base_health: 96
+            mod: 2.2
+            contribution_weight: 1.4
+      wave_3:
+        at_seconds: 300
+        mobs:
+          current_beast:
+            entity_type: ELDER_GUARDIAN
+            name: "Current Beast"
+            amount: 1
+            level_offset: 18
+            base_health: 240
+            mod: 4.0
+            contribution_weight: 3.0
+    rewards:
+      completion:
+        - custom_item: stormfish_scale
+          fallback_material: PHANTOM_MEMBRANE
+          amount: 1
+          weight: 6
+          xp: 45
+        - custom_item: tide_heart
+          fallback_material: HEART_OF_THE_SEA
+          amount: 1
+          weight: 1
+          xp: 90
+      participation:
+        - custom_item: deep_sea_cache
+          fallback_material: PRISMARINE_CRYSTALS
+          amount: 2
+          weight: 1
+          xp: 20
+
+  secret_treasure_hunt:
+    enabled: true
+    name: "Secret Treasure Hunt"
+    trigger:
+      type: TREASURE_ROLL
+      chance: 0.18
+      catalyst_item: sunken_compass
+      cooldown:
+        same_world_game_day: true
+        real_seconds: 1800
+      conditions:
+        require_open_water: true
+        biome_tags: [DEEP_OCEAN]
+        environment_tags: [DEEP_SEA]
+    duration_seconds: 360
+    radius: 28
+    join_radius: 56
+    min_contribution: 80
+    progress_target: 1000
+    complete_on_duration: false
+    empty_timeout_seconds: 90
+    contribution:
+      damage_multiplier: 0.8
+      kill: 70
+      valid_fishing_catch: 45
+    messages:
+      start: "[Fishing Event] {player}'s sunken compass points to a secret treasure near {x}, {z}."
+      complete: "[Fishing Event] Secret Treasure Hunt reached the cache."
+      fail: "[Fishing Event] The secret treasure trail faded."
+    waves:
+      wave_1:
+        at_seconds: 90
+        mobs:
+          drowned_scout:
+            entity_type: DROWNED
+            name: "Drowned Scout"
+            amount: 2
+            level_offset: 4
+            base_health: 48
+            mod: 1.4
+            contribution_weight: 1.0
+    milestones:
+      clue_1:
+        progress: 250
+        message: "[Fishing Event] First clue recovered: {progress}/{target}."
+        rewards:
+          - custom_item: pearl_cluster
+            fallback_material: ENDER_PEARL
+            amount: 1
+            weight: 1
+            xp: 12
+      clue_2:
+        progress: 600
+        message: "[Fishing Event] Second clue recovered: {progress}/{target}."
+        spawn_mobs:
+          vault_guardian:
+            entity_type: GUARDIAN
+            name: "Vault Guardian"
+            amount: 2
+            level_offset: 10
+            base_health: 90
+            mod: 2.0
+            contribution_weight: 1.5
+        rewards:
+          - custom_item: drowned_map_fragment
+            fallback_material: MAP
+            amount: 1
+            weight: 1
+            xp: 20
+      cache_open:
+        progress: 1000
+        message: "[Fishing Event] The treasure cache is exposed."
+        rewards:
+          - custom_item: ancient_shell
+            fallback_material: NAUTILUS_SHELL
+            amount: 1
+            weight: 1
+            xp: 30
+    rewards:
+      completion:
+        - custom_item: ancient_shell
+          fallback_material: NAUTILUS_SHELL
+          amount: 1
+          weight: 6
+          xp: 55
+        - custom_item: tide_heart
+          fallback_material: HEART_OF_THE_SEA
+          amount: 1
+          weight: 1
+          xp: 90
+      participation:
+        - custom_item: deep_sea_cache
+          fallback_material: PRISMARINE_CRYSTALS
+          amount: 2
+          weight: 1
+          xp: 18

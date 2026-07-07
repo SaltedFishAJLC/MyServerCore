@@ -1,6 +1,6 @@
 # ServerCore `/sc` 指令大全
 
-更新时间：2026-06-21
+更新时间：2026-07-07
 
 本文根据当前 `plugin.yml` 与 `ServerCorePlugin` 的实际命令分支整理，不以聊天帮助文本为准。
 
@@ -99,7 +99,13 @@
 | `/sc admin items reload` | 自定义物品，同时刷新被动、套装、原版物品覆盖与自己的物品格式。 |
 | `/sc admin passives reload` | 自定义物品、统一被动与套装配置。 |
 | `/sc admin vanillaitems reload` | 原版物品覆盖配置，并应用到自己的背包。 |
-| `/sc admin gatheringloot reload` | 伐木、农业、采掘、钓鱼和挖矿奖励表。 |
+| `/sc admin gatheringloot reload` | 伐木、农业、采掘、钓鱼、鱼饵、普通鱼、钓鱼环境、钓鱼事件和挖矿奖励表。 |
+| `/sc admin fishing reload` | 钓鱼 loot、鱼饵/普通鱼、钓鱼环境和多人钓鱼事件。 |
+| `/sc admin fishing debug` | 显示当前浮漂的群系、开阔水域、天气、环境标签、环境加成和最终钓鱼概率。 |
+| `/sc admin bait list` | 列出已加载鱼饵 ID。 |
+| `/sc admin bait give <id> [amount]` | 生成鱼饵消耗品。 |
+| `/sc admin fish list` | 列出已加载普通鱼 ID。 |
+| `/sc admin fish give <id> [amount]` | 生成可食用普通鱼。 |
 | `/sc reload enchants` | 自定义附魔注册表。注意该指令没有 `admin` 层。 |
 
 ### 3.1 重载命令别名
@@ -114,6 +120,8 @@
 | `passives` | `equipment` |
 | `vanillaitems` | `vanilla-items`、`itemoverrides` |
 | `gatheringloot` | `loot` |
+| `bait` | `baits` |
+| `fish` | `normalfish`、`normal-fish` |
 
 部署提醒：资源目录中的 YAML 不会自动覆盖已经存在的 `plugins/ServerCore/*.yml`。重载前必须先把新字段和条目合并到服务器运行时配置。
 

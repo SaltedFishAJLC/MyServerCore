@@ -1,0 +1,306 @@
+baits:
+  worm_bait:
+    material: WHEAT_SEEDS
+    name: "蠕虫鱼饵"
+    rarity: COMMON
+    tier: 1
+    route: MIXED
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 25
+      sea_creature_chance: 0.0
+      treasure_chance: 0.0
+    lore:
+      - "朴素但可靠的新手鱼饵。"
+
+  sweet_kelp_bait:
+    material: KELP
+    name: "甜海带鱼饵"
+    rarity: COMMON
+    tier: 1
+    route: MIXED
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 15
+      sea_creature_chance: 0.0
+      treasure_chance: 0.0
+    modifiers:
+      normal_fish_weight: 0.10
+    lore:
+      - "更容易吸引普通鱼类。"
+
+  glow_ink_bait:
+    material: GLOW_INK_SAC
+    name: "荧墨鱼饵"
+    rarity: UNCOMMON
+    tier: 2
+    route: SEA_CREATURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 45
+      sea_creature_chance: 1.0
+      treasure_chance: 0.0
+    lore:
+      - "幽蓝的光芒会引来浅海中的异动。"
+
+  pearl_sand_bait:
+    material: SAND
+    name: "珍珠砂鱼饵"
+    rarity: UNCOMMON
+    tier: 2
+    route: TREASURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 40
+      sea_creature_chance: 0.0
+      treasure_chance: 0.5
+    modifiers:
+      rare_fish_weight: 0.05
+    lore:
+      - "细砂中混着微小的珍珠碎屑。"
+
+  inkbound_bait:
+    material: INK_SAC
+    name: "墨灵鱼饵"
+    rarity: RARE
+    tier: 3
+    route: SEA_CREATURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 70
+      sea_creature_chance: 3.0
+      treasure_chance: 0.0
+    modifiers:
+      sea_creature_weight:
+        abyss_guardian: 0.15
+    lore:
+      - "墨灵残膜调制而成，适合引来深海猎物。"
+
+  reef_lure:
+    material: PRISMARINE_CRYSTALS
+    name: "礁光拟饵"
+    rarity: RARE
+    tier: 3
+    route: TREASURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 80
+      sea_creature_chance: 0.0
+      treasure_chance: 0.0
+    modifiers:
+      rare_fish_weight: 0.08
+      treasure_quality: 0.05
+      fish_weight:
+        reef_glassfish: 0.20
+    gates:
+      unlock_fish:
+        - reef_glassfish
+    lore:
+      - "反射着珊瑚礁中的微光。"
+
+  storm_scale_bait:
+    material: PRISMARINE_SHARD
+    name: "风暴鳞饵"
+    rarity: EPIC
+    tier: 4
+    route: SEA_CREATURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 100
+      sea_creature_chance: 4.0
+      treasure_chance: 0.0
+    modifiers:
+      sea_creature_weight:
+        storm_eel: 0.20
+    gates:
+      unlock_sea_creatures:
+        - storm_eel
+    lore:
+      - "暴雨中剥落的鳞片仍在轻微颤动。"
+
+  diver_chum:
+    material: SPONGE
+    name: "潜水员饵料"
+    rarity: EPIC
+    tier: 4
+    route: TREASURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 100
+      sea_creature_chance: 0.0
+      treasure_chance: 0.0
+    modifiers:
+      treasure_quality: 0.08
+      epic_treasure_weight: 0.05
+    gates:
+      unlock_treasure_pools:
+        - diver_supply
+    lore:
+      - "潜水员常用的诱饵，偶尔会牵出遗失补给。"
+
+  bloody_chum:
+    material: ROTTEN_FLESH
+    name: "血腥诱饵"
+    rarity: EPIC
+    tier: 4
+    route: SEA_CREATURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 60
+      sea_creature_chance: 7.0
+      treasure_chance: -2.0
+    lore:
+      - "强烈的血腥气会吓跑普通鱼，也会唤来猎食者。"
+
+  riptide_bait:
+    material: PRISMARINE_SHARD
+    name: "激流鱼饵"
+    rarity: EPIC
+    tier: 5
+    route: SEA_CREATURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 120
+      sea_creature_chance: 5.0
+      treasure_chance: 0.0
+    modifiers:
+      sea_creature_weight:
+        elder_tidecaller: 0.10
+        storm_eel: 0.15
+    gates:
+      unlock_events:
+        - storm_sea
+    lore:
+      - "能在海面下卷起微小的暗流。"
+
+  abyssal_chum:
+    material: BLACK_DYE
+    name: "深渊诱饵"
+    rarity: EPIC
+    tier: 5
+    route: TREASURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 120
+      sea_creature_chance: 0.0
+      treasure_chance: 0.0
+    modifiers:
+      treasure_quality: 0.12
+      legendary_treasure_weight: 0.08
+    gates:
+      unlock_treasure_pools:
+        - high_tier_treasure
+    lore:
+      - "来自深海的气息会吸引沉没之物。"
+
+  tide_heart_bait:
+    material: HEART_OF_THE_SEA
+    name: "潮心鱼饵"
+    rarity: LEGENDARY
+    tier: 5
+    route: MIXED
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 80
+      sea_creature_chance: 3.0
+      treasure_chance: 0.5
+    modifiers:
+      rare_fish_weight: 0.10
+    lore:
+      - "潮汐之心的碎屑会短暂改变海流。"
+
+  eel_scent_bait:
+    material: PHANTOM_MEMBRANE
+    name: "雷鳗腥饵"
+    rarity: EPIC
+    tier: 5
+    route: SEA_CREATURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 80
+      sea_creature_chance: 8.0
+      treasure_chance: -3.0
+    modifiers:
+      sea_creature_weight:
+        storm_eel: 0.30
+        elder_tidecaller: 0.15
+    lore:
+      - "带有雷鳗气味的诱饵，极易引来暴躁的海怪。"
+
+  leviathan_chum:
+    material: NETHER_STAR
+    name: "利维坦血饵"
+    rarity: LEGENDARY
+    tier: 6
+    route: SEA_CREATURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 80
+      sea_creature_chance: 7.0
+      treasure_chance: -5.0
+    modifiers:
+      sea_creature_weight:
+        leviathan_echo: 0.25
+    gates:
+      unlock_sea_creatures:
+        - leviathan_echo
+    lore:
+      - "深海巨兽的血气会让海面变得沉重。"
+
+  starhook_bait:
+    material: AMETHYST_SHARD
+    name: "星钩鱼饵"
+    rarity: LEGENDARY
+    tier: 6
+    route: TREASURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 80
+      sea_creature_chance: 0.0
+      treasure_chance: 1.0
+    modifiers:
+      treasure_quality: 0.15
+    gates:
+      unlock_treasure_pools:
+        - endgame_treasure
+    lore:
+      - "钩尖映着星光，似乎能牵引沉没之物。"
+
+  sunken_king_lure:
+    material: GOLD_NUGGET
+    name: "沉王拟饵"
+    rarity: LEGENDARY
+    tier: 6
+    route: TREASURE
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 50
+      sea_creature_chance: 0.0
+      treasure_chance: 0.0
+    modifiers:
+      legendary_treasure_weight: 0.20
+      treasure_weight:
+        sunken_king_vault: 0.10
+    gates:
+      unlock_treasure_pools:
+        - sunken_king_vault
+      unlock_fish:
+        - sunken_royal_fish
+    lore:
+      - "据说它能打开沉没王库的门缝。"
+
+  void_pearl_bait:
+    material: ENDER_PEARL
+    name: "虚珠鱼饵"
+    rarity: LEGENDARY
+    tier: 6
+    route: SPECIAL
+    consume_on: CATCH_SUCCESS
+    stats:
+      fishing_speed: 60
+      sea_creature_chance: 4.0
+      treasure_chance: 0.0
+    modifiers:
+      rare_sea_creature_weight: 0.10
+    lore:
+      - "珍珠内部漂浮着看不见的深海裂隙。"

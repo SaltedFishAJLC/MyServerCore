@@ -60,7 +60,9 @@ public class PDCManager {
     public final NamespacedKey KEY_ITEM_ID;
     public final NamespacedKey KEY_ITEM_SCALE_VERSION;
     public final NamespacedKey KEY_ITEM_RARITY;
+    public final NamespacedKey KEY_ITEM_TYPE;
     public final NamespacedKey KEY_ITEM_EQUIPMENT_TIER;
+    public final NamespacedKey KEY_ITEM_FISHING_TIER;
     public final NamespacedKey KEY_ITEM_FISHING_ROD;
     public final NamespacedKey KEY_ITEM_FISHING_ROUTE;
     public final NamespacedKey KEY_ITEM_FISHING_POWER;
@@ -104,6 +106,9 @@ public class PDCManager {
     public final NamespacedKey KEY_MOB_VIRTUAL_MAX_HEALTH;
     public final NamespacedKey KEY_CUSTOM_MOB_ID;
     public final NamespacedKey KEY_HOLOGRAM_ID;
+    public final NamespacedKey KEY_FISHING_EVENT_ID;
+    public final NamespacedKey KEY_FISHING_EVENT_INSTANCE;
+    public final NamespacedKey KEY_FISHING_EVENT_CONTRIBUTION_WEIGHT;
 
     public final NamespacedKey KEY_REQ_SKILL;
     public final NamespacedKey KEY_REQ_SLAYER;
@@ -158,7 +163,9 @@ public class PDCManager {
         this.KEY_ITEM_ID = key("item_id");
         this.KEY_ITEM_SCALE_VERSION = key("item_scale_version");
         this.KEY_ITEM_RARITY = key("item_rarity");
+        this.KEY_ITEM_TYPE = key("item_type");
         this.KEY_ITEM_EQUIPMENT_TIER = key("item_equipment_tier");
+        this.KEY_ITEM_FISHING_TIER = key("item_fishing_tier");
         this.KEY_ITEM_FISHING_ROD = key("item_fishing_rod");
         this.KEY_ITEM_FISHING_ROUTE = key("item_fishing_route");
         this.KEY_ITEM_FISHING_POWER = key("item_fishing_power");
@@ -199,6 +206,9 @@ public class PDCManager {
         this.KEY_MOB_VIRTUAL_MAX_HEALTH = key("mob_virtual_max_health");
         this.KEY_CUSTOM_MOB_ID = key("custom_mob_id");
         this.KEY_HOLOGRAM_ID = key("hologram_id");
+        this.KEY_FISHING_EVENT_ID = key("fishing_event_id");
+        this.KEY_FISHING_EVENT_INSTANCE = key("fishing_event_instance");
+        this.KEY_FISHING_EVENT_CONTRIBUTION_WEIGHT = key("fishing_event_contribution_weight");
         this.KEY_REQ_SKILL = key("req_skill");
         this.KEY_REQ_SLAYER = key("req_slayer");
         this.KEY_REQ_DUNGEON = key("req_dungeon");

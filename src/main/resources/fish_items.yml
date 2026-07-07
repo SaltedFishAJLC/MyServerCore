@@ -1,0 +1,396 @@
+balance:
+  temporary_treasure_chance_bonus_cap: 1.0
+
+fish:
+  silver_carp:
+    material: COD
+    name: "银鳞鲤"
+    rarity: COMMON
+    tier: 1
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 20
+      cooldown_seconds: 3
+    lore:
+      - "常见的淡水鱼，肉质清甜。"
+
+  river_perch:
+    material: COD
+    name: "河湾鲈鱼"
+    rarity: COMMON
+    tier: 1
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 15
+      cooldown_seconds: 3
+      buffs:
+        fishing_speed_food:
+          duration_seconds: 30
+          stats:
+            fishing_speed: 20
+    lore:
+      - "吃下后会让人短暂地更懂水流。"
+
+  sweet_kelp_fish:
+    material: SALMON
+    name: "甜海带鱼"
+    rarity: COMMON
+    tier: 1
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 25
+      cooldown_seconds: 3
+    lore:
+      - "带着淡淡海带甜味的小鱼。"
+
+  glowfin_sardine:
+    material: TROPICAL_FISH
+    name: "荧鳍沙丁鱼"
+    rarity: UNCOMMON
+    tier: 2
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 30
+      cooldown_seconds: 3
+      buffs:
+        night_vision_food:
+          duration_seconds: 60
+          effects:
+            night_vision: 1
+    lore:
+      - "鱼鳍散发着微弱荧光。"
+
+  inktail_cod:
+    material: COD
+    name: "墨尾鳕"
+    rarity: UNCOMMON
+    tier: 2
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 35
+      cooldown_seconds: 3
+      buffs:
+        sea_creature_food:
+          duration_seconds: 60
+          stats:
+            sea_creature_chance: 1.0
+    lore:
+      - "尾部残留着墨色纹路。"
+
+  pearlscale_herring:
+    material: COD
+    name: "珍鳞鲱鱼"
+    rarity: UNCOMMON
+    tier: 2
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 30
+      cooldown_seconds: 3
+      buffs:
+        treasure_food:
+          duration_seconds: 60
+          stats:
+            treasure_chance: 0.5
+    lore:
+      - "鱼鳞像珍珠一样反光。"
+
+  reef_glassfish:
+    material: TROPICAL_FISH
+    name: "礁光玻璃鱼"
+    rarity: RARE
+    tier: 3
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 50
+      cooldown_seconds: 3
+      buffs:
+        fishing_speed_food:
+          duration_seconds: 90
+          stats:
+            fishing_speed: 40
+    lore:
+      - "透明的鱼身折射着珊瑚礁的光。"
+
+  bloodsnapper:
+    material: SALMON
+    name: "血吻鲷"
+    rarity: RARE
+    tier: 3
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 45
+      cooldown_seconds: 3
+      buffs:
+        combat_vs_sea_creature_food:
+          duration_seconds: 90
+          modifiers:
+            sea_creature_damage: 0.03
+    lore:
+      - "血红色的鱼吻像刀口一样锋利。"
+
+  sponge_puffer:
+    material: PUFFERFISH
+    name: "海绵河豚"
+    rarity: RARE
+    tier: 3
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 60
+      cooldown_seconds: 3
+      buffs:
+        combat_vs_sea_creature_food:
+          duration_seconds: 90
+          modifiers:
+            sea_creature_damage_taken: -0.03
+    lore:
+      - "肉质柔软，能让人短暂适应海怪的冲击。"
+
+  storm_mackerel:
+    material: COD
+    name: "风暴鲭鱼"
+    rarity: EPIC
+    tier: 4
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 80
+      cooldown_seconds: 3
+      buffs:
+        sea_creature_food:
+          duration_seconds: 120
+          stats:
+            sea_creature_chance: 2.0
+    lore:
+      - "鱼鳞间还残留着暴雨的气息。"
+
+  tidefin_tuna:
+    material: SALMON
+    name: "潮鳍金枪鱼"
+    rarity: EPIC
+    tier: 4
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 90
+      cooldown_seconds: 3
+      buffs:
+        fishing_speed_food:
+          duration_seconds: 120
+          stats:
+            fishing_speed: 60
+    lore:
+      - "强健的鱼鳍似乎能感知潮汐。"
+
+  ancient_shellfish:
+    material: TROPICAL_FISH
+    name: "古壳贝鱼"
+    rarity: EPIC
+    tier: 4
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 75
+      cooldown_seconds: 3
+      buffs:
+        treasure_food:
+          duration_seconds: 120
+          modifiers:
+            treasure_quality: 0.05
+    lore:
+      - "外壳上刻着难以辨认的古老纹理。"
+
+  abyssal_eel:
+    material: COD
+    name: "深渊鳗"
+    rarity: EPIC
+    tier: 5
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 140
+      cooldown_seconds: 4
+      buffs:
+        fishing_speed_food:
+          duration_seconds: 180
+          stats:
+            fishing_speed: 80
+    lore:
+      - "来自无光海沟的细长鳗鱼。"
+
+  riptide_ray:
+    material: TROPICAL_FISH
+    name: "激流鳐"
+    rarity: EPIC
+    tier: 5
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 120
+      cooldown_seconds: 4
+      buffs:
+        sea_creature_food:
+          duration_seconds: 180
+          stats:
+            sea_creature_chance: 3.0
+    lore:
+      - "体内似乎仍然流动着急促的暗流。"
+
+  king_pearlfish:
+    material: TROPICAL_FISH
+    name: "王珠鱼"
+    rarity: LEGENDARY
+    tier: 5
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 130
+      cooldown_seconds: 4
+      buffs:
+        treasure_food:
+          duration_seconds: 180
+          stats:
+            treasure_chance: 0.5
+          modifiers:
+            rare_treasure_weight: 0.05
+    lore:
+      - "传说它会吞下沉船中的珍珠。"
+
+  leviathan_remora:
+    material: COD
+    name: "利维坦鮣鱼"
+    rarity: LEGENDARY
+    tier: 6
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 220
+      cooldown_seconds: 5
+      buffs:
+        sea_creature_food:
+          duration_seconds: 240
+          stats:
+            sea_creature_chance: 3.0
+          modifiers:
+            sea_creature_material_weight: 0.05
+    lore:
+      - "常依附在巨兽身侧的深海鱼。"
+
+  starfall_koi:
+    material: TROPICAL_FISH
+    name: "星坠锦鲤"
+    rarity: LEGENDARY
+    tier: 6
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 200
+      cooldown_seconds: 5
+      buffs:
+        treasure_food:
+          duration_seconds: 240
+          stats:
+            treasure_chance: 1.0
+          caps:
+            temporary_treasure_chance_bonus: 1.0
+    lore:
+      - "据说它只会在星光落入海面时上钩。"
+
+  sunken_royal_fish:
+    material: TROPICAL_FISH
+    name: "沉王御鱼"
+    rarity: LEGENDARY
+    tier: 6
+    fish_type: NORMAL_FISH
+    edible: true
+    consume:
+      restore_health: 250
+      cooldown_seconds: 5
+      buffs:
+        treasure_food:
+          duration_seconds: 240
+          modifiers:
+            legendary_treasure_weight: 0.10
+    lore:
+      - "沉没王库中流出的奇异鱼类。"
+
+normal_fish_pools:
+  river_fish_pool:
+    min_tier: 1
+    min_fishing_level: 1
+    fish:
+      silver_carp:
+        weight: 100
+      river_perch:
+        weight: 70
+      sweet_kelp_fish:
+        weight: 45
+
+  shallow_sea_fish_pool:
+    min_tier: 2
+    min_fishing_level: 15
+    fish:
+      glowfin_sardine:
+        weight: 80
+      inktail_cod:
+        weight: 60
+      pearlscale_herring:
+        weight: 35
+
+  reef_fish_pool:
+    min_tier: 3
+    min_fishing_level: 30
+    fish:
+      reef_glassfish:
+        weight: 70
+      bloodsnapper:
+        weight: 45
+      sponge_puffer:
+        weight: 35
+
+  storm_fish_pool:
+    min_tier: 4
+    min_fishing_level: 45
+    conditions:
+      weather:
+        - RAIN
+        - THUNDER
+    fish:
+      storm_mackerel:
+        weight: 70
+      tidefin_tuna:
+        weight: 50
+      ancient_shellfish:
+        weight: 30
+
+  abyss_fish_pool:
+    min_tier: 5
+    min_fishing_level: 60
+    fish:
+      abyssal_eel:
+        weight: 60
+      riptide_ray:
+        weight: 45
+      king_pearlfish:
+        weight: 18
+
+  endgame_fish_pool:
+    min_tier: 6
+    min_fishing_level: 75
+    fish:
+      leviathan_remora:
+        weight: 35
+      starfall_koi:
+        weight: 22
+      sunken_royal_fish:
+        weight: 8
+        required_bait:
+          - sunken_king_lure

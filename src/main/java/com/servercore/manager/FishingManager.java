@@ -2,8 +2,12 @@ package com.servercore.manager;
 
 import com.servercore.ServerCorePlugin;
 import com.servercore.enchant.EnchantStatResolver;
+import com.servercore.fishing.FishingConditions;
+import com.servercore.fishing.FishingContext;
+import com.servercore.fishing.FishingEnvironmentResult;
 import dev.aurelium.auraskills.api.skill.Skills;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -62,8 +66,12 @@ public class FishingManager implements Listener {
     private static FishingManager instance;
     private final ServerCorePlugin plugin;
     private final GlobalStatManager globalStats;
+    private final FishingContentManager fishingContent;
+    private final FishingEnvironmentManager fishingEnvironment;
+    private final FishingEventManager fishingEvents;
     private final File gatheringLootFile;
     private final Map<UUID, PendingCatchResult> pendingCatchResults = new HashMap<>();
+    private final Map<UUID, UUID> activeHooks = new HashMap<>();
     private volatile List<SeaCreatureEntry> seaCreatures = List.of();
     private volatile List<TreasureTier> treasureTiers = List.of();
 
@@ -72,8 +80,20 @@ public class FishingManager implements Listener {
     }
 
     public FishingManager(ServerCorePlugin plugin, GlobalStatManager globalStats) {
+        this(plugin, globalStats, FishingContentManager.getInstance());
+    }
+
+    public FishingManager(ServerCorePlugin plugin, GlobalStatManager globalStats, FishingContentManager fishingContent) {
+        this(plugin, globalStats, fishingContent, FishingEnvironmentManager.getInstance(), FishingEventManager.getInstance());
+    }
+
+    public FishingManager(ServerCorePlugin plugin, GlobalStatManager globalStats, FishingContentManager fishingContent,
+                          FishingEnvironmentManager fishingEnvironment, FishingEventManager fishingEvents) {
         this.plugin = plugin;
         this.globalStats = globalStats;
+        this.fishingContent = fishingContent;
+        this.fishingEnvironment = fishingEnvironment;
+        this.fishingEvents = fishingEvents;
         this.gatheringLootFile = new File(plugin.getDataFolder(), "gathering_loot.yml");
         instance = this;
         reloadLootTables();
@@ -108,30 +128,64 @@ public class FishingManager implements Listener {
         FishHook hook = event.getHook();
 
         if (event.getState() == PlayerFishEvent.State.FISHING) {
-            applyFishingSpeed(player, hook);
+            FishingContentManager.BaitDefinition bait = fishingContent == null
+                    ? null
+                    : fishingContent.reserveBait(player, hook);
+            activeHooks.put(player.getUniqueId(), hook.getUniqueId());
+            scheduleApplyFishingSpeed(player, hook, bait);
+            return;
+        }
+
+        if (event.getState() == PlayerFishEvent.State.CAUGHT_ENTITY) {
+            activeHooks.remove(player.getUniqueId());
+            if (fishingContent != null) {
+                fishingContent.finalizeBait(hook);
+            }
             return;
         }
 
         if (event.getState() != PlayerFishEvent.State.CAUGHT_FISH) {
+            activeHooks.remove(player.getUniqueId());
+            if (shouldRefundBait(event.getState()) && fishingContent != null) {
+                fishingContent.refundBait(hook);
+            }
             return;
         }
 
-        if (!isOpenWater(hook.getLocation())) {
+        activeHooks.remove(player.getUniqueId());
+        FishingContentManager.BaitDefinition bait = fishingContent == null
+                ? null
+                : fishingContent.getReservedBait(hook);
+
+        FishingContext fishingContext = buildFishingContext(player, hook);
+        FishingEnvironmentResult environmentResult = resolveEnvironment(fishingContext);
+        fishingContext = fishingContext.withEnvironmentTags(environmentResult.environmentTags());
+        if (!shouldUseCustomFishing(fishingContext)) {
+            if (event.getCaught() != null && fishingContent != null) {
+                fishingContent.finalizeBait(hook);
+            }
             return;
         }
 
         int fishingLevel = getFishingLevel(player);
-        FishingStatSnapshot fishingStats = getFishingStatSnapshot(player);
+        FishingStatSnapshot fishingStats = getFishingStatSnapshot(player, bait, environmentResult.bonus());
         double seaCreatureChance = calculateSeaCreatureChance(fishingLevel, fishingStats.total().seaCreatureChance());
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
         if (random.nextDouble() < seaCreatureChance) {
-            SeaCreatureEntry seaCreature = rollSeaCreature(hook.getLocation(), fishingLevel, random);
-            if (seaCreature != null && spawnSeaCreature(player, hook.getLocation(), fishingLevel, seaCreature)) {
-                event.setExpToDrop(0);
-                queueCaughtItemRemoval(event.getCaught());
-                handleBaitConsumption(player, event, BaitConsumptionContext.SEA_CREATURE);
-                return;
+            SeaCreatureEntry seaCreature = rollSeaCreature(player, fishingContext, fishingLevel, bait, random);
+            if (seaCreature != null) {
+                FishingEventManager.FishingEventStartResult eventResult = fishingEvents == null
+                        ? FishingEventManager.FishingEventStartResult.notStarted("events-disabled")
+                        : fishingEvents.tryStartFromSeaCreatureRoll(fishingContext, seaCreature.id());
+                if (eventResult.started() || spawnSeaCreature(player, hook.getLocation(), fishingLevel, seaCreature)) {
+                    event.setExpToDrop(0);
+                    queueCaughtItemRemoval(event.getCaught());
+                    if (fishingContent != null) {
+                        fishingContent.finalizeBait(hook);
+                    }
+                    return;
+                }
             }
         }
 
@@ -139,20 +193,45 @@ public class FishingManager implements Listener {
                 player,
                 fishingLevel,
                 calculateTreasureChance(fishingLevel, fishingStats.total().treasureChance()),
+                bait,
                 random
         );
         if (treasure != null && event.getCaught() instanceof Item item) {
+            FishingEventManager.FishingEventStartResult eventResult = fishingEvents == null
+                    ? FishingEventManager.FishingEventStartResult.notStarted("events-disabled")
+                    : fishingEvents.tryStartFromTreasureRoll(fishingContext, treasure.id());
+            if (eventResult.started()) {
+                event.setExpToDrop(0);
+                queueCaughtItemRemoval(event.getCaught());
+                if (fishingContent != null) {
+                    fishingContent.finalizeBait(hook);
+                }
+                return;
+            }
             pendingCatchResults.put(item.getUniqueId(), PendingCatchResult.replaceWith(createTreasureItem(treasure)));
             event.setExpToDrop(Math.max(event.getExpToDrop(), 3));
             addFishingXp(player, treasure.xp());
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6f, 1.35f);
             player.sendActionBar(Component.text("Deep sea treasure surfaced: " + treasure.tier() + "."));
-            handleBaitConsumption(player, event, BaitConsumptionContext.TREASURE);
+            if (fishingContent != null) {
+                fishingContent.finalizeBait(hook);
+            }
             return;
         }
 
         if (event.getCaught() instanceof Item) {
-            handleBaitConsumption(player, event, BaitConsumptionContext.VANILLA);
+            if (fishingContent != null) {
+                FishingContentManager.NormalFishDefinition fish =
+                        fishingContent.rollNormalFish(player, fishingLevel, bait, random);
+                if (fish != null && event.getCaught() instanceof Item item) {
+                    pendingCatchResults.put(item.getUniqueId(), PendingCatchResult.replaceWith(
+                            fishingContent.createFishItem(fish.id(), 1)
+                    ));
+                    event.setExpToDrop(Math.max(event.getExpToDrop(), 1));
+                    player.sendActionBar(Component.text("Caught " + fish.displayName() + "."));
+                }
+                fishingContent.finalizeBait(hook);
+            }
         }
     }
 
@@ -179,14 +258,86 @@ public class FishingManager implements Listener {
         }
     }
 
-    private void applyFishingSpeed(Player player, FishHook hook) {
+    private void scheduleApplyFishingSpeed(Player player, FishHook hook, FishingContentManager.BaitDefinition bait) {
+        scheduleApplyFishingSpeed(player, hook, bait, 0);
+    }
+
+    private void scheduleApplyFishingSpeed(Player player, FishHook hook, FishingContentManager.BaitDefinition bait, int attempt) {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (hook == null || hook.isDead() || !hook.isValid() || !player.isOnline()) {
+                return;
+            }
+            FishingContext context = buildFishingContext(player, hook);
+            if (!shouldUseCustomFishing(context)) {
+                if (attempt < 6) {
+                    scheduleApplyFishingSpeed(player, hook, bait, attempt + 1);
+                }
+                return;
+            }
+            FishingEnvironmentResult environmentResult = resolveEnvironment(context);
+            applyFishingSpeed(player, hook, bait, environmentResult.bonus());
+        }, 10L);
+    }
+
+    private void applyFishingSpeed(Player player, FishHook hook, FishingContentManager.BaitDefinition bait,
+                                   FishingStatContribution environmentBonus) {
         int level = getFishingLevel(player);
         FishingWaitWindow waitWindow = calculateWaitWindow(getEffectiveFishingSpeed(
                 level,
-                getFishingStatSnapshot(player).total().fishingSpeed()
+                getFishingStatSnapshot(player, bait, environmentBonus).total().fishingSpeed()
         ));
         hook.setMinWaitTime(waitWindow.minTicks());
         hook.setMaxWaitTime(waitWindow.maxTicks());
+    }
+
+    private boolean shouldRefundBait(PlayerFishEvent.State state) {
+        return state == PlayerFishEvent.State.REEL_IN
+                || state == PlayerFishEvent.State.FAILED_ATTEMPT
+                || state == PlayerFishEvent.State.IN_GROUND;
+    }
+
+    private FishingContext buildFishingContext(Player player, FishHook hook) {
+        FishingEnvironmentManager manager = fishingEnvironment == null
+                ? FishingEnvironmentManager.getInstance()
+                : fishingEnvironment;
+        if (manager != null) {
+            return manager.buildContext(player, hook);
+        }
+
+        Location location = hook.getLocation();
+        World world = location.getWorld();
+        String biomeTag = location.getBlock().getBiome().name().toUpperCase(Locale.ROOT);
+        return new FishingContext(
+                player,
+                hook,
+                location,
+                world,
+                location.getBlock().getBiome(),
+                true,
+                world != null && world.hasStorm(),
+                world != null && world.isThundering(),
+                world != null && world.hasStorm(),
+                true,
+                world == null ? 0L : world.getTime(),
+                world == null ? 0L : world.getFullTime(),
+                world == null ? 0L : world.getFullTime() / 24000L,
+                java.util.Set.of(biomeTag),
+                java.util.Set.of(biomeTag)
+        );
+    }
+
+    private FishingEnvironmentResult resolveEnvironment(FishingContext context) {
+        FishingEnvironmentManager manager = fishingEnvironment == null
+                ? FishingEnvironmentManager.getInstance()
+                : fishingEnvironment;
+        return manager == null ? FishingEnvironmentResult.empty(context.environmentTags()) : manager.resolve(context);
+    }
+
+    private boolean shouldUseCustomFishing(FishingContext context) {
+        FishingEnvironmentManager manager = fishingEnvironment == null
+                ? FishingEnvironmentManager.getInstance()
+                : fishingEnvironment;
+        return manager == null || manager.shouldUseCustomFishing(context);
     }
 
     public static double getLevelFishingSpeed(int fishingLevel) {
@@ -251,11 +402,6 @@ public class FishingManager implements Listener {
         ));
     }
 
-    private void handleBaitConsumption(Player player, PlayerFishEvent event, BaitConsumptionContext context) {
-        // Bait items are not defined yet. Future bait rules should consume one
-        // matching inventory item here after a configured successful catch type.
-    }
-
     private boolean spawnSeaCreature(Player player, Location hookLocation, int fishingLevel, SeaCreatureEntry entry) {
         Location spawnLocation = hookLocation.clone().add(0.5, 0.25, 0.5);
         MobSpawnManager mobSpawnManager = MobSpawnManager.getInstance();
@@ -300,50 +446,66 @@ public class FishingManager implements Listener {
         return spawned instanceof LivingEntity livingEntity ? livingEntity : null;
     }
 
-    private SeaCreatureEntry rollSeaCreature(Location location, int fishingLevel, ThreadLocalRandom random) {
-        Biome biome = location.getBlock().getBiome();
+    private SeaCreatureEntry rollSeaCreature(Player player, FishingContext context, int fishingLevel,
+                                             FishingContentManager.BaitDefinition bait, ThreadLocalRandom random) {
         List<SeaCreatureEntry> eligible = seaCreatures.stream()
                 .filter(entry -> fishingLevel >= entry.minLevel())
-                .filter(entry -> entry.matchesBiome(biome))
+                .filter(entry -> fishingContent == null || fishingContent.isSeaCreatureUnlocked(bait, entry.id()))
+                .filter(entry -> entry.matchesContext(context))
                 .toList();
         if (eligible.isEmpty()) {
             eligible = seaCreatures.stream()
                     .filter(entry -> fishingLevel >= entry.minLevel())
+                    .filter(entry -> fishingContent == null || fishingContent.isSeaCreatureUnlocked(bait, entry.id()))
+                    .filter(entry -> !entry.explicitConditions())
                     .toList();
         }
         if (eligible.isEmpty()) {
             return null;
         }
 
-        int totalWeight = eligible.stream().mapToInt(SeaCreatureEntry::weight).sum();
-        int roll = random.nextInt(Math.max(1, totalWeight));
+        double totalWeight = eligible.stream()
+                .mapToDouble(entry -> adjustedSeaCreatureWeight(player, bait, entry))
+                .sum();
+        double roll = random.nextDouble(Math.max(0.0001, totalWeight));
         for (SeaCreatureEntry entry : eligible) {
-            roll -= entry.weight();
-            if (roll < 0) {
+            roll -= adjustedSeaCreatureWeight(player, bait, entry);
+            if (roll < 0.0) {
                 return entry;
             }
         }
         return eligible.getFirst();
     }
 
-    private TreasureEntry rollTreasure(Player player, int fishingLevel, double treasureChance, ThreadLocalRandom random) {
+    private double adjustedSeaCreatureWeight(Player player, FishingContentManager.BaitDefinition bait, SeaCreatureEntry entry) {
+        double bonus = fishingContent == null
+                ? 0.0
+                : fishingContent.getSeaCreatureWeightBonus(player, bait, entry.id(), entry.minLevel());
+        return entry.weight() * Math.max(0.05, 1.0 + bonus);
+    }
+
+    private TreasureEntry rollTreasure(Player player, int fishingLevel, double treasureChance,
+                                       FishingContentManager.BaitDefinition bait, ThreadLocalRandom random) {
         if (!rollRareFishingDrop(player, treasureChance, random)) {
             return null;
         }
 
-        TreasureTier tier = rollTreasureTier(fishingLevel, random);
+        TreasureTier tier = rollTreasureTier(player, fishingLevel, bait, random);
         if (tier == null) {
             return null;
         }
 
         List<TreasureEntry> eligible = tier.entries().stream()
                 .filter(entry -> fishingLevel >= entry.minLevel())
+                .filter(entry -> fishingContent == null || fishingContent.isTreasureUnlocked(bait, entry.id()))
                 .toList();
-        int totalWeight = eligible.stream().mapToInt(TreasureEntry::weight).sum();
-        int roll = random.nextInt(Math.max(1, totalWeight));
+        double totalWeight = eligible.stream()
+                .mapToDouble(entry -> adjustedTreasureEntryWeight(player, bait, entry))
+                .sum();
+        double roll = random.nextDouble(Math.max(0.0001, totalWeight));
         for (TreasureEntry entry : eligible) {
-            roll -= entry.weight();
-            if (roll < 0) {
+            roll -= adjustedTreasureEntryWeight(player, bait, entry);
+            if (roll < 0.0) {
                 return entry;
             }
         }
@@ -369,24 +531,38 @@ public class FishingManager implements Listener {
         return custom == null ? new ItemStack(treasure.material(), treasure.amount()) : custom;
     }
 
-    private TreasureTier rollTreasureTier(int fishingLevel, ThreadLocalRandom random) {
+    private TreasureTier rollTreasureTier(Player player, int fishingLevel,
+                                          FishingContentManager.BaitDefinition bait, ThreadLocalRandom random) {
         List<TreasureTier> eligible = treasureTiers.stream()
                 .filter(tier -> fishingLevel >= tier.minLevel())
+                .filter(tier -> fishingContent == null || fishingContent.isTreasureUnlocked(bait, tier.id()))
                 .filter(tier -> !tier.entries().isEmpty())
                 .toList();
-        int totalWeight = eligible.stream().mapToInt(TreasureTier::weight).sum();
+        double totalWeight = eligible.stream()
+                .mapToDouble(tier -> adjustedTreasureTierWeight(player, bait, tier))
+                .sum();
         if (totalWeight <= 0) {
             return null;
         }
 
-        int roll = random.nextInt(totalWeight);
+        double roll = random.nextDouble(totalWeight);
         for (TreasureTier tier : eligible) {
-            roll -= tier.weight();
-            if (roll < 0) {
+            roll -= adjustedTreasureTierWeight(player, bait, tier);
+            if (roll < 0.0) {
                 return tier;
             }
         }
         return eligible.isEmpty() ? null : eligible.getFirst();
+    }
+
+    private double adjustedTreasureTierWeight(Player player, FishingContentManager.BaitDefinition bait, TreasureTier tier) {
+        double bonus = fishingContent == null ? 0.0 : fishingContent.getTreasureTierWeightBonus(player, bait, tier.id());
+        return tier.weight() * Math.max(0.05, 1.0 + bonus);
+    }
+
+    private double adjustedTreasureEntryWeight(Player player, FishingContentManager.BaitDefinition bait, TreasureEntry entry) {
+        double bonus = fishingContent == null ? 0.0 : fishingContent.getTreasureEntryWeightBonus(player, bait, entry.id());
+        return entry.weight() * Math.max(0.05, 1.0 + bonus);
     }
 
     private LivingEntity spawnMythicMob(String mythicMob, Location location) {
@@ -415,6 +591,13 @@ public class FishingManager implements Listener {
         if (bridge != null) {
             bridge.addSkillXp(player, Skills.FISHING, amount);
         }
+    }
+
+    private String formatNumber(double value) {
+        if (Math.abs(value - Math.rint(value)) < 0.0001) {
+            return String.valueOf((int) Math.rint(value));
+        }
+        return String.format(Locale.US, "%.1f", value);
     }
 
     private boolean isOpenWater(Location location) {
@@ -472,17 +655,70 @@ public class FishingManager implements Listener {
         );
     }
 
+    public List<String> describeCurrentFishingContext(Player player) {
+        if (player == null) {
+            return List.of("No player.");
+        }
+        UUID hookId = activeHooks.get(player.getUniqueId());
+        Entity entity = hookId == null ? null : Bukkit.getEntity(hookId);
+        if (!(entity instanceof FishHook hook) || hook.isDead() || !hook.isValid()) {
+            return List.of("Fishing Debug", "No active fishing hook for " + player.getName() + ".");
+        }
+
+        FishingContext context = buildFishingContext(player, hook);
+        FishingEnvironmentResult result = resolveEnvironment(context);
+        FishingContext enriched = context.withEnvironmentTags(result.environmentTags());
+        FishingContentManager.BaitDefinition bait = fishingContent == null ? null : fishingContent.getReservedBait(hook);
+        FishingStatSnapshot stats = getFishingStatSnapshot(player, bait, result.bonus());
+        int level = getFishingLevel(player);
+        FishingStatContribution total = stats.total();
+        FishingWaitWindow wait = calculateWaitWindow(getEffectiveFishingSpeed(level, total.fishingSpeed()));
+
+        List<String> lines = new ArrayList<>();
+        lines.add("Fishing Debug: " + player.getName());
+        FishingEnvironmentManager manager = fishingEnvironment == null
+                ? FishingEnvironmentManager.getInstance()
+                : fishingEnvironment;
+        if (manager != null) {
+            lines.addAll(manager.describe(player, hook));
+        } else {
+            lines.add("Biome: " + context.biome().name());
+            lines.add("OpenWater: " + context.openWater());
+        }
+        lines.add("Custom Fishing Enabled: " + shouldUseCustomFishing(enriched));
+        lines.add("Bait: " + (bait == null ? "none" : bait.id()));
+        lines.add("Fishing Level: " + level);
+        lines.add("Total FS/SCC/TC: " + formatNumber(total.fishingSpeed())
+                + " / " + formatNumber(total.seaCreatureChance()) + "%"
+                + " / " + formatNumber(total.treasureChance()) + "%");
+        lines.add("Effective FS: " + formatNumber(getEffectiveFishingSpeed(level, total.fishingSpeed()))
+                + " / " + formatNumber(getFishingSpeedCap()));
+        lines.add("Wait Window: " + wait.minTicks() + "-" + wait.maxTicks() + " ticks");
+        lines.add("Sea Creature Chance: " + formatNumber(calculateSeaCreatureChance(level, total.seaCreatureChance()) * 100.0) + "%");
+        lines.add("Treasure Chance: " + formatNumber(calculateTreasureChance(level, total.treasureChance()) * 100.0) + "%");
+        return lines;
+    }
+
     private double calculateSeaCreatureChance(int fishingLevel, double equipmentBonusPercent) {
-        double bonus = Math.max(0.0, equipmentBonusPercent) / 100.0;
-        return Math.min(0.95, SEA_CREATURE_BASE_CHANCE + fishingLevel * SEA_CREATURE_CHANCE_PER_LEVEL + bonus);
+        double bonus = equipmentBonusPercent / 100.0;
+        return Math.max(0.0, Math.min(0.95, SEA_CREATURE_BASE_CHANCE + fishingLevel * SEA_CREATURE_CHANCE_PER_LEVEL + bonus));
     }
 
     private double calculateTreasureChance(int fishingLevel, double equipmentBonusPercent) {
-        double bonus = Math.max(0.0, equipmentBonusPercent) / 100.0;
-        return Math.min(0.95, TREASURE_BASE_CHANCE + fishingLevel * TREASURE_CHANCE_PER_LEVEL + bonus);
+        double bonus = equipmentBonusPercent / 100.0;
+        return Math.max(0.0, Math.min(0.95, TREASURE_BASE_CHANCE + fishingLevel * TREASURE_CHANCE_PER_LEVEL + bonus));
     }
 
     public FishingStatSnapshot getFishingStatSnapshot(Player player) {
+        return getFishingStatSnapshot(player, null);
+    }
+
+    public FishingStatSnapshot getFishingStatSnapshot(Player player, FishingContentManager.BaitDefinition bait) {
+        return getFishingStatSnapshot(player, bait, FishingStatContribution.empty());
+    }
+
+    public FishingStatSnapshot getFishingStatSnapshot(Player player, FishingContentManager.BaitDefinition bait,
+                                                      FishingStatContribution environmentBonus) {
         PDCManager pdc = PDCManager.getInstance();
         if (player == null || pdc == null) {
             return FishingStatSnapshot.empty();
@@ -509,7 +745,33 @@ public class FishingManager implements Listener {
             ));
         }
 
-        return new FishingStatSnapshot(mainHand, armor, accessories, talismanBag);
+        return new FishingStatSnapshot(
+                mainHand,
+                armor,
+                accessories,
+                talismanBag,
+                getTemporaryFishingStats(player, bait),
+                environmentBonus
+        );
+    }
+
+    private FishingStatContribution getTemporaryFishingStats(Player player, FishingContentManager.BaitDefinition bait) {
+        FishingStatContribution temporary = FishingStatContribution.empty();
+        if (fishingContent != null) {
+            temporary = temporary.plus(fishingContent.getActiveFoodBuffStats(player));
+        }
+        if (bait != null) {
+            temporary = temporary.plus(bait.stats());
+        }
+
+        if (fishingContent == null || temporary.treasureChance() <= 0.0) {
+            return temporary;
+        }
+        return new FishingStatContribution(
+                temporary.fishingSpeed(),
+                temporary.seaCreatureChance(),
+                Math.min(temporary.treasureChance(), fishingContent.getTemporaryTreasureChanceBonusCap())
+        );
     }
 
     private FishingStatContribution sumFishingStats(ItemStack[] items, PDCManager pdc) {
@@ -561,7 +823,8 @@ public class FishingManager implements Listener {
                     Math.max(0, entry.getInt("weight", 1)),
                     Math.max(0.1, entry.getDouble("mod", 1.0)),
                     Math.max(1.0, entry.getDouble("base_health", 24.0)),
-                    entry.getString("biome_tags", ""),
+                    FishingConditions.fromConfig(entry.getConfigurationSection("conditions"), entry.getString("biome_tags", "")),
+                    entry.isConfigurationSection("conditions"),
                     entry.getString("mythic_mob", ""),
                     Math.max(0.0, entry.getDouble("xp", 0.0))
             ));
@@ -653,10 +916,14 @@ public class FishingManager implements Listener {
 
     private List<SeaCreatureEntry> defaultSeaCreatures() {
         return List.of(
-                new SeaCreatureEntry("deep_drowned", "Deep Drowned", EntityType.DROWNED, 1, 60, 1.0, 24.0, "OCEAN,RIVER,SWAMP", "", 8.0),
-                new SeaCreatureEntry("reef_guardian", "Reef Guardian", EntityType.GUARDIAN, 10, 95, 1.4, 42.0, "OCEAN,WARM", "", 18.0),
-                new SeaCreatureEntry("abyss_guardian", "Abyss Guardian", EntityType.GUARDIAN, 25, 150, 2.0, 80.0, "DEEP_OCEAN,COLD,FROZEN", "", 36.0),
-                new SeaCreatureEntry("elder_tidecaller", "Elder Tidecaller", EntityType.ELDER_GUARDIAN, 45, 300, 4.0, 180.0, "DEEP_OCEAN", "", 80.0)
+                new SeaCreatureEntry("deep_drowned", "Deep Drowned", EntityType.DROWNED, 1, 60, 1.0, 24.0,
+                        FishingConditions.legacyBiomeTags("OCEAN,RIVER,SWAMP"), false, "", 8.0),
+                new SeaCreatureEntry("reef_guardian", "Reef Guardian", EntityType.GUARDIAN, 10, 95, 1.4, 42.0,
+                        FishingConditions.legacyBiomeTags("OCEAN,WARM"), false, "", 18.0),
+                new SeaCreatureEntry("abyss_guardian", "Abyss Guardian", EntityType.GUARDIAN, 25, 150, 2.0, 80.0,
+                        FishingConditions.legacyBiomeTags("DEEP_OCEAN,COLD,FROZEN"), false, "", 36.0),
+                new SeaCreatureEntry("elder_tidecaller", "Elder Tidecaller", EntityType.ELDER_GUARDIAN, 45, 300, 4.0, 180.0,
+                        FishingConditions.legacyBiomeTags("DEEP_OCEAN"), false, "", 80.0)
         );
     }
 
@@ -685,12 +952,6 @@ public class FishingManager implements Listener {
         }
     }
 
-    public enum BaitConsumptionContext {
-        SEA_CREATURE,
-        TREASURE,
-        VANILLA
-    }
-
     public record FishingStatContribution(
             double fishingSpeed,
             double seaCreatureChance,
@@ -716,15 +977,45 @@ public class FishingManager implements Listener {
             FishingStatContribution mainHand,
             FishingStatContribution armor,
             FishingStatContribution accessories,
-            FishingStatContribution talismanBag
+            FishingStatContribution talismanBag,
+            FishingStatContribution temporary,
+            FishingStatContribution environment
     ) {
+        public FishingStatSnapshot {
+            mainHand = mainHand == null ? FishingStatContribution.empty() : mainHand;
+            armor = armor == null ? FishingStatContribution.empty() : armor;
+            accessories = accessories == null ? FishingStatContribution.empty() : accessories;
+            talismanBag = talismanBag == null ? FishingStatContribution.empty() : talismanBag;
+            temporary = temporary == null ? FishingStatContribution.empty() : temporary;
+            environment = environment == null ? FishingStatContribution.empty() : environment;
+        }
+
         public static FishingStatSnapshot empty() {
             FishingStatContribution empty = FishingStatContribution.empty();
-            return new FishingStatSnapshot(empty, empty, empty, empty);
+            return new FishingStatSnapshot(empty, empty, empty, empty, empty, empty);
+        }
+
+        public FishingStatSnapshot(
+                FishingStatContribution mainHand,
+                FishingStatContribution armor,
+                FishingStatContribution accessories,
+                FishingStatContribution talismanBag
+        ) {
+            this(mainHand, armor, accessories, talismanBag, FishingStatContribution.empty(), FishingStatContribution.empty());
+        }
+
+        public FishingStatSnapshot(
+                FishingStatContribution mainHand,
+                FishingStatContribution armor,
+                FishingStatContribution accessories,
+                FishingStatContribution talismanBag,
+                FishingStatContribution temporary
+        ) {
+            this(mainHand, armor, accessories, talismanBag, temporary, FishingStatContribution.empty());
         }
 
         public FishingStatContribution total() {
-            return mainHand.plus(armor).plus(accessories).plus(talismanBag);
+            return mainHand.plus(armor).plus(accessories).plus(talismanBag).plus(temporary).plus(environment);
         }
     }
 
@@ -746,19 +1037,17 @@ public class FishingManager implements Listener {
             int weight,
             double mod,
             double baseHealth,
-            String biomeTags,
+            FishingConditions conditions,
+            boolean explicitConditions,
             String mythicMob,
             double xp
     ) {
-        boolean matchesBiome(Biome biome) {
-            String biomeName = biome.name().toUpperCase(Locale.ROOT);
-            for (String tag : biomeTags.split(",")) {
-                String trimmed = tag.trim().toUpperCase(Locale.ROOT);
-                if (!trimmed.isBlank() && biomeName.contains(trimmed)) {
-                    return true;
-                }
-            }
-            return false;
+        private SeaCreatureEntry {
+            conditions = conditions == null ? FishingConditions.empty() : conditions;
+        }
+
+        boolean matchesContext(FishingContext context) {
+            return conditions.matches(context);
         }
     }
 

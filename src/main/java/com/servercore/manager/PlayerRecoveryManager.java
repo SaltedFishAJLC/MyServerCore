@@ -87,6 +87,14 @@ public class PlayerRecoveryManager implements Listener {
         applyNaturalRegenerationRule();
     }
 
+    public void healImmediate(Player player, double amount) {
+        heal(player, amount);
+    }
+
+    public void syncFoodState(Player player) {
+        syncFood(player);
+    }
+
     public void markCombat(Player player) {
         if (player != null) {
             lastCombatAt.put(player.getUniqueId(), System.currentTimeMillis());

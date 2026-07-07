@@ -1,6 +1,6 @@
 # 钓鱼体系实现状态与后续任务
 
-更新时间：2026-07-06
+更新时间：2026-07-07
 
 本文以当前仓库代码为准，并结合本项目对话中已经确认的设计要求，记录 ServerCore 钓鱼体系的实现状态、计算约定、配置接口、已知问题和后续任务。
 
@@ -24,9 +24,14 @@
 - 当前公式满配目标为有效 Fishing Speed `1500` 时达到 `15-60 ticks`。
 - Fishing Speed 现在区分原始值与有效值；公式入口会把有效值封顶到 `1500`，超过上限不会继续缩短等待。
 - 第一批 T1-T6 钓竿已进入默认配置，并写入 `fishing_rod`、`fishing_route`、`fishing_power`、`growth_line`、`growth_stage` 等 PDC/lore 字段。
+- 第一批鱼饵和普通鱼已进入默认配置：鱼饵按背包顺序预约并在成功收杆后消耗，普通鱼作为海怪和宝藏失败后的第三类结果。
+- 普通鱼食用由 `FishingContentManager` 拦截，使用 `PlayerRecoveryManager` 的立即治疗/饱食同步入口，不写入通用食物补给表，避免与后续料理系统冲突。
+- 环境修正测试版已进入主流程：`FishingEnvironmentManager` 负责天气、群系、时间、开阔水域与环境标签，环境加成作为独立临时来源参与本次钓鱼计算，不写入玩家或物品 PDC。
+- 多人事件测试版已进入主流程：`FishingEventManager` 在海怪或宝藏基础 roll 已成功之后尝试启动事件，默认提供 `sea_monster_raid` 与 `secret_treasure_hunt` 两个事件。
+- ServerCore 自定义海怪、宝藏与多人事件现在默认要求开阔水域；开阔水域优先使用 Paper/原版 `FishHook#isInOpenWater()`，旧 5x5 水域检查只作为兼容 fallback。
 - 当前 T6 装备侧目标按“套装 + 对应钓竿 + 固定套装效果”计算：海怪线 `lord_set + lord_seabond_rod + gatherers_compass` 约为 `1150 Fishing Speed / 78% SCC / 11.5% TC`；宝藏线 `tidevault_set + tidevault_starhook_rod + gatherers_compass` 约为 `1300 Fishing Speed / 31% SCC / 31% TC`。实际等待公式仍会额外叠加 Fishing 等级速度，并在 1500 封顶。
-- 钓鱼属性当前聚合主手、护甲、4 个饰品槽和护符袋；副手不生效。
-- 收杆成功后已预留鱼饵消耗接口；当前没有默认鱼饵道具，也不会实际消耗背包物品。
+- 钓鱼属性当前聚合主手、护甲、4 个饰品槽、护符袋和临时来源；副手不生效。临时来源包括预约鱼饵和普通鱼食物 Buff。
+- 来自鱼饵、普通鱼食物等临时来源的正向 Treasure Chance 默认合计封顶为 `+1.0` 百分点。
 - 海怪已经通过 MobSpawnManager 专用入口统一接入减伤、虚拟血池和全息链路。
 - 缺少钓鱼系统自动化测试。
 
@@ -35,21 +40,36 @@
 主要实现：
 
 - `src/main/java/com/servercore/manager/FishingManager.java`
+- `src/main/java/com/servercore/manager/FishingContentManager.java`
+- `src/main/java/com/servercore/manager/FishingEnvironmentManager.java`
+- `src/main/java/com/servercore/manager/FishingEventManager.java`
+- `src/main/java/com/servercore/fishing/FishingContext.java`
+- `src/main/java/com/servercore/fishing/FishingConditions.java`
+- `src/main/java/com/servercore/fishing/FishingEnvironmentResult.java`
 - `src/main/java/com/servercore/manager/AuraSkillsBridge.java`
 - `src/main/java/com/servercore/manager/GlobalStatManager.java`
 - `src/main/java/com/servercore/manager/NonCombatStatsMenu.java`
 - `src/main/java/com/servercore/manager/ItemFormatManager.java`
 - `src/main/java/com/servercore/manager/PDCManager.java`
+- `src/main/java/com/servercore/manager/PlayerRecoveryManager.java`
 
 内容配置：
 
 - `src/main/resources/gathering_loot.yml`
+- `src/main/resources/fishing_baits.yml`
+- `src/main/resources/fish_items.yml`
+- `src/main/resources/fishing_environment.yml`
+- `src/main/resources/fishing_events.yml`
 - `src/main/resources/custom_items.yml`
 - `src/main/resources/enchants.yml`
 
 服务器运行时实际读取：
 
 - `plugins/ServerCore/gathering_loot.yml`
+- `plugins/ServerCore/fishing_baits.yml`
+- `plugins/ServerCore/fish_items.yml`
+- `plugins/ServerCore/fishing_environment.yml`
+- `plugins/ServerCore/fishing_events.yml`
 - `plugins/ServerCore/custom_items.yml`
 - `plugins/ServerCore/enchants.yml`
 
@@ -60,7 +80,13 @@
 ```text
 /sc admin gatheringloot reload
 /sc admin loot reload
+/sc admin fishing reload
+/sc admin fishing debug
 /sc admin items reload
+/sc admin bait list
+/sc admin bait give <id> [amount]
+/sc admin fish list
+/sc admin fish give <id> [amount]
 ```
 
 查看面板：
@@ -74,28 +100,32 @@
 FishingManager 监听 `PlayerFishEvent`，当前流程如下：
 
 1. 状态为 `FISHING`：
+   - 扫描 `PlayerInventory#getStorageContents()`，按槽位顺序预约第一个有效鱼饵。
+   - 预约会临时扣除 1 个鱼饵并绑定到 `FishHook` UUID；空杆、取消、换世界、退出或钩子消失时返还。
    - 读取 AuraSkills Fishing 等级。
-   - 读取主手物品及其 active 附魔提供的 Fishing Speed。
+   - 聚合主手、护甲、饰品、护符袋、食物 Buff 和预约鱼饵提供的 Fishing Speed。
+   - 浮漂落水后读取 `FishingEnvironmentManager` 上下文；若满足开阔水域和环境规则，额外叠加环境 Fishing Speed / SCC / TC。
    - 计算等待窗口。
    - 写入 `FishHook#setMinWaitTime` 和 `setMaxWaitTime`。
 
 2. 状态为 `CAUGHT_FISH`：
-   - 检查是否满足 ServerCore 的开放水域要求。
-   - 不满足时不执行自定义海怪或宝藏逻辑，保留原版结果。
+   - 通过 `FishingEnvironmentManager` 构建本次收杆上下文，包含群系、群系标签、环境标签、天气、时间、开阔水域、雨水影响和天空影响。
+   - 检查是否满足 ServerCore 的开阔水域要求。
+   - 不满足时不执行自定义海怪、宝藏或多人事件逻辑，保留原版结果。
    - 满足时先判定 Sea Creature。
-   - 海怪概率命中后先选择合格条目并尝试生成；没有合格条目或生成失败时继续判定宝藏。
+   - 海怪概率命中后先按 `conditions` 选择合格条目，再给多人事件一次启动机会；事件没有启动时才尝试生成普通海怪。
    - 海怪成功：清零原版经验、生成海怪，本次不再判定宝藏。
    - 海怪失败：判定 Treasure Chance。
-   - 宝藏成功：按等级筛选档位，再按权重选择档位和条目。
+   - 宝藏成功：按等级筛选档位，再按权重选择档位和条目；随后给宝藏多人事件一次启动机会，事件没有启动时才替换为宝藏物品。
+   - 宝藏失败：进入普通鱼池，按 Fishing 等级、天气、鱼饵门槛和权重修正选择普通鱼。
    - AuraSkills 在 `MONITOR` 阶段读取原始渔获并发放常规 Fishing XP。
-   - ServerCore 随后在同一 `MONITOR` 阶段移除海怪分支的原渔获，或把宝藏分支的原渔获替换成自定义宝藏。
-   - 成功海怪、宝藏或普通渔获分支都会经过预留的鱼饵消耗钩子；当前钩子为空实现。
-   - 两者都失败：保留原版渔获。
+   - ServerCore 随后在同一 `MONITOR` 阶段移除海怪分支的原渔获，或把宝藏/普通鱼分支的原渔获替换成自定义物品。
+   - 成功钓起海怪、宝藏、普通鱼或保留原版渔获时，预约鱼饵正式消耗。
 
 优先级约定：
 
 ```text
-Sea Creature > Treasure > Vanilla Catch
+Sea Creature > Treasure > Normal Fish
 ```
 
 海怪和宝藏不能在同一次收杆中同时出现。
@@ -421,9 +451,9 @@ Legendary: 3
 
 ## 8. 开放水域判定
 
-ServerCore 只在自定义开放水域判定通过后执行海怪和宝藏逻辑。
+ServerCore 只在开放水域判定通过后执行自定义海怪、宝藏和多人事件逻辑。
 
-当前检查浮漂所在高度的 `5×5` 区域：
+当前优先调用 Paper/原版 `FishHook#isInOpenWater()`。如果运行时 API 不可用，才回退到旧的浮漂所在高度 `5×5` 区域检查：
 
 ```text
 水或气泡柱数量 >= 16
@@ -436,7 +466,7 @@ ServerCore 只在自定义开放水域判定通过后执行海怪和宝藏逻辑
 WATER 或 BUBBLE_COLUMN
 ```
 
-该判定用于限制狭小自动钓鱼池触发自定义收益。它不是 AuraSkills 的方块 XP 防刷事件；钓鱼当前使用独立开放水域检查。
+该判定用于限制狭小自动钓鱼池触发自定义收益。它不是 AuraSkills 的方块 XP 防刷事件；钓鱼当前使用 `FishingEnvironmentManager` 统一读取开阔水域上下文。
 
 ## 9. AuraSkills 接入
 
@@ -569,11 +599,11 @@ treasure_chance
 10. 概率型装备属性使用直观百分比点：`5 = 5%`，不是 `0.05`。
 11. 附魔属性通过 `EnchantStatResolver` 临时计算，不永久写入基础物品 PDC。
 12. 运行时配置是 `plugins/ServerCore/` 下的文件，资源模板不会自动合并更新。
-13. 钓鱼装备属性聚合主手、护甲、4 个饰品槽和护符袋，副手不生效。
+13. 钓鱼装备属性聚合主手、护甲、4 个饰品槽、护符袋、临时来源和环境修正，副手不生效。
 14. 海怪数值统一由 ServerCore 管理；MythicMobs 只负责实体、AI 和技能。
 15. 海怪与宝藏保留一次 AuraSkills 原始渔获 XP，并额外发放条目 `xp`。
 16. 钓竿阶段通过 `fishing_power` 预留池子门槛；当前 `FishingManager#hasEnoughFishingPower(Player, FishingPool)` 已提供结构，但默认池子尚未强制检查。
-17. 鱼饵是未来的背包消耗型道具；当前只在成功收杆分支预留 `handleBaitConsumption(...)`，没有默认鱼饵、没有实际消耗。
+17. 鱼饵是背包消耗型道具；当前按 storage 槽位顺序预约，成功收杆消耗，空杆/取消/换世界/退出/钩子清理时返还。
 18. 护符袋中相同内部 `item_id` 只生效一次；同 `talisman_family` 仍按既有优先级启用最高版本。
 
 ## 12. 后续任务
@@ -638,9 +668,9 @@ treasure_chance
    - MythicMobs 负责数值，ServerCore 只写标签和奖励。
    - 每条海怪配置增加明确的覆盖开关。
 
-5. **扩展海怪和宝藏条件**
+5. **继续扩展海怪和宝藏条件**
 
-   可考虑支持：
+   2026-07-07 已为海怪加入 `conditions`，支持开阔水域、群系标签、环境标签、天气和时间，并兼容旧 `biome_tags`。后续仍可考虑支持：
 
    - 精确群系或 namespaced biome。
    - 世界白名单。
@@ -649,18 +679,18 @@ treasure_chance
    - 最低开放水域等级。
    - 前置任务或地牢进度。
 
-6. **实现鱼饵道具与消耗规则**
+6. **扩展鱼饵体验层**
 
-   当前已预留成功收杆后的统一消耗钩子。未来鱼饵建议作为背包消耗型道具，在海怪、宝藏或指定渔获类型成功后扣除 1 个；具体鱼饵 ID、适用 catch type、优先级和失败提示仍待设计。
+   当前已实现背包顺序扫描、预约、成功消耗和失败返还。后续如需更强体验，可继续增加鱼饵袋、选择 GUI、debug/simulate 命令、事件鱼饵和更细的 catch type 限制。
 
 ### P2：可观测性与体验
 
 1. 为 FishingManager 增加单元测试，至少覆盖等待公式、概率上限、档位权重和空合格表。
-2. 增加管理员调试命令，显示玩家最终速度、概率、属性来源和当前可抽取条目。
+2. `/sc admin fishing debug` 已能显示当前浮漂环境、环境加成和最终概率；后续可继续补当前可抽取海怪/宝藏候选列表。
 3. 将英文 ActionBar 文本迁移到可配置中文文本。
-4. 增加海怪与宝藏触发日志的可选 debug 模式。
+4. 增加海怪、宝藏与多人事件触发日志的可选 debug 模式。
 5. 在 `/sc gathering` 中进一步拆分每件物品的基础 PDC 与附魔贡献；当前已按主手、护甲、饰品槽、护符袋拆分。
-6. 明确开放水域判定是否需要完全对齐原版或 AuraSkills 规则。
+6. 当前优先使用 `FishHook#isInOpenWater()`；后续如 AuraSkills 规则有差异，需要决定是否完全对齐 AuraSkills。
 
 ## 13. 建议验收清单
 
@@ -672,7 +702,13 @@ treasure_chance
 - `lord_set + lord_seabond_rod + gatherers_compass` 的装备目标接近 `1150 FS / 78 SCC / 11.5 TC`。
 - `tidevault_set + tidevault_starhook_rod + gatherers_compass` 的装备目标接近 `1300 FS / 31 SCC / 31 TC`。
 - 第一批钓竿物品 lore 显示路线、Fishing Power 和成长阶段。
-- 目前没有默认鱼饵道具，普通钓鱼不会实际消耗任何背包物品。
+- 背包中有鱼饵时，抛竿会预约第一个可用鱼饵，并在成功钓起任意结果后消耗 1 个。
+- 空杆、取消、换世界、退出或钩子清理时，已预约鱼饵会返还，背包满时掉落在玩家位置。
+- 鱼饵和普通鱼食物 Buff 提供的 Fishing Speed 会参与等待窗口计算，但 effective Fishing Speed 仍硬封顶为 1500。
+- `starhook_bait` 与 `starfall_koi` 同时存在时，临时 Treasure Chance 仍不超过 `+1.0` 百分点。
+- 宝藏失败后会进入普通鱼池，并按等级、天气、鱼饵门槛和权重修正生成自定义普通鱼。
+- 普通鱼右键食用会立即回血、消耗 1 个物品并进入鱼类食物短冷却。
+- 同组普通鱼食物 Buff 不叠加，保留更强者；不同组可以共存。
 - 非开放水域不会触发 ServerCore 海怪或宝藏。
 - 海怪成功后不再产出宝藏。
 - 海怪失败后宝藏仍可触发。
@@ -685,3 +721,70 @@ treasure_chance
 - 等级不足时无法切换到带 `req_skill` 的钓竿。
 - 生命超过 2000 的海怪仍按配置血量工作。
 - 重载 `gathering_loot.yml` 后不需要重启服务器。
+- `/sc admin fishing debug` 能在玩家有活动浮漂时输出群系、开阔水域、天气、环境标签、环境 FS/SCC/TC 加成和命中规则。
+- 雨天开阔水域命中 `rain_open_water`，雷暴开阔水域额外命中 `thunderstorm`。
+- 深海开阔水域命中 `ocean_current` 和 `deep_ocean_depth`，并产生 `OCEAN_CURRENT` / `DEEP_SEA` 标签。
+- 非开阔水域不会触发 ServerCore 海怪、宝藏或多人事件。
+- 背包有 `ocean_current_core` 时，雨天开阔海洋海怪 roll 成功后有概率启动 `sea_monster_raid`，启动后消耗 1 个催化剂。
+- 背包有 `sunken_compass` 时，深海宝藏 roll 成功后有概率启动 `secret_treasure_hunt`，启动后消耗 1 个催化剂。
+- 多人事件未通过概率、冷却、环境或活跃数量限制时，不消耗催化剂，并回到普通海怪/宝藏产出。
+- 多人事件怪物带有 `fishing_event_id` 与 `fishing_event_instance` PDC，击杀和伤害能计入贡献。
+- 玩家在事件范围内继续钓鱼，成功 `CAUGHT_FISH` 会为当前事件增加贡献/进度。
+- 插件 disable 时会清理活动钓鱼事件和事件怪。
+
+## 14. 环境修正与多人事件测试版
+
+### 14.1 环境修正
+
+`FishingEnvironmentManager` 读取 `fishing_environment.yml`，负责把本次浮漂位置解析为钓鱼上下文。上下文包括：
+
+- `FishHook#isInOpenWater()` 的原版/Paper 开阔水域判定；API 不可用时 fallback 到旧 5x5 水域检查。
+- 当前群系和由配置归并出的群系标签，例如 `OCEAN`、`DEEP_OCEAN`、`WARM`、`COLD`、`SWAMP`。
+- 天气、雷暴、时间、是否受雨水影响、是否受天空影响。
+- 环境规则累积出的环境标签，例如 `RAIN_BONUS`、`STORM`、`OCEAN_CURRENT`、`DEEP_SEA`、`REEF`。
+
+默认环境规则只提供本次钓鱼计算用的临时加成，不写入玩家 PDC 或物品 PDC。`/sc gathering` 的钓鱼来源现在包含“环境修正”，但这个面板只显示玩家当前位置的常规快照；精确浮漂上下文请用 `/sc admin fishing debug`。
+
+### 14.2 海怪条件
+
+`gathering_loot.yml` 的海怪条目现在支持：
+
+```yaml
+conditions:
+  require_open_water: true
+  biome_tags: [DEEP_OCEAN]
+  environment_tags: [DEEP_SEA]
+  weather: [RAIN, THUNDER]
+  time: [NIGHT]
+```
+
+旧字段 `biome_tags: "OCEAN,RIVER"` 仍会被转换为条件，已有海怪表不需要立刻重写。只有显式写了 `conditions` 的条目会严格按新条件过滤；旧式条目保留过去“没有群系命中时按等级 fallback”的兼容行为。
+
+### 14.3 多人事件
+
+`FishingEventManager` 读取 `fishing_events.yml`。事件只会在基础钓鱼 roll 已经成功后尝试启动：
+
+- `SEA_CREATURE_ROLL`：海怪概率命中且选中了一个合格海怪后触发。
+- `TREASURE_ROLL`：宝藏概率命中且选中了一个合格宝藏后触发。
+
+启动顺序为：匹配事件条件 -> 检查活跃数量和冷却 -> 检查玩家背包催化剂 -> 事件概率 roll -> 消耗催化剂 -> 创建事件实例。概率未命中或条件不满足时不会消耗催化剂。
+
+默认事件：
+
+- `sea_monster_raid`：雨天/雷暴开阔海洋，需要 `OCEAN_CURRENT` 环境标签与 `ocean_current_core`，持续 8 分钟，分波刷出海怪。
+- `secret_treasure_hunt`：深海开阔水域，需要 `DEEP_SEA` 环境标签与 `sunken_compass`，持续 6 分钟，目标进度 1000，通过继续钓鱼、伤害和击杀推进。
+
+事件贡献来源：
+
+- 对事件怪造成伤害。
+- 击杀事件怪。
+- 在事件范围内成功钓起渔获。
+
+事件怪通过 `MobSpawnManager#spawnFishingSeaCreature()` 创建，继续复用现有海怪数值、虚拟血池和全息面板链路，并额外写入 `fishing_event_id`、`fishing_event_instance`、`fishing_event_contribution_weight`。
+
+### 14.4 测试服注意事项
+
+- 新增默认资源只会在运行时文件不存在时复制；已有测试服需要手动合并 `fishing_environment.yml`、`fishing_events.yml` 和 `custom_items.yml` 中的 `ocean_current_core` / `sunken_compass`。
+- `/sc admin fishing reload` 会重载钓鱼 loot、鱼饵/普通鱼、环境规则和事件规则。
+- `/sc admin items give ocean_current_core` 与 `/sc admin items give sunken_compass` 可发放催化剂。
+- 当前多人事件为测试版：事件状态未持久化，插件重启会清理活动事件；奖励和平衡值应按测试服反馈继续调。
